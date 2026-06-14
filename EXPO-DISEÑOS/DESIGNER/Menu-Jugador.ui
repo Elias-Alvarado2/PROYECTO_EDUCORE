@@ -25,7 +25,7 @@
    <property name="styleSheet">
     <string notr="true">QFrame#MenuJugador{
     /* Reemplaza la ruta por la ubicación real de tu imagen */
-    border-image: url(&quot;C:/Users/cabre/OneDrive/Documentos/EXPO - 2026/PROYECTO_EDUCORE/EXPO-DISEÑOS/DISEÑOS/Menu-Usuario.png&quot;) 0 0 0 0 stretch stretch;
+    border-image: url(&quot;../../assets/DISEÑOS/Menu-Usuario.png&quot;) 0 0 0 0 stretch stretch;
     background-color: transparent;
 }</string>
    </property>

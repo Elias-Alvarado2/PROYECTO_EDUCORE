@@ -13,6 +13,13 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QFrame#Registro{
+    /* Reemplaza la ruta por la ubicación real de tu imagen */
+    border-image: url(&quot;../../assets/DISEÑOS/Registro.jpg&quot;) 0 0 0 0 stretch stretch;
+    background-color: transparent;
+}</string>
+  </property>
   <widget class="QFrame" name="Registro">
    <property name="geometry">
     <rect>

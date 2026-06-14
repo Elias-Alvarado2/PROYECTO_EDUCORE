@@ -34,7 +34,7 @@
    <property name="styleSheet">
     <string notr="true">QFrame#Login{
     /* Reemplaza la ruta por la ubicación real de tu imagen */
-    border-image: url(&quot;C:/Users/cabre/Downloads/JGCG/JGCG/EXPO/DISEÑOS/LoginNuevo.png&quot;) 0 0 0 0 stretch stretch;
+    border-image: url(&quot;../../assets/DISEÑOS/LoginNuevo.png&quot;) 0 0 0 0 stretch stretch;
     background-color: transparent;
 }</string>
    </property>
