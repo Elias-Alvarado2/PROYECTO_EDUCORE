@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <widget class="QFrame" name="NivelesPython">
+  <widget class="QFrame" name="NivelesJava">
    <property name="geometry">
     <rect>
      <x>0</x>
@@ -23,11 +23,10 @@
     </rect>
    </property>
    <property name="styleSheet">
-    <string notr="true">QFrame#NivelesPython{
-border-image: url(&quot;../../assets/DISEÑOS/Niveles-Python.png&quot;) 0 0 0 0 stretch stretch;
+    <string notr="true">QFrame#NivelesJava{
+border-image: url(&quot;../../assets/DISEÑOS/Niveles-Java.png&quot;) 0 0 0 0 stretch stretch;
 background-color: transparent;
-}
-</string>
+}</string>
    </property>
    <property name="frameShape">
     <enum>QFrame::Shape::StyledPanel</enum>
@@ -39,9 +38,9 @@ background-color: transparent;
     <property name="geometry">
      <rect>
       <x>520</x>
-      <y>465</y>
+      <y>475</y>
       <width>151</width>
-      <height>155</height>
+      <height>165</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -54,6 +53,7 @@ QPushButton:hover {
 background-color: rgba(255, 255, 255, 80);
 border-radius: 10px;
 }
+
 </string>
     </property>
     <property name="text">
@@ -63,10 +63,10 @@ border-radius: 10px;
    <widget class="QPushButton" name="pushButton_2">
     <property name="geometry">
      <rect>
-      <x>700</x>
-      <y>465</y>
-      <width>150</width>
-      <height>155</height>
+      <x>702</x>
+      <y>475</y>
+      <width>151</width>
+      <height>165</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -79,6 +79,7 @@ QPushButton:hover {
 background-color: rgba(255, 255, 255, 80);
 border-radius: 10px;
 }
+
 </string>
     </property>
     <property name="text">
@@ -88,10 +89,10 @@ border-radius: 10px;
    <widget class="QPushButton" name="pushButton_3">
     <property name="geometry">
      <rect>
-      <x>880</x>
-      <y>465</y>
-      <width>150</width>
-      <height>155</height>
+      <x>885</x>
+      <y>475</y>
+      <width>151</width>
+      <height>165</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -104,6 +105,7 @@ QPushButton:hover {
 background-color: rgba(255, 255, 255, 80);
 border-radius: 10px;
 }
+
 </string>
     </property>
     <property name="text">
@@ -113,10 +115,10 @@ border-radius: 10px;
    <widget class="QPushButton" name="pushButton_4">
     <property name="geometry">
      <rect>
-      <x>1060</x>
-      <y>465</y>
-      <width>150</width>
-      <height>155</height>
+      <x>1067</x>
+      <y>475</y>
+      <width>151</width>
+      <height>165</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -128,7 +130,9 @@ border: none;
 QPushButton:hover {
 background-color: rgba(255, 255, 255, 80);
 border-radius: 10px;
-}</string>
+}
+
+</string>
     </property>
     <property name="text">
      <string/>
@@ -137,10 +141,10 @@ border-radius: 10px;
    <widget class="QPushButton" name="pushButton_5">
     <property name="geometry">
      <rect>
-      <x>1246</x>
-      <y>465</y>
-      <width>150</width>
-      <height>155</height>
+      <x>1250</x>
+      <y>475</y>
+      <width>151</width>
+      <height>165</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -153,6 +157,7 @@ QPushButton:hover {
 background-color: rgba(255, 255, 255, 80);
 border-radius: 10px;
 }
+
 </string>
     </property>
     <property name="text">
@@ -162,9 +167,9 @@ border-radius: 10px;
    <widget class="QPushButton" name="pushButton_6">
     <property name="geometry">
      <rect>
-      <x>690</x>
-      <y>670</y>
-      <width>533</width>
+      <x>691</x>
+      <y>685</y>
+      <width>537</width>
       <height>130</height>
      </rect>
     </property>
@@ -178,6 +183,7 @@ QPushButton:hover {
 background-color: rgba(255, 255, 255, 80);
 border-radius: 10px;
 }
+
 </string>
     </property>
     <property name="text">
