@@ -13,6 +13,13 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QFrame#MenuAdministrador{
+    /* Reemplaza la ruta por la ubicación real de tu imagen */
+    border-image: url(&quot;../../assets/DISEÑOS/Menu-Administrador.png&quot;) 0 0 0 0 stretch stretch;
+    background-color: transparent;
+}</string>
+  </property>
   <widget class="QFrame" name="MenuAdministrador">
    <property name="geometry">
     <rect>
@@ -25,7 +32,7 @@
    <property name="styleSheet">
     <string notr="true">QFrame#MenuAdministrador{
     /* Reemplaza la ruta por la ubicación real de tu imagen */
-    border-image: url(&quot;C:/Users/cabre/Downloads/Menu-Administrador.png&quot;) 0 0 0 0 stretch stretch;
+    border-image: url(&quot;../../assets/DISEÑOS/Menu-Administrador.png&quot;)0 0 0 0 stretch stretch;
     background-color: transparent;
 }</string>
    </property>
