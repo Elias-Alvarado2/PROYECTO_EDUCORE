@@ -16,7 +16,7 @@
   <property name="styleSheet">
    <string notr="true">QFrame#Registro{
     /* Reemplaza la ruta por la ubicación real de tu imagen */
-    border-image: url(&quot;../../assets/DISEÑOS/Registro.jpg&quot;) 0 0 0 0 stretch stretch;
+    border-image: url(&quot;../../assets/DISEÑOS/Registro.jpeg&quot;) 0 0 0 0 stretch stretch;
     background-color: transparent;
 }</string>
   </property>
@@ -37,9 +37,8 @@
    </property>
    <property name="styleSheet">
     <string notr="true">QFrame#Registro{
-    /* Reemplaza la ruta por la ubicación real de tu imagen */
-    border-image: url(&quot;C:/Users/cabre/Downloads/Registro.jpeg&quot;) 0 0 0 0 stretch stretch;
-    background-color: transparent;
+border-image: url(&quot;../../assets/DISEÑOS/Registro.jpeg&quot;) 0 0 0 0 stretch stretch;
+background-color: transparent;
 }</string>
    </property>
    <property name="frameShape">

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1280</width>
-    <height>721</height>
+    <width>1920</width>
+    <height>1080</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -27,8 +27,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1280</width>
-     <height>720</height>
+     <width>1920</width>
+     <height>1080</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -47,8 +47,8 @@
    <widget class="QPushButton" name="btnIniciar_Sesion">
     <property name="geometry">
      <rect>
-      <x>710</x>
-      <y>506</y>
+      <x>1180</x>
+      <y>770</y>
       <width>467</width>
       <height>48</height>
      </rect>
@@ -80,8 +80,8 @@ QPushButton:hover {
    <widget class="QPushButton" name="btn_Registrarse">
     <property name="geometry">
      <rect>
-      <x>710</x>
-      <y>587</y>
+      <x>1180</x>
+      <y>890</y>
       <width>467</width>
       <height>48</height>
      </rect>
@@ -113,8 +113,8 @@ QPushButton:hover {
    <widget class="QLineEdit" name="lineEdit">
     <property name="geometry">
      <rect>
-      <x>720</x>
-      <y>348</y>
+      <x>1080</x>
+      <y>530</y>
       <width>411</width>
       <height>31</height>
      </rect>
@@ -140,8 +140,8 @@ QLineEdit:focus {
    <widget class="QLineEdit" name="lineEdit_2">
     <property name="geometry">
      <rect>
-      <x>720</x>
-      <y>431</y>
+      <x>1080</x>
+      <y>650</y>
       <width>401</width>
       <height>31</height>
      </rect>
