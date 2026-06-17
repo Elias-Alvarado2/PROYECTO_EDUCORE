@@ -47,9 +47,9 @@
    <widget class="QPushButton" name="btnIniciar_Sesion">
     <property name="geometry">
      <rect>
-      <x>1180</x>
-      <y>770</y>
-      <width>467</width>
+      <x>1068</x>
+      <y>760</y>
+      <width>698</width>
       <height>48</height>
      </rect>
     </property>
