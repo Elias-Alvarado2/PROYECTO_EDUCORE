@@ -2,6 +2,7 @@ import sys
 import os
 from PyQt6 import QtWidgets, uic
 
+
 class LoginWindow(QtWidgets.QDialog):
     def __init__(self):
         super().__init__()
@@ -12,32 +13,37 @@ class LoginWindow(QtWidgets.QDialog):
         # Ruta hacia el archivo .ui
         ruta_ui = os.path.join(BASE_DIR, "expo-diseños", "DESIGNER", "Login.ui")
         
-        # ⚠️ REEMPLAZA ESTO: Pon el nombre exacto de tu imagen (ejemplo: "fondo.png")
+        # Nombre exacto de tu imagen
         nombre_imagen = "LoginNuevo.png" 
         ruta_imagen = os.path.join(BASE_DIR, "assets", "diseños", nombre_imagen)
         
         try:
-            # 2. CARGAR EL DISEÑO (BOTONES, TEXTOS, ETC.)
+            # 2. CARGAR EL DISEÑO
             uic.loadUi(ruta_ui, self)
             
-            # 3. FORZAR EL TAMAÑO DE LA VENTANA A 1920x1080
+            # 3. FORZAR EL TAMAÑO DE LA VENTANA
             self.resize(1020, 720)
             
-            # [TRUCO PARA LA EXPO]: Si quitas el '#' de la línea de abajo, 
-            # la ventana se abrirá en pantalla completa real ocultando la barra de Windows.
-            # self.showFullScreen()
-            
-            # 4. APLICAR EL FONDO ESTILIZADO (AJUSTE PERFECTO)
-            # Cambiamos las diagonales de Windows (\) por las de entorno web (/) para evitar fallos de CSS
+            # 4. APLICAR EL FONDO
             ruta_css = ruta_imagen.replace(os.sep, '/')
             
-            # Usamos 'border-image' que clava las esquinas de la imagen a los bordes del Dialog
             self.setStyleSheet(f"""
                 QDialog {{
                     border-image: url('{ruta_css}') 0 0 0 0 stretch stretch;
                 }}
             """)
-            
+
+            # --- MOSTRAR / OCULTAR CONTRASEÑA ---
+
+            # La contraseña empieza oculta
+            self.txtContrasena.setEchoMode(QtWidgets.QLineEdit.EchoMode.Password)
+
+            # Hace que el botón funcione como interruptor
+            self.btnMostrarContrasena.setCheckable(True)
+
+            # El botón del ojo muestra/oculta la contraseña
+            self.btnMostrarContrasena.clicked.connect(self.mostrar_ocultar_contrasena)
+
         except Exception as e:
             QtWidgets.QMessageBox.critical(
                 self, "Error de Sistema", 
@@ -46,8 +52,13 @@ class LoginWindow(QtWidgets.QDialog):
             sys.exit(1)
             
         # --- 5. LÓGICA DE TUS BOTONES ---
-        # Si en Qt Designer tu botón de inicio se llama 'btn_ingresar', descomenta la línea de abajo:
         # self.btn_ingresar.clicked.connect(self.funcion_login)
+
+    def mostrar_ocultar_contrasena(self, checked):
+        if checked:
+            self.txtContrasena.setEchoMode(QtWidgets.QLineEdit.EchoMode.Normal)
+        else:
+            self.txtContrasena.setEchoMode(QtWidgets.QLineEdit.EchoMode.Password)
 
     def funcion_login(self):
         print("¡El botón está vivo y respondiendo en Python!")
