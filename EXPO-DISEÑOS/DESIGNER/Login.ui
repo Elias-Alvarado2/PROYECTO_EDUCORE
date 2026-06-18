@@ -1,23 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Dialog</class>
- <widget class="QDialog" name="Dialog">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1920</width>
-    <height>1080</height>
+    <width>1037</width>
+    <height>739</height>
    </rect>
   </property>
-  <property name="sizePolicy">
-   <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-    <horstretch>0</horstretch>
-    <verstretch>0</verstretch>
-   </sizepolicy>
-  </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Form</string>
   </property>
   <widget class="QFrame" name="Login">
    <property name="enabled">
@@ -27,8 +21,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1920</width>
-     <height>1080</height>
+     <width>1020</width>
+     <height>720</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -44,66 +38,50 @@
    <property name="frameShadow">
     <enum>QFrame::Shadow::Raised</enum>
    </property>
-   <widget class="QPushButton" name="btnIniciar_Sesion">
+   <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>1068</x>
-      <y>760</y>
-      <width>698</width>
-      <height>48</height>
+      <x>568</x>
+      <y>505</y>
+      <width>370</width>
+      <height>50</height>
      </rect>
     </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="cursor">
-     <cursorShape>PointingHandCursor</cursorShape>
-    </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
-    background-color: transparent;
-    border: none;
+     <string notr="true">
+QPushButton {
+background-color: transparent;
+border: none;
 }
 
 QPushButton:hover {
-    background-color: rgba(255, 255, 255, 80);
-    border-radius: 10px;
+background-color: rgba(255, 255, 255, 80);
+border-radius: 10px;
 }</string>
     </property>
     <property name="text">
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="btn_Registrarse">
+   <widget class="QPushButton" name="pushButton_2">
     <property name="geometry">
      <rect>
-      <x>1180</x>
-      <y>890</y>
-      <width>467</width>
-      <height>48</height>
+      <x>568</x>
+      <y>585</y>
+      <width>370</width>
+      <height>50</height>
      </rect>
     </property>
-    <property name="sizePolicy">
-     <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-      <horstretch>0</horstretch>
-      <verstretch>0</verstretch>
-     </sizepolicy>
-    </property>
-    <property name="cursor">
-     <cursorShape>PointingHandCursor</cursorShape>
-    </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
-    background-color: transparent;
-    border: none;
+     <string notr="true">
+QPushButton {
+background-color: transparent;
+border: none;
 }
 
 QPushButton:hover {
-    background-color: rgba(255, 255, 255, 80);
-    border-radius: 10px;
+background-color: rgba(255, 255, 255, 80);
+border-radius: 10px;
 }</string>
     </property>
     <property name="text">
@@ -113,56 +91,21 @@ QPushButton:hover {
    <widget class="QLineEdit" name="lineEdit">
     <property name="geometry">
      <rect>
-      <x>1080</x>
-      <y>530</y>
-      <width>411</width>
-      <height>31</height>
+      <x>567</x>
+      <y>342</y>
+      <width>321</width>
+      <height>42</height>
      </rect>
-    </property>
-    <property name="cursor">
-     <cursorShape>ArrowCursor</cursorShape>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">QLineEdit {
-    background-color: transparent;
-    border: none;
-    color: black;
-    padding-left: 8px;
-}
-
-QLineEdit:focus {
-    background-color: transparent;
-    border: none;
-    color: black;
-}</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="lineEdit_2">
     <property name="geometry">
      <rect>
-      <x>1080</x>
-      <y>650</y>
-      <width>401</width>
-      <height>31</height>
+      <x>570</x>
+      <y>430</y>
+      <width>321</width>
+      <height>26</height>
      </rect>
-    </property>
-    <property name="cursor">
-     <cursorShape>ArrowCursor</cursorShape>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">QLineEdit {
-    background-color: transparent;
-    border: none;
-    color: black;
-    padding-left: 8px;
-}
-
-QLineEdit:focus {
-    background-color: transparent;
-    border: none;
-    color: black;
-}
-</string>
     </property>
    </widget>
   </widget>
