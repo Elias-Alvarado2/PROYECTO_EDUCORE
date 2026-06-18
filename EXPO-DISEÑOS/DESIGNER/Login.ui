@@ -126,7 +126,7 @@ QLineEdit:focus {
 }</string>
     </property>
    </widget>
-   <widget class="QLineEdit" name="txtcontrasena">
+   <widget class="QLineEdit" name="txtContrasena">
     <property name="geometry">
      <rect>
       <x>567</x>
