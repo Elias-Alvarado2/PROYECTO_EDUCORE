@@ -36,7 +36,7 @@ class LoginWindow(QtWidgets.QDialog):
             # --- MOSTRAR / OCULTAR CONTRASEÑA ---
 
             # La contraseña empieza oculta
-            self.txtcontrasena.setEchoMode(QtWidgets.QLineEdit.EchoMode.Password)
+            self.txtContrasena.setEchoMode(QtWidgets.QLineEdit.EchoMode.Password)
 
             # Hace que el botón funcione como interruptor
             self.btnMostrarContrasena.setCheckable(True)
