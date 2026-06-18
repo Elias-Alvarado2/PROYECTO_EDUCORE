@@ -21,7 +21,7 @@ class LoginWindow(QtWidgets.QDialog):
             uic.loadUi(ruta_ui, self)
             
             # 3. FORZAR EL TAMAÑO DE LA VENTANA A 1920x1080
-            self.resize(1920, 1080)
+            self.resize(1020, 720)
             
             # [TRUCO PARA LA EXPO]: Si quitas el '#' de la línea de abajo, 
             # la ventana se abrirá en pantalla completa real ocultando la barra de Windows.
