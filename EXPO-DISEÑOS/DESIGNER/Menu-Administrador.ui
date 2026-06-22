@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Dialog</class>
- <widget class="QDialog" name="Dialog">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,14 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
-  </property>
-  <property name="styleSheet">
-   <string notr="true">QFrame#MenuAdministrador{
-    /* Reemplaza la ruta por la ubicación real de tu imagen */
-    border-image: url(&quot;../../assets/DISEÑOS/Menu-Administrador.png&quot;) 0 0 0 0 stretch stretch;
-    background-color: transparent;
-}</string>
+   <string>Form</string>
   </property>
   <widget class="QFrame" name="MenuAdministrador">
    <property name="geometry">
