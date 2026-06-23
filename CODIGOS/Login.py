@@ -1,71 +1,59 @@
 import sys
 from pathlib import Path
-from PyQt6 import QtWidgets, uic
+from PyQt6 import QtWidgets, uic, QtGui
+
+from MenuUsuario import MenuUsuario
+
+
+class FondoImagen(QtWidgets.QLabel):
+    def __init__(self, ventana, ruta_imagen):
+        super().__init__(ventana)
+
+        self.ruta_imagen = ruta_imagen
+        self.pixmap_original = QtGui.QPixmap(str(self.ruta_imagen))
+
+        self.setScaledContents(True)
+        self.setGeometry(0, 0, ventana.width(), ventana.height())
+        self.setPixmap(self.pixmap_original)
+
+        self.lower()
+
+    def actualizar_tamano(self, ancho, alto):
+        self.setGeometry(0, 0, ancho, alto)
 
 
 class LoginWindow(QtWidgets.QDialog):
     def __init__(self):
         super().__init__()
 
-        # Carpeta donde está este archivo Login.py
         BASE_DIR = Path(__file__).resolve().parent
-
-        # Carpeta principal del proyecto: PROYECTO_EDUCORE
         PROYECTO_DIR = BASE_DIR.parent
 
-        # RUTA CORRECTA DEL ARCHIVO .ui
         ruta_ui = PROYECTO_DIR / "EXPO-DISEÑOS" / "DESIGNER" / "Login.ui"
-
-        # RUTA CORRECTA DE LA IMAGEN DE FONDO
-        nombre_imagen = "LoginNuevo.png"
-        ruta_imagen = PROYECTO_DIR / "assets" / "diseños" / nombre_imagen
-
-        # Mostrar rutas en consola para comprobar
-        print("Buscando UI en:", ruta_ui)
-        print("Buscando imagen en:", ruta_imagen)
+        ruta_imagen = PROYECTO_DIR / "assets" / "DISEÑOS" / "LoginNuevo.png"
 
         try:
-            # Verificar que exista el archivo Login.ui
             if not ruta_ui.exists():
-                raise FileNotFoundError(f"No se encontró el archivo Login.ui en:\n{ruta_ui}")
+                raise FileNotFoundError(f"No se encontró Login.ui en:\n{ruta_ui}")
 
-            # Verificar que exista la imagen
             if not ruta_imagen.exists():
-                raise FileNotFoundError(f"No se encontró la imagen de fondo en:\n{ruta_imagen}")
+                raise FileNotFoundError(f"No se encontró la imagen del login en:\n{ruta_imagen}")
 
-            # Cargar interfaz hecha en Qt Designer
+            # Cargar diseño del login
             uic.loadUi(str(ruta_ui), self)
 
-            # Tamaño de la ventana
             self.resize(1020, 720)
 
-            # Aplicar fondo
-            ruta_css = ruta_imagen.as_posix()
+            # Fondo del login
+            self.fondo = FondoImagen(self, ruta_imagen)
 
-            self.setStyleSheet(f"""
-                QDialog {{
-                    border-image: url("{ruta_css}") 0 0 0 0 stretch stretch;
-                }}
-            """)
-
-            # Verificar que existan los objetos del Designer
-            if not hasattr(self, "txtContrasena"):
-                raise AttributeError("No existe un QLineEdit llamado txtContrasena en Login.ui")
-
-            if not hasattr(self, "btnMostrarContrasena"):
-                raise AttributeError("No existe un botón llamado btnMostrarContrasena en Login.ui")
-
-            # La contraseña empieza oculta
+            # Mostrar / ocultar contraseña
             self.txtContrasena.setEchoMode(QtWidgets.QLineEdit.EchoMode.Password)
-
-            # El botón funciona como interruptor
             self.btnMostrarContrasena.setCheckable(True)
-
-            # Conectar botón para mostrar/ocultar contraseña
             self.btnMostrarContrasena.clicked.connect(self.mostrar_ocultar_contrasena)
 
-            # Aquí puedes conectar tu botón de iniciar sesión
-            # self.btnIngresar.clicked.connect(self.funcion_login)
+            # Botón para abrir el menú de usuario
+            self.btn_Iniciar.clicked.connect(self.abrir_menu_usuario)
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(
@@ -75,14 +63,22 @@ class LoginWindow(QtWidgets.QDialog):
             )
             sys.exit(1)
 
+    def resizeEvent(self, event):
+        if hasattr(self, "fondo"):
+            self.fondo.actualizar_tamano(self.width(), self.height())
+
+        super().resizeEvent(event)
+
     def mostrar_ocultar_contrasena(self, checked):
         if checked:
             self.txtContrasena.setEchoMode(QtWidgets.QLineEdit.EchoMode.Normal)
         else:
             self.txtContrasena.setEchoMode(QtWidgets.QLineEdit.EchoMode.Password)
 
-    def funcion_login(self):
-        print("¡El botón de login funciona!")
+    def abrir_menu_usuario(self):
+        self.menu_usuario = MenuUsuario()
+        self.menu_usuario.showMaximized()
+        self.close()
 
 
 if __name__ == "__main__":
