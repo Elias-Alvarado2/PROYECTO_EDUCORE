@@ -40,7 +40,7 @@ background-color: transparent;
    <property name="frameShadow">
     <enum>QFrame::Shadow::Raised</enum>
    </property>
-   <widget class="QPushButton" name="btn_IniciarRegistro">
+   <widget class="QPushButton" name="btn_Iniciar">
     <property name="geometry">
      <rect>
       <x>599</x>
@@ -68,7 +68,7 @@ border-radius: 10px;
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="btn_RegistrarseRegistro">
+   <widget class="QPushButton" name="btnRegistrarUsuario">
     <property name="geometry">
      <rect>
       <x>600</x>
@@ -96,7 +96,7 @@ border-radius: 10px;
      <string/>
     </property>
    </widget>
-   <widget class="QLineEdit" name="txt_ContrasenaRegistro">
+   <widget class="QLineEdit" name="txtContrasena">
     <property name="geometry">
      <rect>
       <x>590</x>
@@ -131,7 +131,7 @@ QLineEdit:focus {
      <enum>QLineEdit::EchoMode::Normal</enum>
     </property>
    </widget>
-   <widget class="QLineEdit" name="txt_UsuarioRegistro">
+   <widget class="QLineEdit" name="txtUsuario">
     <property name="geometry">
      <rect>
       <x>590</x>
@@ -163,7 +163,7 @@ QLineEdit:focus {
 }</string>
     </property>
    </widget>
-   <widget class="QLineEdit" name="txt_CorreoRegistro">
+   <widget class="QLineEdit" name="txtCorreo">
     <property name="geometry">
      <rect>
       <x>590</x>
@@ -195,7 +195,7 @@ QLineEdit:focus {
 }</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="btn_MostrarContrasenaRegistro">
+   <widget class="QPushButton" name="btnMostrarContrasena">
     <property name="geometry">
      <rect>
       <x>920</x>

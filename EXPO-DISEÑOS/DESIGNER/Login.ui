@@ -94,7 +94,7 @@ border-radius: 10px;
      <string/>
     </property>
    </widget>
-   <widget class="QLineEdit" name="lineEdit">
+   <widget class="QLineEdit" name="txtUsuario">
     <property name="geometry">
      <rect>
       <x>567</x>
