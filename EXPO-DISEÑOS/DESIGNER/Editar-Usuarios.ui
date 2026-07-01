@@ -65,6 +65,12 @@ background-color: transparent;
     <property name="cursor">
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+background-color: transparent;
+border: none;
+}</string>
+    </property>
     <property name="text">
      <string/>
     </property>
@@ -73,20 +79,48 @@ background-color: transparent;
     <property name="geometry">
      <rect>
       <x>360</x>
-      <y>440</y>
+      <y>430</y>
       <width>561</width>
-      <height>51</height>
+      <height>61</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLineEdit {
+    background-color: transparent;
+    border: none;
+    color: black;
+    padding-left: 8px;
+}
+
+QLineEdit:focus {
+    background-color: transparent;
+    border: none;
+    color: black;
+}</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="txt_nombreusuario">
     <property name="geometry">
      <rect>
       <x>360</x>
-      <y>550</y>
+      <y>540</y>
       <width>561</width>
-      <height>51</height>
+      <height>61</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLineEdit {
+    background-color: transparent;
+    border: none;
+    color: black;
+    padding-left: 8px;
+}
+
+QLineEdit:focus {
+    background-color: transparent;
+    border: none;
+    color: black;
+}</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="txt_correo">
@@ -95,38 +129,94 @@ background-color: transparent;
       <x>360</x>
       <y>660</y>
       <width>561</width>
-      <height>51</height>
+      <height>61</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLineEdit {
+    background-color: transparent;
+    border: none;
+    color: black;
+    padding-left: 8px;
+}
+
+QLineEdit:focus {
+    background-color: transparent;
+    border: none;
+    color: black;
+}</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="txt_contrasena">
     <property name="geometry">
      <rect>
       <x>360</x>
-      <y>780</y>
+      <y>770</y>
       <width>561</width>
-      <height>51</height>
+      <height>71</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLineEdit {
+    background-color: transparent;
+    border: none;
+    color: black;
+    padding-left: 8px;
+}
+
+QLineEdit:focus {
+    background-color: transparent;
+    border: none;
+    color: black;
+}</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="txt_personaje">
     <property name="geometry">
      <rect>
-      <x>1030</x>
-      <y>440</y>
+      <x>1020</x>
+      <y>430</y>
       <width>581</width>
-      <height>51</height>
+      <height>61</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLineEdit {
+    background-color: transparent;
+    border: none;
+    color: black;
+    padding-left: 8px;
+}
+
+QLineEdit:focus {
+    background-color: transparent;
+    border: none;
+    color: black;
+}</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="txt_vidas">
     <property name="geometry">
      <rect>
-      <x>1030</x>
+      <x>1020</x>
       <y>550</y>
       <width>581</width>
-      <height>51</height>
+      <height>61</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLineEdit {
+    background-color: transparent;
+    border: none;
+    color: black;
+    padding-left: 8px;
+}
+
+QLineEdit:focus {
+    background-color: transparent;
+    border: none;
+    color: black;
+}</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="txt_fecharegistro">
@@ -135,8 +225,22 @@ background-color: transparent;
       <x>1030</x>
       <y>660</y>
       <width>571</width>
-      <height>51</height>
+      <height>61</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLineEdit {
+    background-color: transparent;
+    border: none;
+    color: black;
+    padding-left: 8px;
+}
+
+QLineEdit:focus {
+    background-color: transparent;
+    border: none;
+    color: black;
+}</string>
     </property>
    </widget>
    <widget class="QComboBox" name="cmb_estado">
@@ -147,6 +251,9 @@ background-color: transparent;
       <width>581</width>
       <height>51</height>
      </rect>
+    </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
     </property>
    </widget>
   </widget>

@@ -46,6 +46,12 @@ background-color: transparent;
     <property name="cursor">
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+background-color: transparent;
+border: none;
+}</string>
+    </property>
     <property name="text">
      <string/>
     </property>
@@ -62,6 +68,12 @@ background-color: transparent;
     <property name="cursor">
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+background-color: transparent;
+border: none;
+}</string>
+    </property>
     <property name="text">
      <string/>
     </property>
@@ -77,6 +89,12 @@ background-color: transparent;
     </property>
     <property name="cursor">
      <cursorShape>PointingHandCursor</cursorShape>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+background-color: transparent;
+border: none;
+}</string>
     </property>
     <property name="text">
      <string/>

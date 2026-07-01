@@ -43,16 +43,15 @@ background-color: transparent;
       <height>165</height>
      </rect>
     </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
     <property name="styleSheet">
      <string notr="true">QPushButton {
 background-color: transparent;
 border: none;
 }
 
-QPushButton:hover {
-background-color: rgba(255, 255, 255, 80);
-border-radius: 10px;
-}
 
 </string>
     </property>
@@ -69,15 +68,13 @@ border-radius: 10px;
       <height>165</height>
      </rect>
     </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
     <property name="styleSheet">
      <string notr="true">QPushButton {
 background-color: transparent;
 border: none;
-}
-
-QPushButton:hover {
-background-color: rgba(255, 255, 255, 80);
-border-radius: 10px;
 }
 
 </string>
@@ -95,16 +92,15 @@ border-radius: 10px;
       <height>165</height>
      </rect>
     </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
     <property name="styleSheet">
      <string notr="true">QPushButton {
 background-color: transparent;
 border: none;
 }
 
-QPushButton:hover {
-background-color: rgba(255, 255, 255, 80);
-border-radius: 10px;
-}
 
 </string>
     </property>
@@ -121,16 +117,15 @@ border-radius: 10px;
       <height>165</height>
      </rect>
     </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
     <property name="styleSheet">
      <string notr="true">QPushButton {
 background-color: transparent;
 border: none;
 }
 
-QPushButton:hover {
-background-color: rgba(255, 255, 255, 80);
-border-radius: 10px;
-}
 
 </string>
     </property>
@@ -147,16 +142,15 @@ border-radius: 10px;
       <height>165</height>
      </rect>
     </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
     <property name="styleSheet">
      <string notr="true">QPushButton {
 background-color: transparent;
 border: none;
 }
 
-QPushButton:hover {
-background-color: rgba(255, 255, 255, 80);
-border-radius: 10px;
-}
 
 </string>
     </property>
@@ -173,16 +167,15 @@ border-radius: 10px;
       <height>130</height>
      </rect>
     </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
     <property name="styleSheet">
      <string notr="true">QPushButton {
 background-color: transparent;
 border: none;
 }
 
-QPushButton:hover {
-background-color: rgba(255, 255, 255, 80);
-border-radius: 10px;
-}
 
 </string>
     </property>
