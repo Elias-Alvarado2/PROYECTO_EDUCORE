@@ -43,6 +43,9 @@ background-color: transparent;
       <height>61</height>
      </rect>
     </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
     <property name="text">
      <string/>
     </property>
@@ -56,6 +59,9 @@ background-color: transparent;
       <height>71</height>
      </rect>
     </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
     <property name="text">
      <string/>
     </property>
@@ -68,6 +74,9 @@ background-color: transparent;
       <width>471</width>
       <height>71</height>
      </rect>
+    </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="text">
      <string/>
