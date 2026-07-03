@@ -58,7 +58,7 @@
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_2">
+   <widget class="QPushButton" name="btn_editar">
     <property name="geometry">
      <rect>
       <x>627</x>
@@ -81,7 +81,7 @@
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_3">
+   <widget class="QPushButton" name="btn_eliminar">
     <property name="geometry">
      <rect>
       <x>627</x>
@@ -104,36 +104,13 @@
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_4">
+   <widget class="QPushButton" name="btn_volver">
     <property name="geometry">
      <rect>
       <x>627</x>
       <y>770</y>
       <width>650</width>
       <height>117</height>
-     </rect>
-    </property>
-    <property name="cursor">
-     <cursorShape>PointingHandCursor</cursorShape>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">QPushButton {
-    background-color: transparent;
-    border: none;
-}
-</string>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_5">
-    <property name="geometry">
-     <rect>
-      <x>63</x>
-      <y>50</y>
-      <width>203</width>
-      <height>78</height>
      </rect>
     </property>
     <property name="cursor">
