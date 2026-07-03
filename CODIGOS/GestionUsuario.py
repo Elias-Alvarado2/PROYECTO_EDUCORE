@@ -1,6 +1,8 @@
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
 from VisualizarUsuario import VisualizarUsuario
+from EliminarUsuario import EliminarUsuario
+from EditarUsuario import EditarUsuario
 
 
 class FondoImagen(QtWidgets.QLabel):
@@ -55,9 +57,29 @@ class GestionUsuario(QtWidgets.QWidget):
         # Conectar botón Visualizar Usuarios
         self.btn_visualizar.clicked.connect(self.abrir_visualizar_usuario)
 
+        # Conectar botón Eliminar Usuarios
+        self.btn_eliminar.clicked.connect(self.abrir_eliminar_usuario)
+
+        # Conectar botón Editar Usuarios
+        self.btn_editar.clicked.connect(self.abrir_editar_usuario)
+
     def abrir_visualizar_usuario(self):
         self.ventana_visualizar = VisualizarUsuario()
         self.ventana_visualizar.show()
+
+        # Oculta el menú GestionUsuario
+        self.hide()
+
+    def abrir_eliminar_usuario(self):
+        self.ventana_eliminar = EliminarUsuario()
+        self.ventana_eliminar.show()
+
+        # Oculta el menú GestionUsuario
+        self.hide()
+
+    def abrir_editar_usuario(self):
+        self.ventana_editar = EditarUsuario()
+        self.ventana_editar.show()
 
         # Oculta el menú GestionUsuario
         self.hide()
