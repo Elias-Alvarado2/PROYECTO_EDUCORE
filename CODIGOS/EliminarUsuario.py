@@ -1,5 +1,8 @@
+import sys
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
+
+from ConexionBD import ConexionBD
 
 
 class FondoImagen(QtWidgets.QLabel):
@@ -24,16 +27,10 @@ class EliminarUsuario(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
 
-        # Carpeta CODIGOS
         BASE_DIR = Path(__file__).resolve().parent
-
-        # Carpeta PROYECTO_EDUCORE
         PROYECTO_DIR = BASE_DIR.parent
 
-        # Ruta del archivo .ui del menú
         ruta_ui = PROYECTO_DIR / "EXPO-DISEÑOS" / "DESIGNER" / "Eliminar-Usuario.ui"
-        
-        # Ruta de la imagen del menú
         ruta_imagen = PROYECTO_DIR / "assets" / "DISEÑOS" / "Eliminar_Usuario.png"
 
         if not ruta_ui.exists():
@@ -42,17 +39,174 @@ class EliminarUsuario(QtWidgets.QWidget):
         if not ruta_imagen.exists():
             raise FileNotFoundError(f"No se encontró la imagen:\n{ruta_imagen}")
 
-        # Cargar diseño del menú
         uic.loadUi(str(ruta_ui), self)
 
-        # Tamaño del menú
         self.resize(1920, 1080)
 
-        # Crear fondo usando la clase FondoImagen
         self.fondo = FondoImagen(self, ruta_imagen)
+
+        self.db = ConexionBD()
+        self.jugador_actual = None
+
+        self.configurar_campos()
+        self.conectar_eventos()
 
     def resizeEvent(self, event):
         if hasattr(self, "fondo"):
             self.fondo.actualizar_tamano(self.width(), self.height())
+            self.fondo.lower()
 
         super().resizeEvent(event)
+
+    def configurar_campos(self):
+        # Solo permite escribir números en el campo ID
+        self.txt_idjugador.setValidator(QtGui.QIntValidator(1, 999999))
+
+        # Los datos del jugador solo se muestran, no se editan
+        self.txt_nombreusuario.setReadOnly(True)
+        self.txt_correo.setReadOnly(True)
+        self.txt_personaje.setReadOnly(True)
+        self.txt_vidas.setReadOnly(True)
+        self.txt_fecharegistro.setReadOnly(True)
+        self.txt_estado.setReadOnly(True)
+
+    def conectar_eventos(self):
+        # Buscar jugador al presionar Enter en el campo ID
+        self.txt_idjugador.returnPressed.connect(self.buscar_usuario)
+
+        # Buscar también cuando el admin sale del campo ID
+        self.txt_idjugador.editingFinished.connect(self.buscar_usuario)
+
+        # Botón eliminar
+        self.btn_eliminarusuario.clicked.connect(self.eliminar_usuario)
+
+        # Botón cancelar
+        if hasattr(self, "btn_cancelar"):
+            self.btn_cancelar.clicked.connect(self.limpiar_campos)
+
+        # Botón volver
+        if hasattr(self, "btn_volver"):
+            self.btn_volver.clicked.connect(self.close)
+
+        if hasattr(self, "btn_Volver"):
+            self.btn_Volver.clicked.connect(self.close)
+
+    def buscar_usuario(self):
+        id_jugador = self.txt_idjugador.text().strip()
+
+        if id_jugador == "":
+            self.jugador_actual = None
+            self.limpiar_datos_usuario()
+            return
+
+        try:
+            jugador = self.db.buscar_jugador_por_id(id_jugador)
+
+            if jugador is None:
+                self.jugador_actual = None
+                self.limpiar_datos_usuario()
+
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "Usuario no encontrado",
+                    f"No existe un jugador con ID {id_jugador}."
+                )
+                return
+
+            self.jugador_actual = jugador
+            self.mostrar_datos_usuario(jugador)
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error de base de datos",
+                str(e)
+            )
+
+    def mostrar_datos_usuario(self, jugador):
+        self.txt_nombreusuario.setText(str(jugador["nombre"]))
+        self.txt_correo.setText(str(jugador["correo"]))
+        self.txt_personaje.setText(str(jugador["personaje"]))
+        self.txt_vidas.setText(str(jugador["vidas"]))
+        self.txt_fecharegistro.setText(str(jugador["fecha_registro"]))
+        self.txt_estado.setText(str(jugador["estado"]))
+
+    def limpiar_datos_usuario(self):
+        self.txt_nombreusuario.clear()
+        self.txt_correo.clear()
+        self.txt_personaje.clear()
+        self.txt_vidas.clear()
+        self.txt_fecharegistro.clear()
+        self.txt_estado.clear()
+
+    def limpiar_campos(self):
+        self.txt_idjugador.clear()
+        self.limpiar_datos_usuario()
+        self.jugador_actual = None
+        self.txt_idjugador.setFocus()
+
+    def eliminar_usuario(self):
+        id_jugador = self.txt_idjugador.text().strip()
+
+        if id_jugador == "":
+            QtWidgets.QMessageBox.warning(
+                self,
+                "ID vacío",
+                "Debes ingresar el ID del jugador que deseas eliminar."
+            )
+            return
+
+        # Si todavía no se cargaron los datos, intenta buscar el usuario
+        if self.jugador_actual is None:
+            self.buscar_usuario()
+
+            if self.jugador_actual is None:
+                return
+
+        respuesta = QtWidgets.QMessageBox.question(
+            self,
+            "Confirmar eliminación",
+            f"¿Seguro que deseas eliminar este jugador?\n\n"
+            f"ID: {self.jugador_actual['id_jugador']}\n"
+            f"Nombre: {self.jugador_actual['nombre']}\n"
+            f"Correo: {self.jugador_actual['correo']}\n\n"
+            f"Esta acción también eliminará sus datos relacionados.",
+            QtWidgets.QMessageBox.StandardButton.Yes |
+            QtWidgets.QMessageBox.StandardButton.No
+        )
+
+        if respuesta != QtWidgets.QMessageBox.StandardButton.Yes:
+            return
+
+        try:
+            eliminado = self.db.eliminar_jugador(id_jugador)
+
+            if eliminado:
+                QtWidgets.QMessageBox.information(
+                    self,
+                    "Usuario eliminado",
+                    "El jugador fue eliminado correctamente."
+                )
+
+                self.limpiar_campos()
+
+            else:
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "No se pudo eliminar",
+                    "No se encontró el jugador o no se pudo eliminar."
+                )
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error de base de datos",
+                str(e)
+            )
+
+
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    ventana = EliminarUsuario()
+    ventana.show()
+    sys.exit(app.exec())
