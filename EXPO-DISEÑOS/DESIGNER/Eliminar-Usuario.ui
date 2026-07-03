@@ -109,6 +109,20 @@ border: none;
       <height>31</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">QLineEdit {
+    background-color: transparent;
+    border: none;
+    color: black;
+    padding-left: 8px;
+}
+
+QLineEdit:focus {
+    background-color: transparent;
+    border: none;
+    color
+}</string>
+    </property>
    </widget>
    <widget class="QLineEdit" name="txt_nombreusuario">
     <property name="geometry">
@@ -118,6 +132,20 @@ border: none;
       <width>931</width>
       <height>31</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLineEdit {
+    background-color: transparent;
+    border: none;
+    color: black;
+    padding-left: 8px;
+}
+
+QLineEdit:focus {
+    background-color: transparent;
+    border: none;
+    color
+}</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="txt_correo">
@@ -129,6 +157,20 @@ border: none;
       <height>31</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">QLineEdit {
+    background-color: transparent;
+    border: none;
+    color: black;
+    padding-left: 8px;
+}
+
+QLineEdit:focus {
+    background-color: transparent;
+    border: none;
+    color
+}</string>
+    </property>
    </widget>
    <widget class="QLineEdit" name="txt_personaje">
     <property name="geometry">
@@ -138,6 +180,20 @@ border: none;
       <width>991</width>
       <height>31</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLineEdit {
+    background-color: transparent;
+    border: none;
+    color: black;
+    padding-left: 8px;
+}
+
+QLineEdit:focus {
+    background-color: transparent;
+    border: none;
+    color
+}</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="txt_vidas">
@@ -149,6 +205,20 @@ border: none;
       <height>31</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">QLineEdit {
+    background-color: transparent;
+    border: none;
+    color: black;
+    padding-left: 8px;
+}
+
+QLineEdit:focus {
+    background-color: transparent;
+    border: none;
+    color
+}</string>
+    </property>
    </widget>
    <widget class="QLineEdit" name="txt_fecharegistro">
     <property name="geometry">
@@ -159,6 +229,20 @@ border: none;
       <height>31</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">QLineEdit {
+    background-color: transparent;
+    border: none;
+    color: black;
+    padding-left: 8px;
+}
+
+QLineEdit:focus {
+    background-color: transparent;
+    border: none;
+    color
+}</string>
+    </property>
    </widget>
    <widget class="QLineEdit" name="txt_estado">
     <property name="geometry">
@@ -168,6 +252,20 @@ border: none;
       <width>1031</width>
       <height>31</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLineEdit {
+    background-color: transparent;
+    border: none;
+    color: black;
+    padding-left: 8px;
+}
+
+QLineEdit:focus {
+    background-color: transparent;
+    border: none;
+    color
+}</string>
     </property>
    </widget>
   </widget>
