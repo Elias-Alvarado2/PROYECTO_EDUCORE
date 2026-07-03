@@ -34,7 +34,7 @@ class EliminarUsuario(QtWidgets.QWidget):
         ruta_ui = PROYECTO_DIR / "EXPO-DISEÑOS" / "DESIGNER" / "Eliminar-Usuario.ui"
         
         # Ruta de la imagen del menú
-        ruta_imagen = PROYECTO_DIR / "assets" / "DISEÑOS" / "Eliminar-Usuario.png"
+        ruta_imagen = PROYECTO_DIR / "assets" / "DISEÑOS" / "Eliminar_Usuario.png"
 
         if not ruta_ui.exists():
             raise FileNotFoundError(f"No se encontró el archivo UI:\n{ruta_ui}")

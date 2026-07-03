@@ -34,13 +34,13 @@ class EditarUsuario(QtWidgets.QWidget):
         ruta_ui = PROYECTO_DIR / "EXPO-DISEÑOS" / "DESIGNER" / "Editar-Usuarios.ui"
 
         # Ruta de la imagen del menú
-        ruta_imagen = PROYECTO_DIR / "assets" / "DISEÑOS" / "Editar-Usuarios.png"
+        ruta_imagen = PROYECTO_DIR / "assets" / "DISEÑOS" / "Editar_Usuarios.png"
 
         if not ruta_ui.exists():
-            raise FileNotFoundError(f"No se encontró el archivo UI:\n{ruta_ui}")
+            raise FileNotFoundError(f"No se encontro el archivo UI:\n{ruta_ui}")
 
         if not ruta_imagen.exists():
-            raise FileNotFoundError(f"No se encontró la imagen:\n{ruta_imagen}")
+            raise FileNotFoundError(f"No se encontro la imagen:\n{ruta_imagen}")
 
         # Cargar diseño del menú
         uic.loadUi(str(ruta_ui), self)
