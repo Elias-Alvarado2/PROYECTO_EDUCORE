@@ -35,7 +35,7 @@
    <property name="frameShadow">
     <enum>QFrame::Shadow::Raised</enum>
    </property>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="btn_visualizar">
     <property name="geometry">
      <rect>
       <x>627</x>

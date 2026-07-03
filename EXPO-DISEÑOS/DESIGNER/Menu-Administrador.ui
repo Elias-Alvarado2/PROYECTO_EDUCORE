@@ -35,7 +35,7 @@
    <property name="frameShadow">
     <enum>QFrame::Shadow::Raised</enum>
    </property>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="btnJugar">
     <property name="geometry">
      <rect>
       <x>635</x>
@@ -58,7 +58,7 @@
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_2">
+   <widget class="QPushButton" name="btnAjustes">
     <property name="geometry">
      <rect>
       <x>635</x>
@@ -81,7 +81,7 @@
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_3">
+   <widget class="QPushButton" name="btnPerfil">
     <property name="geometry">
      <rect>
       <x>635</x>
@@ -104,7 +104,7 @@
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_4">
+   <widget class="QPushButton" name="btnGestionUsuarios">
     <property name="geometry">
      <rect>
       <x>635</x>
@@ -127,7 +127,7 @@
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_5">
+   <widget class="QPushButton" name="btnCerrarSesion">
     <property name="geometry">
      <rect>
       <x>635</x>
