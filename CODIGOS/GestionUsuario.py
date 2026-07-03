@@ -1,5 +1,6 @@
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
+from VisualizarUsuario import VisualizarUsuario
 
 
 class FondoImagen(QtWidgets.QLabel):
@@ -50,6 +51,16 @@ class GestionUsuario(QtWidgets.QWidget):
 
         # Crear fondo usando la clase FondoImagen
         self.fondo = FondoImagen(self, ruta_imagen)
+
+        # Conectar botón Visualizar Usuarios
+        self.btn_visualizar.clicked.connect(self.abrir_visualizar_usuario)
+
+    def abrir_visualizar_usuario(self):
+        self.ventana_visualizar = VisualizarUsuario()
+        self.ventana_visualizar.show()
+
+        # Oculta el menú GestionUsuario
+        self.hide()
 
     def resizeEvent(self, event):
         if hasattr(self, "fondo"):
