@@ -205,3 +205,37 @@ class ConexionBD:
                 cursor.close()
             if conexion:
                 conexion.close()
+
+    def obtener_jugadores(self):
+        conexion = None
+        cursor = None
+
+        try:
+            conexion = self.conectar()
+            cursor = conexion.cursor(dictionary=True)
+
+            consulta = """
+                       SELECT id_jugador, \
+                              nombre, \
+                              correo, \
+                              `contraseña`, \
+                              personaje, \
+                              vidas, \
+                              fecha_registro, \
+                              estado
+                       FROM jugador
+                       ORDER BY id_jugador ASC; \
+                       """
+
+            cursor.execute(consulta)
+            return cursor.fetchall()
+
+        except Error as e:
+            raise Exception(f"Error al obtener los jugadores:\n{e}")
+
+        finally:
+            if cursor:
+                cursor.close()
+            if conexion:
+                conexion.close()
+
