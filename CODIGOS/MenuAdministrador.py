@@ -1,5 +1,6 @@
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
+from GestionUsuario import GestionUsuario
 
 
 class FondoImagen(QtWidgets.QLabel):
@@ -17,36 +18,6 @@ class FondoImagen(QtWidgets.QLabel):
 
     def actualizar_tamano(self, ancho, alto):
         self.setGeometry(0, 0, ancho, alto)
-
-
-class GestionarUsuarios(QtWidgets.QWidget):
-    def __init__(self):
-        super().__init__()
-
-        BASE_DIR = Path(__file__).resolve().parent
-        PROYECTO_DIR = BASE_DIR.parent
-
-        ruta_ui = PROYECTO_DIR / "EXPO-DISEÑOS" / "DESIGNER" / "Gestionar-Usuarios.ui"
-        ruta_imagen = PROYECTO_DIR / "assets" / "DISEÑOS" / "Gestionar-Usuarios.png"
-
-        if not ruta_ui.exists():
-            raise FileNotFoundError(f"No se encontró el archivo UI:\n{ruta_ui}")
-
-        if not ruta_imagen.exists():
-            raise FileNotFoundError(f"No se encontró la imagen:\n{ruta_imagen}")
-
-        uic.loadUi(str(ruta_ui), self)
-
-        self.resize(1920, 1080)
-
-        self.fondo = FondoImagen(self, ruta_imagen)
-
-    def resizeEvent(self, event):
-        if hasattr(self, "fondo"):
-            self.fondo.actualizar_tamano(self.width(), self.height())
-
-        super().resizeEvent(event)
-
 
 class MenuAdministrador(QtWidgets.QWidget):
     def __init__(self):
@@ -74,7 +45,7 @@ class MenuAdministrador(QtWidgets.QWidget):
         self.btnGestionUsuarios.clicked.connect(self.abrir_gestionar_usuarios)
 
     def abrir_gestionar_usuarios(self):
-        self.ventana_gestionar = GestionarUsuarios()
+        self.ventana_gestionar = GestionUsuario()
         self.ventana_gestionar.show()
 
         # Oculta el menú administrador
