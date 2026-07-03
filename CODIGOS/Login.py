@@ -3,6 +3,7 @@ from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
 
 from MenuUsuario import MenuUsuario
+from MenuAdministrador import MenuAdministrador
 from ConexionBD import ConexionBD
 from Registro import RegistroWindow
 
@@ -96,6 +97,20 @@ class LoginWindow(QtWidgets.QDialog):
             return
 
         try:
+            # Primero se valida si es administrador
+            admin = self.db.validar_admin(usuario, contrasena)
+
+            if admin:
+                QtWidgets.QMessageBox.information(
+                    self,
+                    "Bienvenido administrador",
+                    f"Inicio de sesión correcto.\n\nBienvenido, {admin['nombre']}."
+                )
+
+                self.abrir_menu_admin(admin)
+                return
+
+            # Si no es administrador, se valida como jugador
             jugador = self.db.validar_jugador(usuario, contrasena)
 
             if jugador:
@@ -112,17 +127,18 @@ class LoginWindow(QtWidgets.QDialog):
                 )
 
                 self.abrir_menu_usuario(jugador)
+                return
 
-            else:
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Usuario no encontrado",
-                    "El usuario o la contraseña son incorrectos.\n\n"
-                    "Si no tienes una cuenta, debes registrarte antes de iniciar sesión."
-                )
+            # Si no existe ni como admin ni como jugador
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Usuario no encontrado",
+                "El usuario o la contraseña son incorrectos.\n\n"
+                "Si no tienes una cuenta, debes registrarte antes de iniciar sesión."
+            )
 
-                self.txtContrasena.clear()
-                self.txtContrasena.setFocus()
+            self.txtContrasena.clear()
+            self.txtContrasena.setFocus()
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(
@@ -138,6 +154,15 @@ class LoginWindow(QtWidgets.QDialog):
             self.menu_usuario = MenuUsuario()
 
         self.menu_usuario.showMaximized()
+        self.close()
+
+    def abrir_menu_admin(self, admin):
+        try:
+            self.menu_admin = MenuAdministrador(admin)
+        except TypeError:
+            self.menu_admin = MenuAdministrador()
+
+        self.menu_admin.showMaximized()
         self.close()
 
     def abrir_registro(self):

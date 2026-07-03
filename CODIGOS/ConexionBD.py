@@ -24,6 +24,50 @@ class ConexionBD:
         except Error as e:
             raise Exception(f"Error al conectar con la base de datos:\n{e}")
 
+    def validar_admin(self, usuario_ingresado, contrasena_ingresada):
+        conexion = None
+        cursor = None
+
+        try:
+            conexion = self.conectar()
+            cursor = conexion.cursor(dictionary=True)
+
+            consulta = """
+                SELECT 
+                    id_admin,
+                    nombre,
+                    usuario,
+                    correo,
+                    estado
+                FROM administrador
+                WHERE 
+                    (usuario = %s OR correo = %s OR nombre = %s)
+                    AND `contraseña` = %s
+                    AND estado = 'Activo'
+                LIMIT 1;
+            """
+
+            cursor.execute(
+                consulta,
+                (
+                    usuario_ingresado,
+                    usuario_ingresado,
+                    usuario_ingresado,
+                    contrasena_ingresada
+                )
+            )
+
+            return cursor.fetchone()
+
+        except Error as e:
+            raise Exception(f"Error al validar el administrador:\n{e}")
+
+        finally:
+            if cursor:
+                cursor.close()
+            if conexion:
+                conexion.close()
+
     def validar_jugador(self, usuario_ingresado, contrasena_ingresada):
         conexion = None
         cursor = None
@@ -161,4 +205,3 @@ class ConexionBD:
                 cursor.close()
             if conexion:
                 conexion.close()
-
