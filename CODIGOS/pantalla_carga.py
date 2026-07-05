@@ -15,9 +15,9 @@ from PyQt6.QtCore import Qt, QTimer, QPoint, QRectF
 # ══════════════════════════════════════════════════════════════════════════════
 class BarraPixelArt(QWidget):
 
-    COLOR_BORDE = QColor("#1C2B55")
-    COLOR_LLENO = QColor("#3B5AA8")
-    COLOR_VACIO = QColor("#E8D2AD")
+    COLOR_BORDE = QColor("#DCE8FF")
+    COLOR_LLENO = QColor("#8EA2FF")
+    COLOR_VACIO = QColor("#FFFFFF")
     TRANSPARENTE = QColor(0, 0, 0, 0)
 
     # Configuración de la barra
@@ -133,7 +133,7 @@ class PantallaCarga(QWidget):
 # Entrar a assets
         self.ruta_fondo = self.PROYECTO_DIR / "assets" / "DISEÑOS" / "fondo_carga.png"
         self.ruta_fuente = self.PROYECTO_DIR / "assets" / "FUENTES" / "Orbitron-Medium.ttf"
-        self.ruta_logo = self.PROYECTO_DIR / "assets" / "DISEÑOS" / "logo.png"
+        self.ruta_logo = self.PROYECTO_DIR / "assets" / "DISEÑOS" / "logoblanco.png"
 
         self.nombre_fuente = self._cargar_fuente()
 
@@ -217,13 +217,13 @@ class PantallaCarga(QWidget):
         # LETRAS EDUCORE
         # ══════════════════════════════════════════════════════════════════════
         colores = [
-            "#172B55",  # e
-            "#172B55",  # d
-            "#172B55",  # u
-            "#405A9E",  # c
-            "#F47B20",  # o
-            "#2B9D91",  # r
-            "#2B9D91",  # e
+            "#FFFFFF",  # e
+            "#FFFFFF",  # d
+            "#FFFFFF",  # u
+            "#FFFFFF",  # c
+            "#FFFFFF",  # o
+            "#FFFFFF",  # r
+            "#FFFFFF",  # e
         ]
 
         texto = "educore"
@@ -279,7 +279,7 @@ class PantallaCarga(QWidget):
         self.lbl_porcentaje.setFont(QFont(self.nombre_fuente, 24, QFont.Weight.Bold))
         self.lbl_porcentaje.setStyleSheet("""
             QLabel {
-                color: #172B55;
+                color: #DCE8FF;
                 background: transparent;
                 border: none;
             }
