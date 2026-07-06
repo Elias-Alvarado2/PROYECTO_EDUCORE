@@ -20,7 +20,7 @@ class FondoImagen(QtWidgets.QLabel):
         self.setGeometry(0, 0, ancho, alto)
 
 
-class NivelesPython(QtWidgets.QWidget):
+class NivelesJava(QtWidgets.QWidget):
     def __init__(self, jugador=None):
         super().__init__()
 
@@ -29,8 +29,8 @@ class NivelesPython(QtWidgets.QWidget):
         BASE_DIR = Path(__file__).resolve().parent
         PROYECTO_DIR = BASE_DIR.parent
 
-        ruta_ui = PROYECTO_DIR / "EXPO-DISEÑOS" / "DESIGNER" / "Niveles Python.ui"
-        ruta_imagen = PROYECTO_DIR / "assets" / "DISEÑOS" / "Niveles-Python.png"
+        ruta_ui = PROYECTO_DIR / "EXPO-DISEÑOS" / "DESIGNER" / "Niveles Java.ui"
+        ruta_imagen = PROYECTO_DIR / "assets" / "DISEÑOS" / "Niveles-Java.png"
 
         if not ruta_ui.exists():
             raise FileNotFoundError(f"No se encontró el archivo UI:\n{ruta_ui}")
@@ -54,6 +54,6 @@ class NivelesPython(QtWidgets.QWidget):
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    ventana = NivelesPython()
+    ventana = NivelesJava()
     ventana.showMaximized()
     sys.exit(app.exec())

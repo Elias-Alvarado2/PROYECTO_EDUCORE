@@ -1,5 +1,6 @@
+import sys
 from pathlib import Path
-from PyQt6 import QtWidgets, uic, QtGui
+from PyQt6 import QtWidgets, uic, QtGui, QtCore
 
 
 class FondoImagen(QtWidgets.QLabel):
@@ -13,7 +14,6 @@ class FondoImagen(QtWidgets.QLabel):
         self.setGeometry(0, 0, ventana.width(), ventana.height())
         self.setPixmap(self.pixmap_original)
 
-        # Mandar la imagen al fondo
         self.lower()
 
     def actualizar_tamano(self, ancho, alto):
@@ -21,73 +21,188 @@ class FondoImagen(QtWidgets.QLabel):
 
 
 class Lecciones(QtWidgets.QWidget):
-    def __init__(self, ventana_anterior=None):
+    def __init__(self, jugador=None):
         super().__init__()
 
-        # Guarda la ventana anterior
-        self.ventana_anterior = ventana_anterior
-        self.ventana_lecciones = None
+        self.jugador = jugador
+        self.lenguaje_seleccionado = None
 
-        # Carpeta CODIGOS
         BASE_DIR = Path(__file__).resolve().parent
-
-        # Carpeta PROYECTO_EDUCORE
         PROYECTO_DIR = BASE_DIR.parent
 
-        # Ruta del archivo .ui del menú
         ruta_ui = PROYECTO_DIR / "EXPO-DISEÑOS" / "DESIGNER" / "Lecciones.ui"
-
-        # Ruta de la imagen del menú
         ruta_imagen = PROYECTO_DIR / "assets" / "DISEÑOS" / "Lecciones.png"
 
         if not ruta_ui.exists():
-            raise FileNotFoundError(f"No se encontro el archivo UI:\n{ruta_ui}")
+            raise FileNotFoundError(f"No se encontró el archivo UI:\n{ruta_ui}")
 
         if not ruta_imagen.exists():
-            raise FileNotFoundError(f"No se encontro la imagen:\n{ruta_imagen}")
+            raise FileNotFoundError(f"No se encontró la imagen:\n{ruta_imagen}")
 
-        # Cargar diseño del menú
         uic.loadUi(str(ruta_ui), self)
 
-        # Tamaño del menú
         self.resize(1920, 1080)
 
-        # Crear fondo usando la clase FondoImagen
         self.fondo = FondoImagen(self, ruta_imagen)
 
-        # Conectar botón volver
+        self.configurar_botones()
         self.conectar_eventos()
 
+    def configurar_botones(self):
+        botones_lenguaje = [self.btnPython, self.btnJava, self.btnC, self.btnMySQL]
+
+        for boton in botones_lenguaje:
+            boton.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
+            boton.setStyleSheet("""
+                QPushButton {
+                    background-color: transparent;
+                    border: none;
+                }
+
+                QPushButton:hover {
+                    border: 3px solid #0B73D9;
+                    border-radius: 8px;
+                    background-color: rgba(11, 115, 217, 25);
+                }
+            """)
+
+        self.btnComenzar.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
+        self.btnComenzar.setEnabled(False)
+
     def conectar_eventos(self):
-        # Botón volver
-        if hasattr(self, "btn_volver"):
-            self.btn_volver.clicked.connect(self.volver_menu_administrador)
+        self.btnPython.clicked.connect(lambda: self.seleccionar_lenguaje("Python"))
+        self.btnJava.clicked.connect(lambda: self.seleccionar_lenguaje("Java"))
+        self.btnC.clicked.connect(lambda: self.seleccionar_lenguaje("C"))
+        self.btnMySQL.clicked.connect(lambda: self.seleccionar_lenguaje("MySQL"))
 
-        if hasattr(self, "btn_Volver"):
-            self.btn_Volver.clicked.connect(self.volver_menu_administrador)
+        self.btnComenzar.clicked.connect(self.comenzar_aventura)
 
-    def volver_menu_administrador(self):
-        # Si Lecciones fue abierto desde el Menú Administrador,
-        # vuelve a mostrar esa misma ventana.
-        if self.ventana_anterior is not None:
-            self.ventana_anterior.show()
-            self.close()
-            return  
+    def seleccionar_lenguaje(self, lenguaje):
+        self.lenguaje_seleccionado = lenguaje
+        self.btnComenzar.setEnabled(True)
 
-        # Si ejecutaste este archivo directamente,
-        # intenta abrir Gestión Usuarios desde su clase.
+        self.limpiar_estilos_lenguajes()
+
+        if lenguaje == "Python":
+            boton = self.btnPython
+        elif lenguaje == "Java":
+            boton = self.btnJava
+        elif lenguaje == "C":
+            boton = self.btnC
+        elif lenguaje == "MySQL":
+            boton = self.btnMySQL
+        else:
+            boton = None
+
+        if boton:
+            boton.setStyleSheet("""
+                QPushButton {
+                    background-color: rgba(11, 115, 217, 45);
+                    border: 4px solid #0B73D9;
+                    border-radius: 8px;
+                }
+
+                QPushButton:hover {
+                    background-color: rgba(11, 115, 217, 55);
+                    border: 4px solid #0B73D9;
+                    border-radius: 8px;
+                }
+            """)
+
+    def limpiar_estilos_lenguajes(self):
+        botones_lenguaje = [self.btnPython, self.btnJava, self.btnC, self.btnMySQL]
+
+        for boton in botones_lenguaje:
+            boton.setStyleSheet("""
+                QPushButton {
+                    background-color: transparent;
+                    border: none;
+                }
+
+                QPushButton:hover {
+                    border: 3px solid #0B73D9;
+                    border-radius: 8px;
+                    background-color: rgba(11, 115, 217, 25);
+                }
+            """)
+
+    def comenzar_aventura(self):
+        if self.lenguaje_seleccionado is None:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Selecciona un lenguaje",
+                "Debes seleccionar un lenguaje antes de comenzar la aventura."
+            )
+            return
+
         try:
-            from MenuAdministrador import MenuAdministrador
+            if self.lenguaje_seleccionado == "Python":
+                from NivelesPython import NivelesPython
 
-            self.ventana_gestion_usuarios = MenuAdministrador()
-            self.ventana_gestion_usuarios.show()
+                try:
+                    self.ventana_niveles = NivelesPython(self.jugador)
+                except TypeError:
+                    self.ventana_niveles = NivelesPython()
+
+            elif self.lenguaje_seleccionado == "Java":
+                from NivelesJava import NivelesJava
+
+                try:
+                    self.ventana_niveles = NivelesJava(self.jugador)
+                except TypeError:
+                    self.ventana_niveles = NivelesJava()
+
+            elif self.lenguaje_seleccionado == "CSharp":
+                from NivelesC import NivelesCSharp
+
+                try:
+                    self.ventana_niveles = NivelesCSharp(self.jugador)
+                except TypeError:
+                    self.ventana_niveles = NivelesCSharp()
+
+            elif self.lenguaje_seleccionado == "MySQL":
+                from NivelesMySQL import NivelesMySQL
+
+                try:
+                    self.ventana_niveles = NivelesMySQL(self.jugador)
+                except TypeError:
+                    self.ventana_niveles = NivelesMySQL()
+
+            else:
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "Lenguaje no válido",
+                    "El lenguaje seleccionado no es válido."
+                )
+                return
+
+            self.ventana_niveles.showMaximized()
             self.close()
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(
                 self,
-                "Error al volver",
-                f"No se pudo abrir Gestión Usuarios:\n{e}"
+                "Error al abrir niveles",
+                f"No se pudo abrir la ventana de niveles.\n\nDetalles:\n{e}"
+            )
+
+    def volver_menu_usuario(self):
+        try:
+            from MenuUsuario import MenuUsuario
+
+            try:
+                self.ventana_menu = MenuUsuario(self.jugador)
+            except TypeError:
+                self.ventana_menu = MenuUsuario()
+
+            self.ventana_menu.showMaximized()
+            self.close()
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error",
+                f"No se pudo volver al menú de usuario.\n\nDetalles:\n{e}"
             )
 
     def resizeEvent(self, event):
@@ -96,3 +211,10 @@ class Lecciones(QtWidgets.QWidget):
             self.fondo.lower()
 
         super().resizeEvent(event)
+
+
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    ventana = Lecciones()
+    ventana.show()
+    sys.exit(app.exec())

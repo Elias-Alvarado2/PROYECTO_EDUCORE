@@ -13,7 +13,6 @@ class FondoImagen(QtWidgets.QLabel):
         self.setGeometry(0, 0, ventana.width(), ventana.height())
         self.setPixmap(self.pixmap_original)
 
-        # Mandar la imagen al fondo
         self.lower()
 
     def actualizar_tamano(self, ancho, alto):
@@ -21,19 +20,15 @@ class FondoImagen(QtWidgets.QLabel):
 
 
 class MenuUsuario(QtWidgets.QWidget):
-    def __init__(self):
+    def __init__(self, jugador=None):
         super().__init__()
 
-        # Carpeta CODIGOS
-        BASE_DIR = Path(__file__).resolve().parent
+        self.jugador = jugador
 
-        # Carpeta PROYECTO_EDUCORE
+        BASE_DIR = Path(__file__).resolve().parent
         PROYECTO_DIR = BASE_DIR.parent
 
-        # Ruta del archivo .ui del menú
         ruta_ui = PROYECTO_DIR / "EXPO-DISEÑOS" / "DESIGNER" / "Menu-Jugador.ui"
-
-        # Ruta de la imagen del menú
         ruta_imagen = PROYECTO_DIR / "assets" / "DISEÑOS" / "Menu-Usuario.png"
 
         if not ruta_ui.exists():
@@ -42,15 +37,46 @@ class MenuUsuario(QtWidgets.QWidget):
         if not ruta_imagen.exists():
             raise FileNotFoundError(f"No se encontró la imagen:\n{ruta_imagen}")
 
-        # Cargar diseño del menú
         uic.loadUi(str(ruta_ui), self)
 
-        # Tamaño del menú
         self.resize(1920, 1080)
 
-        # Crear fondo usando la clase FondoImagen
         self.fondo = FondoImagen(self, ruta_imagen)
-    
+
+        self.conectar_eventos()
+
+    def conectar_eventos(self):
+        if hasattr(self, "btnJugar"):
+            self.btnJugar.clicked.connect(self.abrir_lecciones)
+
+        if hasattr(self, "btnCerrarSesion"):
+            self.btnCerrarSesion.clicked.connect(self.cerrar_sesion)
+
+        if hasattr(self, "btn_CerrarSesion"):
+            self.btn_CerrarSesion.clicked.connect(self.cerrar_sesion)
+
+        if hasattr(self, "btn_cerrarsesion"):
+            self.btn_cerrarsesion.clicked.connect(self.cerrar_sesion)
+
+    def abrir_lecciones(self):
+        try:
+            from Lecciones import Lecciones
+
+            try:
+                self.ventana_lecciones = Lecciones(self.jugador)
+            except TypeError:
+                self.ventana_lecciones = Lecciones()
+
+            self.ventana_lecciones.showMaximized()
+            self.close()
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error al abrir lecciones",
+                f"No se pudo abrir la ventana de lecciones.\n\nDetalles:\n{e}"
+            )
+
     def cerrar_sesion(self):
         respuesta = QtWidgets.QMessageBox.question(
             self,
@@ -70,21 +96,6 @@ class MenuUsuario(QtWidgets.QWidget):
             self.ventana_login.show()
             self.close()
 
-        except ImportError:
-            try:
-                from Login import Login
-
-                self.ventana_login = Login()
-                self.ventana_login.show()
-                self.close()
-
-            except Exception as e:
-                QtWidgets.QMessageBox.critical(
-                    self,
-                    "Error al cerrar sesión",
-                    f"No se pudo abrir el Login:\n{e}"
-                )
-
         except Exception as e:
             QtWidgets.QMessageBox.critical(
                 self,
@@ -95,5 +106,6 @@ class MenuUsuario(QtWidgets.QWidget):
     def resizeEvent(self, event):
         if hasattr(self, "fondo"):
             self.fondo.actualizar_tamano(self.width(), self.height())
+            self.fondo.lower()
 
         super().resizeEvent(event)

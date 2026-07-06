@@ -35,7 +35,7 @@ background-color: transparent;
    <property name="frameShadow">
     <enum>QFrame::Shadow::Raised</enum>
    </property>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="btnPython">
     <property name="geometry">
      <rect>
       <x>290</x>
@@ -59,7 +59,7 @@ border: none;
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_2">
+   <widget class="QPushButton" name="btnJava">
     <property name="geometry">
      <rect>
       <x>625</x>
@@ -83,7 +83,7 @@ border: none;
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_3">
+   <widget class="QPushButton" name="btnC">
     <property name="geometry">
      <rect>
       <x>980</x>
@@ -107,7 +107,7 @@ border: none;
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_4">
+   <widget class="QPushButton" name="btnMySQL">
     <property name="geometry">
      <rect>
       <x>1335</x>
@@ -131,7 +131,7 @@ border: none;
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_5">
+   <widget class="QPushButton" name="btnComenzar">
     <property name="geometry">
      <rect>
       <x>640</x>
@@ -149,52 +149,6 @@ background-color: transparent;
 border: none;
 }
 
-</string>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_6">
-    <property name="geometry">
-     <rect>
-      <x>373</x>
-      <y>840</y>
-      <width>225</width>
-      <height>65</height>
-     </rect>
-    </property>
-    <property name="cursor">
-     <cursorShape>PointingHandCursor</cursorShape>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">QPushButton {
-background-color: transparent;
-border: none;
-}
-</string>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_7">
-    <property name="geometry">
-     <rect>
-      <x>1310</x>
-      <y>841</y>
-      <width>224</width>
-      <height>64</height>
-     </rect>
-    </property>
-    <property name="cursor">
-     <cursorShape>PointingHandCursor</cursorShape>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">QPushButton {
-background-color: transparent;
-border: none;
-}
 </string>
     </property>
     <property name="text">
