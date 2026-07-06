@@ -52,13 +52,16 @@ class MenuAdministrador(QtWidgets.QWidget):
 
     def conectar_eventos(self):
         # Botón Gestionar Usuarios
-        self.btnGestionUsuarios.clicked.connect(self.abrir_gestionar_usuarios)
+        if hasattr(self, "btn_gestion_usuarios"):
+            self.btn_gestion_usuarios.clicked.connect(self.abrir_gestionar_usuarios)
 
         # Botón Jugar / Lecciones
-        self.btnJugar.clicked.connect(self.abrir_lecciones)
+        if hasattr(self, "btnJugar"):
+            self.btnJugar.clicked.connect(self.abrir_lecciones)
 
         # Botón Cerrar Sesión
-        self.btnCerrarSesion.clicked.connect(self.cerrar_sesion)
+        if hasattr(self, "btn_cerrarSesion"):
+            self.btn_cerrarSesion.clicked.connect(self.cerrar_sesion)
 
     def abrir_gestionar_usuarios(self):
         self.ventana_gestionar = GestionUsuario(self)

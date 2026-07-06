@@ -303,3 +303,83 @@ class ConexionBD:
                 cursor.close()
             if conexion:
                 conexion.close()
+
+    def buscar_jugador_por_id(self, id_jugador):
+        conexion = None
+        cursor = None
+
+        try:
+            conexion = self.conectar()
+            cursor = conexion.cursor(dictionary=True)
+
+            consulta = """
+                SELECT
+                    id_jugador,
+                    nombre,
+                    correo,
+                    contrasena,
+                    personaje,
+                    vidas,
+                    fecha_registro,
+                    estado
+                FROM jugador
+                WHERE id_jugador = %s
+                LIMIT 1;
+            """
+
+            cursor.execute(consulta, (id_jugador,))
+            return cursor.fetchone()
+
+        except Error as e:
+            raise Exception(f"Error al buscar el jugador:\n{e}")
+
+        finally:
+            if cursor:
+                cursor.close()
+            if conexion:
+                conexion.close()
+
+    def actualizar_jugador(self, id_jugador, nombre, correo, contrasena, personaje, vidas, estado):
+        conexion = None
+        cursor = None
+
+        try:
+            conexion = self.conectar()
+            cursor = conexion.cursor()
+
+            consulta = """
+                UPDATE jugador
+                SET
+                    nombre = %s,
+                    correo = %s,
+                    contrasena = %s,
+                    personaje = %s,
+                    vidas = %s,
+                    estado = %s
+                WHERE id_jugador = %s;
+            """
+
+            cursor.execute(
+                consulta,
+                (
+                    nombre,
+                    correo,
+                    contrasena,
+                    personaje,
+                    vidas,
+                    estado,
+                    id_jugador
+                )
+            )
+
+            conexion.commit()
+            return cursor.rowcount > 0
+
+        except Error as e:
+            raise Exception(f"Error al actualizar el jugador:\n{e}")
+
+        finally:
+            if cursor:
+                cursor.close()
+            if conexion:
+                conexion.close()
