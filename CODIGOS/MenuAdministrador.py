@@ -43,6 +43,9 @@ class MenuAdministrador(QtWidgets.QWidget):
 
         self.fondo = FondoImagen(self, ruta_imagen)
 
+        self.ventana_gestionar = None
+        self.ventana_login = None
+
         self.conectar_eventos()
 
     def conectar_eventos(self):
@@ -56,12 +59,68 @@ class MenuAdministrador(QtWidgets.QWidget):
         if hasattr(self, "btn_gestion_usuarios"):
             self.btn_gestion_usuarios.clicked.connect(self.abrir_gestionar_usuarios)
 
+        # Botón Cerrar Sesión
+        if hasattr(self, "btnCerrarSesion"):
+            self.btnCerrarSesion.clicked.connect(self.cerrar_sesion)
+
+        if hasattr(self, "btn_cerrarsesion"):
+            self.btn_cerrarsesion.clicked.connect(self.cerrar_sesion)
+
+        if hasattr(self, "btn_cerrar_sesion"):
+            self.btn_cerrar_sesion.clicked.connect(self.cerrar_sesion)
+
+        if hasattr(self, "btn_cerrarSesion"):
+            self.btn_cerrarSesion.clicked.connect(self.cerrar_sesion)
+
     def abrir_gestionar_usuarios(self):
         self.ventana_gestionar = GestionUsuario(self)
         self.ventana_gestionar.show()
 
         # Oculta el menú administrador
         self.hide()
+
+    def cerrar_sesion(self):
+        respuesta = QtWidgets.QMessageBox.question(
+            self,
+            "Cerrar sesión",
+            "¿Seguro que deseas cerrar sesión?",
+            QtWidgets.QMessageBox.StandardButton.Yes |
+            QtWidgets.QMessageBox.StandardButton.No
+        )
+
+        if respuesta != QtWidgets.QMessageBox.StandardButton.Yes:
+            return
+
+        try:
+            # Opción 1: si tu clase del login se llama LoginWindow
+            from Login import LoginWindow
+
+            self.ventana_login = LoginWindow()
+            self.ventana_login.show()
+            self.close()
+
+        except ImportError:
+            try:
+                # Opción 2: si tu clase del login se llama Login
+                from Login import Login
+
+                self.ventana_login = Login()
+                self.ventana_login.show()
+                self.close()
+
+            except Exception as e:
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    "Error al cerrar sesión",
+                    f"No se pudo abrir el Login:\n{e}"
+                )
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error al cerrar sesión",
+                f"No se pudo abrir el Login:\n{e}"
+            )
 
     def resizeEvent(self, event):
         if hasattr(self, "fondo"):

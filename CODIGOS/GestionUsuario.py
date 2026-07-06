@@ -1,5 +1,6 @@
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
+
 from VisualizarUsuario import VisualizarUsuario
 from EliminarUsuario import EliminarUsuario
 from EditarUsuario import EditarUsuario
@@ -16,7 +17,6 @@ class FondoImagen(QtWidgets.QLabel):
         self.setGeometry(0, 0, ventana.width(), ventana.height())
         self.setPixmap(self.pixmap_original)
 
-        # Mandar la imagen al fondo
         self.lower()
 
     def actualizar_tamano(self, ancho, alto):
@@ -24,19 +24,19 @@ class FondoImagen(QtWidgets.QLabel):
 
 
 class GestionUsuario(QtWidgets.QWidget):
-    def __init__(self):
+    def __init__(self, ventana_anterior=None):
         super().__init__()
 
-        # Carpeta CODIGOS
-        BASE_DIR = Path(__file__).resolve().parent
+        # Aquí se guarda el Menú Administrador
+        self.ventana_anterior = ventana_anterior
+        self.ventana_visualizar = None
+        self.ventana_eliminar = None
+        self.ventana_editar = None
 
-        # Carpeta PROYECTO_EDUCORE
+        BASE_DIR = Path(__file__).resolve().parent
         PROYECTO_DIR = BASE_DIR.parent
 
-        # Ruta del archivo .ui del menú
         ruta_ui = PROYECTO_DIR / "EXPO-DISEÑOS" / "DESIGNER" / "Gestion-Usuario.ui"
-
-        # Ruta de la imagen del menú
         ruta_imagen = PROYECTO_DIR / "assets" / "DISEÑOS" / "Gestion-Usuarios.png"
 
         if not ruta_ui.exists():
@@ -45,47 +45,56 @@ class GestionUsuario(QtWidgets.QWidget):
         if not ruta_imagen.exists():
             raise FileNotFoundError(f"No se encontró la imagen:\n{ruta_imagen}")
 
-        # Cargar diseño del menú
         uic.loadUi(str(ruta_ui), self)
 
-        # Tamaño del menú
         self.resize(1920, 1080)
 
-        # Crear fondo usando la clase FondoImagen
         self.fondo = FondoImagen(self, ruta_imagen)
 
-        # Conectar botón Visualizar Usuarios
+        self.conectar_eventos()
+
+    def conectar_eventos(self):
+        # Botón Visualizar Usuarios
         self.btn_visualizar.clicked.connect(self.abrir_visualizar_usuario)
 
-        # Conectar botón Eliminar Usuarios
+        # Botón Eliminar Usuarios
         self.btn_eliminar.clicked.connect(self.abrir_eliminar_usuario)
 
-        # Conectar botón Editar Usuarios
+        # Botón Editar Usuarios
         self.btn_editar.clicked.connect(self.abrir_editar_usuario)
 
-    def abrir_visualizar_usuario(self):
-        self.ventana_visualizar = VisualizarUsuario()
-        self.ventana_visualizar.show()
+        # Botón Volver al Menú Administrador
+        if hasattr(self, "btn_volver"):
+            self.btn_volver.clicked.connect(self.volver_menu_administrador)
 
-        # Oculta el menú GestionUsuario
+        if hasattr(self, "btn_Volver"):
+            self.btn_Volver.clicked.connect(self.volver_menu_administrador)
+
+    def abrir_visualizar_usuario(self):
+        self.ventana_visualizar = VisualizarUsuario(self)
+        self.ventana_visualizar.show()
         self.hide()
 
     def abrir_eliminar_usuario(self):
-        self.ventana_eliminar = EliminarUsuario()
+        self.ventana_eliminar = EliminarUsuario(self)
         self.ventana_eliminar.show()
-
-        # Oculta el menú GestionUsuario
         self.hide()
 
     def abrir_editar_usuario(self):
-        self.ventana_editar = EditarUsuario()
+        self.ventana_editar = EditarUsuario(self)
         self.ventana_editar.show()
-
-        # Oculta el menú GestionUsuario
         self.hide()
+
+    def volver_menu_administrador(self):
+        if self.ventana_anterior is not None:
+            self.ventana_anterior.show()
+            self.close()
+        else:
+            self.close()
 
     def resizeEvent(self, event):
         if hasattr(self, "fondo"):
             self.fondo.actualizar_tamano(self.width(), self.height())
+            self.fondo.lower()
 
         super().resizeEvent(event)
