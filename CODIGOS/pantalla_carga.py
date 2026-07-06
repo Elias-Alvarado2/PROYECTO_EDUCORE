@@ -9,10 +9,6 @@ from PyQt6.QtGui import (
 )
 from PyQt6.QtCore import Qt, QTimer, QPoint, QRectF
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-#  BARRA DE CARGA PIXEL ART
-# ══════════════════════════════════════════════════════════════════════════════
 class BarraPixelArt(QWidget):
 
     COLOR_BORDE = QColor("#DCE8FF")
@@ -20,14 +16,11 @@ class BarraPixelArt(QWidget):
     COLOR_VACIO = QColor("#FFFFFF")
     TRANSPARENTE = QColor(0, 0, 0, 0)
 
-    # Configuración de la barra
     NUM_SEG = 10
     GAP = 4
     PADDING = 4
     BORDE_G = 4
     CORTE = 7
-
-    # Redondeado de los cuadros internos
     RADIO_CUADRO = 6
 
     def __init__(self, parent=None):
@@ -42,8 +35,6 @@ class BarraPixelArt(QWidget):
 
     def paintEvent(self, _event):
         painter = QPainter(self)
-
-        # Antialias para que los cuadros redondeados se vean suaves
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
         ancho = self.width()
@@ -52,7 +43,6 @@ class BarraPixelArt(QWidget):
         corte = self.CORTE
         grosor = self.BORDE_G
 
-        # Marco exterior con esquinas pixeladas
         contorno = QPolygon([
             QPoint(corte, 0),
             QPoint(ancho - corte, 0),
@@ -64,12 +54,10 @@ class BarraPixelArt(QWidget):
             QPoint(0, corte),
         ])
 
-        # Fondo transparente
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(self.TRANSPARENTE))
         painter.drawPolygon(contorno)
 
-        # Borde exterior
         pen = QPen(self.COLOR_BORDE, grosor)
         pen.setJoinStyle(Qt.PenJoinStyle.MiterJoin)
 
@@ -77,12 +65,10 @@ class BarraPixelArt(QWidget):
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawPolygon(contorno)
 
-        # Área interna
         padding = self.PADDING + grosor
         area_ancho = ancho - 2 * padding
         area_alto = alto - 2 * padding
 
-        # Tamaño de cuadros internos
         cuadro_alto = area_alto
         cuadro_ancho = int(cuadro_alto * 1.18)
 
@@ -113,9 +99,6 @@ class BarraPixelArt(QWidget):
         painter.end()
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-#  PANTALLA DE CARGA EDUCORE
-# ══════════════════════════════════════════════════════════════════════════════
 class PantallaCarga(QWidget):
     def __init__(self):
         super().__init__()
@@ -123,23 +106,15 @@ class PantallaCarga(QWidget):
         self.setWindowTitle("EduCore - Cargando")
         self.setFixedSize(1920, 1080)
 
-        # ══════════════════════════════════════════════════════════════════════
-        # RUTAS
         self.BASE_DIR = Path(__file__).resolve().parent
-
-# Salir de la carpeta CODIGOS y subir a PROYECTO_EDUCORE
         self.PROYECTO_DIR = self.BASE_DIR.parent
 
-# Entrar a assets
         self.ruta_fondo = self.PROYECTO_DIR / "assets" / "DISEÑOS" / "fondo_carga.png"
         self.ruta_fuente = self.PROYECTO_DIR / "assets" / "FUENTES" / "Orbitron-Medium.ttf"
         self.ruta_logo = self.PROYECTO_DIR / "assets" / "DISEÑOS" / "logoblanco.png"
 
         self.nombre_fuente = self._cargar_fuente()
 
-        # ══════════════════════════════════════════════════════════════════════
-        # FONDO
-        # ══════════════════════════════════════════════════════════════════════
         self.fondo = QLabel(self)
         self.fondo.setGeometry(0, 0, 1920, 1080)
 
@@ -163,12 +138,8 @@ class PantallaCarga(QWidget):
 
         self.fondo.lower()
 
-        # ══════════════════════════════════════════════════════════════════════
-        # LOGO
-        # ══════════════════════════════════════════════════════════════════════
         self.logo = QLabel(self)
 
-        # Posición base del logo
         self.logo_x = 810
         self.logo_y_neutro = 145
         self.logo_ancho = 300
@@ -213,17 +184,14 @@ class PantallaCarga(QWidget):
             """)
             print("No se encontró el logo:", self.ruta_logo)
 
-        # ══════════════════════════════════════════════════════════════════════
-        # LETRAS EDUCORE
-        # ══════════════════════════════════════════════════════════════════════
         colores = [
-            "#FFFFFF",  # e
-            "#FFFFFF",  # d
-            "#FFFFFF",  # u
-            "#FFFFFF",  # c
-            "#FFFFFF",  # o
-            "#FFFFFF",  # r
-            "#FFFFFF",  # e
+            "#FFFFFF",
+            "#FFFFFF",
+            "#FFFFFF",
+            "#FFFFFF",
+            "#FFFFFF",
+            "#FFFFFF",
+            "#FFFFFF",
         ]
 
         texto = "educore"
@@ -231,7 +199,6 @@ class PantallaCarga(QWidget):
         FONT_PT = 100
         STEP = 130
 
-        # Posición inicial de las letras
         X_INI = 505
         Y_BASE = 540
 
@@ -265,14 +232,10 @@ class PantallaCarga(QWidget):
 
             self.letras.append(label_letra)
 
-        # ══════════════════════════════════════════════════════════════════════
-        # PORCENTAJE
-        # ══════════════════════════════════════════════════════════════════════
         self.porcentaje = 0
 
         self.lbl_porcentaje = QLabel("0%", self)
 
-        # Está pegado a la barra
         self.lbl_porcentaje.setGeometry(0, 735, 1920, 45)
 
         self.lbl_porcentaje.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -285,9 +248,6 @@ class PantallaCarga(QWidget):
             }
         """)
 
-        # ══════════════════════════════════════════════════════════════════════
-        # BARRA DE CARGA
-        # ══════════════════════════════════════════════════════════════════════
         BARRA_W = 520
         BARRA_H = 70
         BARRA_X = (1920 - BARRA_W) // 2
@@ -296,18 +256,12 @@ class PantallaCarga(QWidget):
         self.barra = BarraPixelArt(self)
         self.barra.setGeometry(BARRA_X, BARRA_Y, BARRA_W, BARRA_H)
 
-        # ══════════════════════════════════════════════════════════════════════
-        # ANIMACIONES
-        # ══════════════════════════════════════════════════════════════════════
         self.t = 0.0
 
-        # Animación de letras
         self.VELOCIDAD_LETRAS = 0.35
         self.AMPLITUD_LETRAS = 35
         self.DESFASE_LETRAS = 0.70
 
-        # Animación del logo
-        # Más lento y suave que las letras
         self.VELOCIDAD_LOGO = 0.18
         self.AMPLITUD_LOGO = 12
 
@@ -315,16 +269,10 @@ class PantallaCarga(QWidget):
         self.timer_animacion.timeout.connect(self._tick_animaciones)
         self.timer_animacion.start(16)
 
-        # ══════════════════════════════════════════════════════════════════════
-        # PROGRESO
-        # ══════════════════════════════════════════════════════════════════════
         self.timer_carga = QTimer(self)
         self.timer_carga.timeout.connect(self._tick_carga)
         self.timer_carga.start(350)
 
-    # ══════════════════════════════════════════════════════════════════════════
-    # CARGAR FUENTE
-    # ══════════════════════════════════════════════════════════════════════════
     def _cargar_fuente(self) -> str:
         if not self.ruta_fuente.exists():
             print("WARN: Orbitron no encontrada. Se usará Arial.")
@@ -343,15 +291,9 @@ class PantallaCarga(QWidget):
 
         return "Arial"
 
-    # ══════════════════════════════════════════════════════════════════════════
-    # ANIMACIONES
-    # ══════════════════════════════════════════════════════════════════════════
     def _tick_animaciones(self):
         self.t += 0.016
 
-        # ─────────────────────────────────────────────────────────────────────
-        # Animación wave de las letras
-        # ─────────────────────────────────────────────────────────────────────
         omega_letras = self.VELOCIDAD_LETRAS * 2 * math.pi
 
         for i, label_letra in enumerate(self.letras):
@@ -367,9 +309,6 @@ class PantallaCarga(QWidget):
                 rect.height()
             )
 
-        # ─────────────────────────────────────────────────────────────────────
-        # Animación suave del logo
-        # ─────────────────────────────────────────────────────────────────────
         omega_logo = self.VELOCIDAD_LOGO * 2 * math.pi
         offset_logo = int(self.AMPLITUD_LOGO * math.sin(omega_logo * self.t))
 
@@ -381,9 +320,6 @@ class PantallaCarga(QWidget):
             rect_logo.height()
         )
 
-    # ══════════════════════════════════════════════════════════════════════════
-    # ACTUALIZAR CARGA
-    # ══════════════════════════════════════════════════════════════════════════
     def _tick_carga(self):
         if self.porcentaje >= 100:
             self.timer_carga.stop()
@@ -398,9 +334,6 @@ class PantallaCarga(QWidget):
             self.timer_carga.stop()
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# EJECUTAR
-# ══════════════════════════════════════════════════════════════════════════════
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 

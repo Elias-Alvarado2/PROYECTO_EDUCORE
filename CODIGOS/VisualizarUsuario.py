@@ -24,8 +24,12 @@ class FondoImagen(QtWidgets.QLabel):
 
 
 class VisualizarUsuario(QtWidgets.QWidget):
-    def __init__(self):
+    def __init__(self, ventana_anterior=None):
         super().__init__()
+
+        # Guarda la ventana anterior, en este caso Gestión Usuarios
+        self.ventana_anterior = ventana_anterior
+        self.ventana_gestion_usuarios = None
 
         # Tamaño base del diseño original
         self.ANCHO_BASE = 1920
@@ -70,10 +74,34 @@ class VisualizarUsuario(QtWidgets.QWidget):
 
         # Botón volver
         if hasattr(self, "btn_Volver"):
-            self.btn_Volver.clicked.connect(self.close)
+            self.btn_Volver.clicked.connect(self.volver_gestion_usuarios)
 
         if hasattr(self, "btn_volver"):
-            self.btn_volver.clicked.connect(self.close)
+            self.btn_volver.clicked.connect(self.volver_gestion_usuarios)
+
+    def volver_gestion_usuarios(self):
+        # Si VisualizarUsuario fue abierto desde Gestión Usuarios,
+        # vuelve a mostrar esa misma ventana.
+        if self.ventana_anterior is not None:
+            self.ventana_anterior.show()
+            self.close()
+            return
+
+        # Si ejecutaste este archivo directamente,
+        # intenta abrir Gestión Usuarios desde su clase.
+        try:
+            from GestionUsuario import GestionUsuario
+
+            self.ventana_gestion_usuarios = GestionUsuario()
+            self.ventana_gestion_usuarios.show()
+            self.close()
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error al volver",
+                f"No se pudo abrir Gestión Usuarios:\n{e}"
+            )
 
     def resizeEvent(self, event):
         if hasattr(self, "fondo"):
@@ -216,8 +244,6 @@ class VisualizarUsuario(QtWidgets.QWidget):
 
         ancho_tabla = self.dgv_visualizarusuarios.width()
 
-        # Estos porcentajes controlan el ancho de cada columna.
-        # Si un dato queda corrido, ajusta estos valores.
         porcentajes = [
             0.16,  # ID JUGADOR
             0.13,  # NOMBRE_USUARIO
@@ -257,7 +283,7 @@ class VisualizarUsuario(QtWidgets.QWidget):
                     self.crear_item(usuario["id_jugador"]),
                     self.crear_item(usuario["nombre"]),
                     self.crear_item(usuario["correo"]),
-                    self.crear_item(usuario["contraseña"]),
+                    self.crear_item(usuario["contrasena"]),
                     self.crear_item(usuario["personaje"]),
                     self.crear_item(usuario["vidas"]),
                     self.crear_item(usuario["fecha_registro"]),

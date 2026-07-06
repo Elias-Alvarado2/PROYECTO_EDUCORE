@@ -21,8 +21,12 @@ class FondoImagen(QtWidgets.QLabel):
 
 
 class EditarUsuario(QtWidgets.QWidget):
-    def __init__(self):
+    def __init__(self, ventana_anterior=None):
         super().__init__()
+
+        # Guarda la ventana anterior, en este caso Gestión Usuarios
+        self.ventana_anterior = ventana_anterior
+        self.ventana_gestion_usuarios = None
 
         # Carpeta CODIGOS
         BASE_DIR = Path(__file__).resolve().parent
@@ -51,8 +55,44 @@ class EditarUsuario(QtWidgets.QWidget):
         # Crear fondo usando la clase FondoImagen
         self.fondo = FondoImagen(self, ruta_imagen)
 
+        # Conectar botón volver
+        self.conectar_eventos()
+
+    def conectar_eventos(self):
+        # Botón volver
+        if hasattr(self, "btn_volver"):
+            self.btn_volver.clicked.connect(self.volver_gestion_usuarios)
+
+        if hasattr(self, "btn_Volver"):
+            self.btn_Volver.clicked.connect(self.volver_gestion_usuarios)
+
+    def volver_gestion_usuarios(self):
+        # Si EditarUsuario fue abierto desde Gestión Usuarios,
+        # vuelve a mostrar esa misma ventana.
+        if self.ventana_anterior is not None:
+            self.ventana_anterior.show()
+            self.close()
+            return
+
+        # Si ejecutaste este archivo directamente,
+        # intenta abrir Gestión Usuarios desde su clase.
+        try:
+            from GestionUsuario import GestionUsuario
+
+            self.ventana_gestion_usuarios = GestionUsuario()
+            self.ventana_gestion_usuarios.show()
+            self.close()
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error al volver",
+                f"No se pudo abrir Gestión Usuarios:\n{e}"
+            )
+
     def resizeEvent(self, event):
         if hasattr(self, "fondo"):
             self.fondo.actualizar_tamano(self.width(), self.height())
+            self.fondo.lower()
 
         super().resizeEvent(event)
