@@ -1,5 +1,6 @@
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
+
 from GestionUsuario import GestionUsuario
 
 
@@ -18,6 +19,7 @@ class FondoImagen(QtWidgets.QLabel):
 
     def actualizar_tamano(self, ancho, alto):
         self.setGeometry(0, 0, ancho, alto)
+
 
 class MenuAdministrador(QtWidgets.QWidget):
     def __init__(self):
@@ -41,11 +43,21 @@ class MenuAdministrador(QtWidgets.QWidget):
 
         self.fondo = FondoImagen(self, ruta_imagen)
 
-        # Conectar botón Gestionar Usuarios
-        self.btnGestionUsuarios.clicked.connect(self.abrir_gestionar_usuarios)
+        self.conectar_eventos()
+
+    def conectar_eventos(self):
+        # Botón Gestionar Usuarios
+        if hasattr(self, "btnGestionUsuarios"):
+            self.btnGestionUsuarios.clicked.connect(self.abrir_gestionar_usuarios)
+
+        if hasattr(self, "btn_gestionusuarios"):
+            self.btn_gestionusuarios.clicked.connect(self.abrir_gestionar_usuarios)
+
+        if hasattr(self, "btn_gestion_usuarios"):
+            self.btn_gestion_usuarios.clicked.connect(self.abrir_gestionar_usuarios)
 
     def abrir_gestionar_usuarios(self):
-        self.ventana_gestionar = GestionUsuario()
+        self.ventana_gestionar = GestionUsuario(self)
         self.ventana_gestionar.show()
 
         # Oculta el menú administrador
@@ -54,5 +66,6 @@ class MenuAdministrador(QtWidgets.QWidget):
     def resizeEvent(self, event):
         if hasattr(self, "fondo"):
             self.fondo.actualizar_tamano(self.width(), self.height())
+            self.fondo.lower()
 
         super().resizeEvent(event)
