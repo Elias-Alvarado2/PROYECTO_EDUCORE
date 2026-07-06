@@ -64,11 +64,7 @@ class GestionUsuario(QtWidgets.QWidget):
         self.btn_editar.clicked.connect(self.abrir_editar_usuario)
 
         # Botón Volver al Menú Administrador
-        if hasattr(self, "btn_volver"):
-            self.btn_volver.clicked.connect(self.volver_menu_administrador)
-
-        if hasattr(self, "btn_Volver"):
-            self.btn_Volver.clicked.connect(self.volver_menu_administrador)
+        self.btn_volver.clicked.connect(self.volver_menu_administrador)
 
     def abrir_visualizar_usuario(self):
         self.ventana_visualizar = VisualizarUsuario(self)

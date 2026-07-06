@@ -50,6 +50,47 @@ class MenuUsuario(QtWidgets.QWidget):
 
         # Crear fondo usando la clase FondoImagen
         self.fondo = FondoImagen(self, ruta_imagen)
+    
+    def cerrar_sesion(self):
+        respuesta = QtWidgets.QMessageBox.question(
+            self,
+            "Cerrar sesión",
+            "¿Seguro que deseas cerrar sesión?",
+            QtWidgets.QMessageBox.StandardButton.Yes |
+            QtWidgets.QMessageBox.StandardButton.No
+        )
+
+        if respuesta != QtWidgets.QMessageBox.StandardButton.Yes:
+            return
+
+        try:
+            from Login import LoginWindow
+
+            self.ventana_login = LoginWindow()
+            self.ventana_login.show()
+            self.close()
+
+        except ImportError:
+            try:
+                from Login import Login
+
+                self.ventana_login = Login()
+                self.ventana_login.show()
+                self.close()
+
+            except Exception as e:
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    "Error al cerrar sesión",
+                    f"No se pudo abrir el Login:\n{e}"
+                )
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error al cerrar sesión",
+                f"No se pudo abrir el Login:\n{e}"
+            )
 
     def resizeEvent(self, event):
         if hasattr(self, "fondo"):
