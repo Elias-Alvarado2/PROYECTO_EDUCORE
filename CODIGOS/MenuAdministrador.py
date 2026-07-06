@@ -2,6 +2,7 @@ from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
 
 from GestionUsuario import GestionUsuario
+from Lecciones import Lecciones
 
 
 class FondoImagen(QtWidgets.QLabel):
@@ -44,37 +45,34 @@ class MenuAdministrador(QtWidgets.QWidget):
         self.fondo = FondoImagen(self, ruta_imagen)
 
         self.ventana_gestionar = None
+        self.ventana_lecciones = None
         self.ventana_login = None
 
         self.conectar_eventos()
 
     def conectar_eventos(self):
         # Botón Gestionar Usuarios
-        if hasattr(self, "btnGestionUsuarios"):
-            self.btnGestionUsuarios.clicked.connect(self.abrir_gestionar_usuarios)
-
-        if hasattr(self, "btn_gestionusuarios"):
-            self.btn_gestionusuarios.clicked.connect(self.abrir_gestionar_usuarios)
-
         if hasattr(self, "btn_gestion_usuarios"):
             self.btn_gestion_usuarios.clicked.connect(self.abrir_gestionar_usuarios)
 
+        # Botón Jugar / Lecciones
+        if hasattr(self, "btnJugar"):
+            self.btnJugar.clicked.connect(self.abrir_lecciones)
+
         # Botón Cerrar Sesión
-        if hasattr(self, "btnCerrarSesion"):
-            self.btnCerrarSesion.clicked.connect(self.cerrar_sesion)
-
-        if hasattr(self, "btn_cerrarsesion"):
-            self.btn_cerrarsesion.clicked.connect(self.cerrar_sesion)
-
-        if hasattr(self, "btn_cerrar_sesion"):
-            self.btn_cerrar_sesion.clicked.connect(self.cerrar_sesion)
-
         if hasattr(self, "btn_cerrarSesion"):
             self.btn_cerrarSesion.clicked.connect(self.cerrar_sesion)
 
     def abrir_gestionar_usuarios(self):
         self.ventana_gestionar = GestionUsuario(self)
-        self.ventana_gestionar.show()
+        self.ventana_gestionar.showMaximized()
+
+        # Oculta el menú administrador
+        self.hide()
+
+    def abrir_lecciones(self):
+        self.ventana_lecciones = Lecciones(self)
+        self.ventana_lecciones.showMaximized()
 
         # Oculta el menú administrador
         self.hide()
@@ -92,7 +90,6 @@ class MenuAdministrador(QtWidgets.QWidget):
             return
 
         try:
-            # Opción 1: si tu clase del login se llama LoginWindow
             from Login import LoginWindow
 
             self.ventana_login = LoginWindow()
@@ -101,7 +98,6 @@ class MenuAdministrador(QtWidgets.QWidget):
 
         except ImportError:
             try:
-                # Opción 2: si tu clase del login se llama Login
                 from Login import Login
 
                 self.ventana_login = Login()
