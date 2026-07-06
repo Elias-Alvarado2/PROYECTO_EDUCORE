@@ -107,10 +107,10 @@
    <widget class="QPushButton" name="btn_volver">
     <property name="geometry">
      <rect>
-      <x>627</x>
-      <y>770</y>
-      <width>650</width>
-      <height>117</height>
+      <x>62</x>
+      <y>52</y>
+      <width>203</width>
+      <height>74</height>
      </rect>
     </property>
     <property name="cursor">
