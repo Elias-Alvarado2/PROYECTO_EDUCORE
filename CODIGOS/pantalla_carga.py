@@ -9,6 +9,7 @@ from PyQt6.QtGui import (
 )
 from PyQt6.QtCore import Qt, QTimer, QPoint, QRectF
 
+
 class BarraPixelArt(QWidget):
 
     COLOR_BORDE = QColor("#DCE8FF")
@@ -100,8 +101,10 @@ class BarraPixelArt(QWidget):
 
 
 class PantallaCarga(QWidget):
-    def __init__(self):
+    def __init__(self, ventana_destino=None):
         super().__init__()
+
+        self.ventana_destino = ventana_destino
 
         self.setWindowTitle("EduCore - Cargando")
         self.setFixedSize(1920, 1080)
@@ -235,9 +238,7 @@ class PantallaCarga(QWidget):
         self.porcentaje = 0
 
         self.lbl_porcentaje = QLabel("0%", self)
-
         self.lbl_porcentaje.setGeometry(0, 735, 1920, 45)
-
         self.lbl_porcentaje.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lbl_porcentaje.setFont(QFont(self.nombre_fuente, 24, QFont.Weight.Bold))
         self.lbl_porcentaje.setStyleSheet("""
@@ -332,12 +333,25 @@ class PantallaCarga(QWidget):
 
         if self.porcentaje == 100:
             self.timer_carga.stop()
+            QTimer.singleShot(500, self.abrir_ventana_destino)
+
+    def abrir_ventana_destino(self):
+        if self.timer_animacion.isActive():
+            self.timer_animacion.stop()
+
+        if self.ventana_destino is not None:
+            app = QApplication.instance()
+            app.ventana_actual = self.ventana_destino
+
+            self.ventana_destino.showMaximized()
+
+        self.close()
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     ventana = PantallaCarga()
-    ventana.show()
+    ventana.showMaximized()
 
     sys.exit(app.exec())

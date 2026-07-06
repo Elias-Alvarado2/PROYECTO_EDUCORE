@@ -6,6 +6,7 @@ from MenuUsuario import MenuUsuario
 from MenuAdministrador import MenuAdministrador
 from ConexionBD import ConexionBD
 from Registro import RegistroWindow
+from pantalla_carga import PantallaCarga
 
 
 class FondoImagen(QtWidgets.QLabel):
@@ -153,7 +154,12 @@ class LoginWindow(QtWidgets.QDialog):
         except TypeError:
             self.menu_usuario = MenuUsuario()
 
-        self.menu_usuario.showMaximized()
+        self.pantalla_carga = PantallaCarga(self.menu_usuario)
+
+        app = QtWidgets.QApplication.instance()
+        app.pantalla_carga = self.pantalla_carga
+
+        self.pantalla_carga.showMaximized()
         self.close()
 
     def abrir_menu_admin(self, admin):
@@ -162,7 +168,12 @@ class LoginWindow(QtWidgets.QDialog):
         except TypeError:
             self.menu_admin = MenuAdministrador()
 
-        self.menu_admin.showMaximized()
+        self.pantalla_carga = PantallaCarga(self.menu_admin)
+
+        app = QtWidgets.QApplication.instance()
+        app.pantalla_carga = self.pantalla_carga
+
+        self.pantalla_carga.showMaximized()
         self.close()
 
     def abrir_registro(self):
