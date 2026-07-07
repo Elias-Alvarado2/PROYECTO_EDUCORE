@@ -1,7 +1,6 @@
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
 
-from GestionUsuario import GestionUsuario
 from Lecciones import Lecciones
 
 
@@ -23,8 +22,10 @@ class FondoImagen(QtWidgets.QLabel):
 
 
 class MenuAdministrador(QtWidgets.QWidget):
-    def __init__(self):
+    def __init__(self, admin=None):
         super().__init__()
+
+        self.admin = admin
 
         BASE_DIR = Path(__file__).resolve().parent
         PROYECTO_DIR = BASE_DIR.parent
@@ -51,31 +52,53 @@ class MenuAdministrador(QtWidgets.QWidget):
         self.conectar_eventos()
 
     def conectar_eventos(self):
-        # Botón Gestionar Usuarios
-        if hasattr(self, "btn_gestion_usuarios"):
-            self.btn_gestion_usuarios.clicked.connect(self.abrir_gestionar_usuarios)
+        if hasattr(self, "btnGestionUsuarios"):
+            self.btnGestionUsuarios.clicked.connect(self.abrir_gestionar_usuarios)
+        else:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Botón no encontrado",
+                "No existe un botón llamado btnGestionUsuarios en el archivo .ui."
+            )
 
-        # Botón Jugar / Lecciones
         if hasattr(self, "btnJugar"):
             self.btnJugar.clicked.connect(self.abrir_lecciones)
 
-        # Botón Cerrar Sesión
-        if hasattr(self, "btn_cerrarSesion"):
-            self.btn_cerrarSesion.clicked.connect(self.cerrar_sesion)
+        if hasattr(self, "btnCerrarSesion"):
+            self.btnCerrarSesion.clicked.connect(self.cerrar_sesion)
 
     def abrir_gestionar_usuarios(self):
-        self.ventana_gestionar = GestionUsuario(self)
-        self.ventana_gestionar.showMaximized()
+        try:
+            from GestionUsuario import GestionUsuario
 
-        # Oculta el menú administrador
-        self.hide()
+            self.ventana_gestionar = GestionUsuario()
+            self.ventana_gestionar.showMaximized()
+
+            self.hide()
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error",
+                f"No se pudo abrir Gestión de Usuarios.\n\nDetalles:\n{e}"
+            )
 
     def abrir_lecciones(self):
-        self.ventana_lecciones = Lecciones(self)
-        self.ventana_lecciones.showMaximized()
+        try:
+            try:
+                self.ventana_lecciones = Lecciones(self.admin)
+            except TypeError:
+                self.ventana_lecciones = Lecciones()
 
-        # Oculta el menú administrador
-        self.hide()
+            self.ventana_lecciones.showMaximized()
+            self.hide()
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error",
+                f"No se pudo abrir Lecciones.\n\nDetalles:\n{e}"
+            )
 
     def cerrar_sesion(self):
         respuesta = QtWidgets.QMessageBox.question(
@@ -95,21 +118,6 @@ class MenuAdministrador(QtWidgets.QWidget):
             self.ventana_login = LoginWindow()
             self.ventana_login.show()
             self.close()
-
-        except ImportError:
-            try:
-                from Login import Login
-
-                self.ventana_login = Login()
-                self.ventana_login.show()
-                self.close()
-
-            except Exception as e:
-                QtWidgets.QMessageBox.critical(
-                    self,
-                    "Error al cerrar sesión",
-                    f"No se pudo abrir el Login:\n{e}"
-                )
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(

@@ -1,10 +1,6 @@
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
 
-from VisualizarUsuario import VisualizarUsuario
-from EliminarUsuario import EliminarUsuario
-from EditarUsuario import EditarUsuario
-
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
@@ -27,11 +23,12 @@ class GestionUsuario(QtWidgets.QWidget):
     def __init__(self, ventana_anterior=None):
         super().__init__()
 
-        # Aquí se guarda el Menú Administrador
         self.ventana_anterior = ventana_anterior
+
         self.ventana_visualizar = None
         self.ventana_eliminar = None
         self.ventana_editar = None
+        self.menu_admin = None
 
         BASE_DIR = Path(__file__).resolve().parent
         PROYECTO_DIR = BASE_DIR.parent
@@ -54,16 +51,15 @@ class GestionUsuario(QtWidgets.QWidget):
         self.conectar_eventos()
 
     def conectar_eventos(self):
-        # Botón Visualizar Usuarios
-        self.btn_visualizar.clicked.connect(self.abrir_visualizar_usuario)
+        if hasattr(self, "btn_visualizar"):
+            self.btn_visualizar.clicked.connect(self.abrir_visualizar_usuario)
 
-        # Botón Eliminar Usuarios
-        self.btn_eliminar.clicked.connect(self.abrir_eliminar_usuario)
+        if hasattr(self, "btn_eliminar"):
+            self.btn_eliminar.clicked.connect(self.abrir_eliminar_usuario)
 
-        # Botón Editar Usuarios
-        self.btn_editar.clicked.connect(self.abrir_editar_usuario)
+        if hasattr(self, "btn_editar"):
+            self.btn_editar.clicked.connect(self.abrir_editar_usuario)
 
-        # Botón Volver al Menú Administrador
         if hasattr(self, "btn_volver"):
             self.btn_volver.clicked.connect(self.volver_menu_administrador)
 
@@ -71,26 +67,68 @@ class GestionUsuario(QtWidgets.QWidget):
             self.btn_Volver.clicked.connect(self.volver_menu_administrador)
 
     def abrir_visualizar_usuario(self):
-        self.ventana_visualizar = VisualizarUsuario(self)
-        self.ventana_visualizar.show()
-        self.hide()
+        try:
+            from VisualizarUsuario import VisualizarUsuario
+
+            self.ventana_visualizar = VisualizarUsuario()
+            self.ventana_visualizar.showMaximized()
+            self.hide()
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error",
+                f"No se pudo abrir Visualizar Usuarios.\n\nDetalles:\n{e}"
+            )
 
     def abrir_eliminar_usuario(self):
-        self.ventana_eliminar = EliminarUsuario(self)
-        self.ventana_eliminar.show()
-        self.hide()
+        try:
+            from EliminarUsuario import EliminarUsuario
+
+            self.ventana_eliminar = EliminarUsuario()
+            self.ventana_eliminar.showMaximized()
+            self.hide()
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error",
+                f"No se pudo abrir Eliminar Usuario.\n\nDetalles:\n{e}"
+            )
 
     def abrir_editar_usuario(self):
-        self.ventana_editar = EditarUsuario(self)
-        self.ventana_editar.show()
-        self.hide()
+        try:
+            from EditarUsuario import EditarUsuario
+
+            self.ventana_editar = EditarUsuario()
+            self.ventana_editar.showMaximized()
+            self.hide()
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error",
+                f"No se pudo abrir Editar Usuario.\n\nDetalles:\n{e}"
+            )
 
     def volver_menu_administrador(self):
-        if self.ventana_anterior is not None:
-            self.ventana_anterior.show()
-            self.close()
-        else:
-            self.close()
+        try:
+            if self.ventana_anterior is not None:
+                self.ventana_anterior.showMaximized()
+                self.close()
+            else:
+                from MenuAdministrador import MenuAdministrador
+
+                self.menu_admin = MenuAdministrador()
+                self.menu_admin.showMaximized()
+                self.close()
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error",
+                f"No se pudo volver al Menú Administrador.\n\nDetalles:\n{e}"
+            )
 
     def resizeEvent(self, event):
         if hasattr(self, "fondo"):
