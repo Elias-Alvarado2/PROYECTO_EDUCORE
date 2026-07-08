@@ -2,11 +2,10 @@ import sys
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
 
-from MenuUsuario import MenuUsuario
-from MenuAdministrador import MenuAdministrador
 from ConexionBD import ConexionBD
 from Registro import RegistroWindow
 from pantalla_carga import PantallaCarga
+from Transicion import FormTransicion
 
 
 class FondoImagen(QtWidgets.QLabel):
@@ -57,7 +56,6 @@ class LoginWindow(QtWidgets.QDialog):
             self.btnMostrarContrasena.clicked.connect(self.mostrar_ocultar_contrasena)
 
             self.btn_Iniciar.clicked.connect(self.iniciar_sesion)
-
             self.btn_Registrarse.clicked.connect(self.abrir_registro)
 
             self.txtContrasena.returnPressed.connect(self.iniciar_sesion)
@@ -76,6 +74,7 @@ class LoginWindow(QtWidgets.QDialog):
     def resizeEvent(self, event):
         if hasattr(self, "fondo"):
             self.fondo.actualizar_tamano(self.width(), self.height())
+            self.fondo.lower()
 
         super().resizeEvent(event)
 
@@ -98,7 +97,6 @@ class LoginWindow(QtWidgets.QDialog):
             return
 
         try:
-            # Primero se valida si es administrador
             admin = self.db.validar_admin(usuario, contrasena)
 
             if admin:
@@ -111,7 +109,6 @@ class LoginWindow(QtWidgets.QDialog):
                 self.abrir_menu_admin(admin)
                 return
 
-            # Si no es administrador, se valida como jugador
             jugador = self.db.validar_jugador(usuario, contrasena)
 
             if jugador:
@@ -130,7 +127,6 @@ class LoginWindow(QtWidgets.QDialog):
                 self.abrir_menu_usuario(jugador)
                 return
 
-            # Si no existe ni como admin ni como jugador
             QtWidgets.QMessageBox.warning(
                 self,
                 "Usuario no encontrado",
@@ -150,40 +146,73 @@ class LoginWindow(QtWidgets.QDialog):
 
     def abrir_menu_usuario(self, jugador):
         try:
-            self.menu_usuario = MenuUsuario(jugador)
-        except TypeError:
-            self.menu_usuario = MenuUsuario()
+            from MenuUsuario import MenuUsuario
 
-        self.pantalla_carga = PantallaCarga(self.menu_usuario)
+            try:
+                self.menu_usuario = MenuUsuario(jugador)
+            except TypeError:
+                self.menu_usuario = MenuUsuario()
 
-        app = QtWidgets.QApplication.instance()
-        app.pantalla_carga = self.pantalla_carga
+            self.pantalla_carga = PantallaCarga(self.menu_usuario)
 
-        self.pantalla_carga.showMaximized()
-        self.close()
+            app = QtWidgets.QApplication.instance()
+            app.pantalla_carga = self.pantalla_carga
+            app.menu_usuario = self.menu_usuario
+
+            self.pantalla_carga.showMaximized()
+            self.close()
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error",
+                f"No se pudo abrir el menú del jugador.\n\nDetalles:\n{e}"
+            )
 
     def abrir_menu_admin(self, admin):
         try:
-            self.menu_admin = MenuAdministrador(admin)
-        except TypeError:
-            self.menu_admin = MenuAdministrador()
+            from MenuAdministrador import MenuAdministrador
 
-        self.pantalla_carga = PantallaCarga(self.menu_admin)
+            try:
+                self.menu_admin = MenuAdministrador(admin)
+            except TypeError:
+                self.menu_admin = MenuAdministrador()
 
-        app = QtWidgets.QApplication.instance()
-        app.pantalla_carga = self.pantalla_carga
+            self.pantalla_carga = PantallaCarga(self.menu_admin)
 
-        self.pantalla_carga.showMaximized()
-        self.close()
+            app = QtWidgets.QApplication.instance()
+            app.pantalla_carga = self.pantalla_carga
+            app.menu_admin = self.menu_admin
+
+            self.pantalla_carga.showMaximized()
+            self.close()
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error",
+                f"No se pudo abrir el menú del administrador.\n\nDetalles:\n{e}"
+            )
 
     def abrir_registro(self):
-        self.registro = RegistroWindow()
-        self.registro.show()
-        self.close()
+        try:
+            FormTransicion(
+                self,
+                RegistroWindow
+            )
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error",
+                f"No se pudo abrir el registro.\n\nDetalles:\n{e}"
+            )
 
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
+
     ventana = LoginWindow()
     ventana.show()
+
     sys.exit(app.exec())

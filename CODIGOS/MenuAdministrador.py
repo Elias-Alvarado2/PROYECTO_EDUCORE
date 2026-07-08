@@ -1,7 +1,7 @@
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
 
-from Lecciones import Lecciones
+from Transicion import FormTransicion
 
 
 class FondoImagen(QtWidgets.QLabel):
@@ -22,10 +22,11 @@ class FondoImagen(QtWidgets.QLabel):
 
 
 class MenuAdministrador(QtWidgets.QWidget):
-    def __init__(self, admin=None):
+    def __init__(self, admin=None, cambiar_form_callback=None):
         super().__init__()
 
         self.admin = admin
+        self.cambiar_form_callback = cambiar_form_callback
 
         BASE_DIR = Path(__file__).resolve().parent
         PROYECTO_DIR = BASE_DIR.parent
@@ -71,10 +72,10 @@ class MenuAdministrador(QtWidgets.QWidget):
         try:
             from GestionUsuario import GestionUsuario
 
-            self.ventana_gestionar = GestionUsuario()
-            self.ventana_gestionar.showMaximized()
-
-            self.hide()
+            FormTransicion(
+                self,
+                GestionUsuario
+            )
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(
@@ -85,13 +86,17 @@ class MenuAdministrador(QtWidgets.QWidget):
 
     def abrir_lecciones(self):
         try:
+            from Lecciones import Lecciones
+
             try:
                 self.ventana_lecciones = Lecciones(self.admin)
             except TypeError:
                 self.ventana_lecciones = Lecciones()
 
-            self.ventana_lecciones.showMaximized()
-            self.hide()
+            FormTransicion(
+                self,
+                self.ventana_lecciones
+            )
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(
@@ -115,9 +120,10 @@ class MenuAdministrador(QtWidgets.QWidget):
         try:
             from Login import LoginWindow
 
-            self.ventana_login = LoginWindow()
-            self.ventana_login.show()
-            self.close()
+            FormTransicion(
+                self,
+                LoginWindow
+            )
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(

@@ -2,12 +2,14 @@ import sys
 import math
 from pathlib import Path
 
-from PyQt6.QtWidgets import QApplication, QWidget, QLabel
+from PyQt6.QtWidgets import QApplication, QWidget, QLabel, QMessageBox
 from PyQt6.QtGui import (
     QPixmap, QFont, QFontDatabase, QPainter,
     QColor, QPen, QBrush, QPolygon
 )
 from PyQt6.QtCore import Qt, QTimer, QPoint, QRectF
+
+from Transicion import FormTransicion
 
 
 class BarraPixelArt(QWidget):
@@ -26,7 +28,9 @@ class BarraPixelArt(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+
         self.progreso = 0
+
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAutoFillBackground(False)
 
@@ -339,13 +343,18 @@ class PantallaCarga(QWidget):
         if self.timer_animacion.isActive():
             self.timer_animacion.stop()
 
-        if self.ventana_destino is not None:
-            app = QApplication.instance()
-            app.ventana_actual = self.ventana_destino
+        if self.ventana_destino is None:
+            QMessageBox.warning(
+                self,
+                "Sin ventana destino",
+                "La pantalla de carga llegó al 100%, pero no tiene una ventana destino."
+            )
+            return
 
-            self.ventana_destino.showMaximized()
-
-        self.close()
+        FormTransicion(
+            self,
+            self.ventana_destino
+        )
 
 
 if __name__ == "__main__":
