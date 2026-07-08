@@ -59,9 +59,9 @@ border: none;
    <widget class="QTableView" name="dgv_visualizarusuarios">
     <property name="geometry">
      <rect>
-      <x>220</x>
+      <x>230</x>
       <y>430</y>
-      <width>1471</width>
+      <width>1461</width>
       <height>421</height>
      </rect>
     </property>
