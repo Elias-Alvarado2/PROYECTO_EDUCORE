@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1920</width>
-    <height>1080</height>
+    <height>1084</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -38,8 +38,8 @@
    <widget class="QPushButton" name="btnJugar">
     <property name="geometry">
      <rect>
-      <x>630</x>
-      <y>319</y>
+      <x>50</x>
+      <y>220</y>
       <width>669</width>
       <height>120</height>
      </rect>
@@ -49,10 +49,12 @@
     </property>
     <property name="styleSheet">
      <string notr="true">QPushButton {
-    background-color: transparent;
+    border-image: url(assets/BOTONES/boton_jugar.png);
     border: none;
-}
-</string>
+    color: white;
+    font-size: 16px;
+    padding: 4px;
+}</string>
     </property>
     <property name="text">
      <string/>
