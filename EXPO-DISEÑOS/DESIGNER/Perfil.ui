@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QFrame" name="Ajustes">
+  <widget class="QFrame" name="Perfil">
    <property name="geometry">
     <rect>
      <x>0</x>
@@ -23,8 +23,8 @@
     </rect>
    </property>
    <property name="styleSheet">
-    <string notr="true">QFrame#Ajustes{
-border-image: url(&quot;../../assets/DISEÑOS/Ajustes.png&quot;) 0 0 0 0 stretch stretch;
+    <string notr="true">QFrame#Perfil{
+border-image: url(&quot;../../assets/DISEÑOS/Perfil.png&quot;) 0 0 0 0 stretch stretch;
 background-color: transparent;
 }
 </string>
