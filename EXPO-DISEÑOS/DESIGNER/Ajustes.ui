@@ -13,13 +13,13 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QFrame" name="frame">
+  <widget class="QFrame" name="Ajustes">
    <property name="geometry">
     <rect>
      <x>40</x>
      <y>30</y>
-     <width>191</width>
-     <height>201</height>
+     <width>331</width>
+     <height>251</height>
     </rect>
    </property>
    <property name="styleSheet">
