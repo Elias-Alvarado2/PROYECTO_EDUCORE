@@ -1,17 +1,24 @@
 # ============================================================
 # EDUCORE - JUEGO PYGAME CON MYSQL
-# Refactorizacion interna conservadora: mantiene intactos el comportamiento,
-# las medidas, las rutas, la logica visual y las consultas del nivel.
+# Refactorizacion interna conservadora sin pantalla de carga.
+# Mantiene las medidas, rutas, logica visual y consultas del nivel.
 # ============================================================
 
 import argparse
+import runpy
 import sys
 import textwrap
 import math
+import multiprocessing
 from functools import lru_cache
 from pathlib import Path
 
 import pygame
+
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
 
 try:
     import mysql.connector
@@ -379,6 +386,7 @@ def limpiar_transparencia_falsa(superficie):
             if es_gris_claro:
                 resultado.set_at((x, y), (r, g, b, 0))
 
+
     resultado.unlock()
     return resultado
 
@@ -519,7 +527,7 @@ def construir_paginas_leccion(leccion, nombre_lenguaje):
 
 
 # ============================================================
-# 5. TRANSICION CUANDO EL JUGADOR CAE AL VACIO
+# 6. TRANSICION DE IRIS
 # ============================================================
 
 class TransicionVacio:
@@ -541,6 +549,15 @@ class TransicionVacio:
         self.tiempo = 0
         self.centro = centro
         self.accion_en_negro = accion_en_negro
+
+    def iniciar_apertura(self, centro):
+        if self.activa():
+            return
+
+        self.estado = "abriendo"
+        self.tiempo = 0
+        self.centro = centro
+        self.accion_en_negro = None
 
     def actualizar(self, dt):
         if self.estado == "apagado":
@@ -592,7 +609,7 @@ class TransicionVacio:
 
 
 # ============================================================
-# 5. CONEXION A BASE DE DATOS
+# 7. CONEXION A BASE DE DATOS
 # ============================================================
 
 class ConexionEduCore:
@@ -976,7 +993,7 @@ class ConexionEduCore:
 
 
 # ============================================================
-# 6. CLASE CAPA PARALLAX
+# 8. CLASE CAPA PARALLAX
 # ============================================================
 
 class CapaParallax:
@@ -1037,7 +1054,7 @@ class CapaParallax:
 
 
 # ============================================================
-# 7. PLATAFORMA Y ABISMO
+# 9. PLATAFORMA Y ABISMO
 # ============================================================
 
 class PlataformaInvisible:
@@ -1071,7 +1088,7 @@ class AbismoInvisible:
 
 
 # ============================================================
-# 8. OBSTACULO
+# 10. OBSTACULO
 # ============================================================
 
 class Obstaculo:
@@ -1132,7 +1149,7 @@ class Obstaculo:
 
 
 # ============================================================
-# CLASE OBJETO DE PRACTICA
+# 10.1 OBJETO DE PRACTICA
 # ============================================================
 
 class ObjetoPractica:
@@ -1219,7 +1236,7 @@ class ObjetoPractica:
         )
 
 # ============================================================
-# 9. JUGADOR CON PERSONAJE VARIABLE
+# 11. JUGADOR CON PERSONAJE VARIABLE
 # ============================================================
 
 class Jugador:
@@ -1483,7 +1500,7 @@ class Jugador:
         pantalla.blit(sprite, (int(self.x_pantalla), int(self.y)))
 
 # ============================================================
-# 10. NPC ANIMADO
+# 12. NPC ANIMADO
 # ============================================================
 
 class NPC:
@@ -1574,7 +1591,7 @@ class NPC:
 
 
 # ============================================================
-# 11. CAJA DE DIALOGO
+# 13. CAJA DE DIALOGO
 # ============================================================
 
 class CajaDialogo:
@@ -1750,7 +1767,7 @@ class CajaDialogo:
 
 
 # ============================================================
-# CLASE PANTALLA PRACTICA VERDADERO / FALSO
+# 14. PANTALLA PRACTICA VERDADERO / FALSO
 # ============================================================
 
 class PantallaPractica:
@@ -2598,7 +2615,7 @@ class PantallaPractica:
         )
 
 # ============================================================
-# 12. SISTEMA REUTILIZABLE DE INTERACCIONES
+# 15. SISTEMA REUTILIZABLE DE INTERACCIONES
 # ============================================================
 
 class Interaccion:
@@ -2664,7 +2681,7 @@ class Interaccion:
         return True
 
 # ============================================================
-# 12.1 BOTON DE IMAGEN PARA MENU DE PAUSA
+# 15.1 BOTON DE IMAGEN PARA MENU DE PAUSA
 # ============================================================
 
 class BotonImagenPausa:
@@ -2788,31 +2805,233 @@ class BotonImagenPausa:
         pantalla.blit(self.imagen_actual, self.rect.topleft)
 
 # ============================================================
-# 13. JUEGO PRINCIPAL
+# 16. INTEGRACION DE LA PANTALLA DE CARGA
+# La clase PantallaCarga original no se modifica. Main la ejecuta en otro
+# proceso y sincroniza su porcentaje mientras se inicializa Pygame.
+# ============================================================
+
+def _cargar_clase_pantalla_carga():
+    """Carga PantallaCarga desde su archivo real sin modificarlo ni usar caché."""
+    codigos_dir = Path(__file__).resolve().parent.parent / "CODIGOS"
+    ruta_pantalla_carga = codigos_dir / "pantalla_carga.py"
+
+    if not ruta_pantalla_carga.is_file():
+        raise FileNotFoundError(
+            f"No se encontro pantalla_carga.py en: {ruta_pantalla_carga}"
+        )
+
+    # La pantalla original importa Transicion.py por nombre.
+    if str(codigos_dir) not in sys.path:
+        sys.path.insert(0, str(codigos_dir))
+
+    # run_path ejecuta directamente el archivo fuente y evita problemas con
+    # módulos o .pyc antiguos almacenados en __pycache__.
+    namespace = runpy.run_path(
+        str(ruta_pantalla_carga),
+        run_name="_educore_pantalla_carga_original",
+    )
+
+    pantalla_carga = namespace.get("PantallaCarga")
+    if not isinstance(pantalla_carga, type):
+        nombres_disponibles = ", ".join(
+            sorted(nombre for nombre in namespace if not nombre.startswith("__"))
+        )
+        raise ImportError(
+            "No se encontro una clase llamada PantallaCarga en "
+            f"{ruta_pantalla_carga}. Nombres encontrados: {nombres_disponibles}"
+        )
+
+    return pantalla_carga
+
+
+def _ejecutar_pantalla_carga_desde_main(progreso_compartido, carga_finalizada):
+    """Ejecuta la PantallaCarga original sin modificar pantalla_carga.py."""
+    try:
+        from PyQt6.QtCore import QTimer, Qt
+        from PyQt6.QtWidgets import QApplication
+
+        PantallaCarga = _cargar_clase_pantalla_carga()
+    except Exception as error:
+        print("[CARGA] No se pudo abrir pantalla_carga.py:", error)
+        return
+
+    class PantallaCargaJuego(PantallaCarga):
+        """Adaptador local; no altera la clase ni el archivo originales."""
+
+        INTERVALO_PROGRESO_MS = 350
+
+        def __init__(self):
+            self._carga_finalizada = carga_finalizada
+            self._juego_termino_carga = False
+            self._cierre_programado = False
+
+            super().__init__(ventana_destino=None)
+
+            # Se detiene el temporizador original para impedir que intente
+            # abrir una ventana PyQt al llegar a 100 %.
+            self.timer_carga.stop()
+            self._establecer_progreso(0)
+
+            # El porcentaje avanza siempre de 10 en 10. Mientras Pygame sigue
+            # cargando se detiene en 90 %; cuando termina, avanza a 100 %.
+            self.timer_incremento = QTimer(self)
+            self.timer_incremento.timeout.connect(self._avanzar_progreso)
+            self.timer_incremento.start(self.INTERVALO_PROGRESO_MS)
+
+            self.timer_estado_juego = QTimer(self)
+            self.timer_estado_juego.timeout.connect(self._sincronizar_estado)
+            self.timer_estado_juego.start(30)
+
+        def _establecer_progreso(self, valor):
+            valor = max(0, min(100, int(valor)))
+
+            if valor == self.porcentaje:
+                return
+
+            self.porcentaje = valor
+            self.lbl_porcentaje.setText(f"{valor}%")
+            self.barra.set_progreso(valor)
+
+        def _sincronizar_estado(self):
+            if self._carga_finalizada.is_set():
+                self._juego_termino_carga = True
+
+        def _avanzar_progreso(self):
+            if self._cierre_programado:
+                return
+
+            limite = 100 if self._juego_termino_carga else 90
+
+            if self.porcentaje < limite:
+                self._establecer_progreso(
+                    min(self.porcentaje + 10, limite)
+                )
+
+            if self._juego_termino_carga and self.porcentaje >= 100:
+                self._cierre_programado = True
+                self.timer_incremento.stop()
+                QTimer.singleShot(350, self._cerrar)
+
+        def _cerrar(self):
+            if self.timer_animacion.isActive():
+                self.timer_animacion.stop()
+
+            if self.timer_incremento.isActive():
+                self.timer_incremento.stop()
+
+            if self.timer_estado_juego.isActive():
+                self.timer_estado_juego.stop()
+
+            self.close()
+            QApplication.instance().quit()
+
+        def abrir_ventana_destino(self):
+            # Main se encarga de mostrar Pygame cuando termina la carga.
+            self._cerrar()
+
+    app = QApplication([])
+    ventana = PantallaCargaJuego()
+
+    # La configuracion se aplica solo a esta instancia creada por main.py.
+    ventana.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
+    ventana.showMaximized()
+
+    app.exec()
+
+
+def _iniciar_pantalla_carga():
+    contexto = multiprocessing.get_context("spawn")
+    progreso = contexto.Value("i", 0)
+    carga_finalizada = contexto.Event()
+    proceso = contexto.Process(
+        target=_ejecutar_pantalla_carga_desde_main,
+        args=(progreso, carga_finalizada),
+        name="EduCorePantallaCarga",
+    )
+    proceso.start()
+    return proceso, progreso, carga_finalizada
+
+
+def _actualizar_progreso_compartido(progreso_compartido, valor):
+    if progreso_compartido is None:
+        return
+
+    valor = max(0, min(100, int(valor)))
+
+    with progreso_compartido.get_lock():
+        progreso_compartido.value = valor
+
+
+def _cerrar_pantalla_carga(proceso, progreso, carga_finalizada):
+    _actualizar_progreso_compartido(progreso, 100)
+    carga_finalizada.set()
+    proceso.join(timeout=4)
+
+    if proceso.is_alive():
+        proceso.terminate()
+        proceso.join(timeout=1)
+
+
+# ============================================================
+# 16. JUEGO PRINCIPAL
 # ============================================================
 
 class JuegoEduCore:
-    def __init__(self, id_jugador=1, nombre_lenguaje="Python", orden_leccion=None):
+    def __init__(
+        self,
+        id_jugador=1,
+        nombre_lenguaje="Python",
+        orden_leccion=None,
+        actualizar_progreso_carga=None,
+    ):
+        self._actualizar_progreso_carga = actualizar_progreso_carga
+        self._informar_progreso_carga(2)
+
         self._inicializar_pygame()
+        self._informar_progreso_carga(8)
+
+        self._inicializar_pantalla()
+        self._informar_progreso_carga(14)
 
         self.id_jugador = id_jugador
         self.nombre_lenguaje_solicitado = nombre_lenguaje
         self.orden_leccion_solicitado = orden_leccion
 
         self.db = ConexionEduCore(DB_CONFIG)
+        self._informar_progreso_carga(22)
+
         self._cargar_datos_iniciales(nombre_lenguaje)
-        self._inicializar_pantalla()
+        self._informar_progreso_carga(30)
+
         self._inicializar_estado()
+        self._informar_progreso_carga(35)
+
         self._inicializar_mundo()
+        self._informar_progreso_carga(70)
 
         self._cargar_assets_interfaz()
+        self._informar_progreso_carga(82)
+
         self._crear_botones_pausa()
         self.personaje_menu_pausa_original = self.cargar_personaje_menu_pausa()
         self._cache_personaje_menu_pausa = {}
+        self._informar_progreso_carga(90)
 
         self.registrar_interacciones()
         self.cargar_sonido_caida()
-        self.reproducir_musica_fondo()
+        self.preparar_musica_fondo()
+        self._informar_progreso_carga(97)
+
+        pygame.display.set_caption("EduCore - Juego conectado a MySQL")
+        self.iniciar_musica_fondo_preparada()
+        self.clock.tick()
+        self._informar_progreso_carga(100)
+
+    def _informar_progreso_carga(self, valor):
+        if self._actualizar_progreso_carga is None:
+            return
+
+        self._actualizar_progreso_carga(valor)
 
     def _inicializar_pygame(self):
         pygame.init()
@@ -2847,6 +3066,7 @@ class JuegoEduCore:
         self.en_pausa = False
         self.boton_pausa_rects = {}
         self.musica_silenciada = False
+        self.musica_fondo_preparada = False
         self.sonido_caida = None
         self.interacciones = []
         self.interaccion_actual = None
@@ -2987,24 +3207,27 @@ class JuegoEduCore:
         }
 
     def cargar_fondo_personalizado(self):
-        self.capas = [
-            CapaParallax(
-                ruta,
-                factor,
-                ANCHO,
-                ALTO,
-                color_fallback,
-                limpiar_fondo_falso=limpiar_fondo_falso,
-                offset_y=offset_y,
-            )
-            for (
+        self.capas = []
+
+        for configuracion in _CAPAS_FONDO_CONFIG:
+            (
                 ruta,
                 factor,
                 color_fallback,
                 limpiar_fondo_falso,
                 offset_y,
-            ) in _CAPAS_FONDO_CONFIG
-        ]
+            ) = configuracion
+            self.capas.append(
+                CapaParallax(
+                    ruta,
+                    factor,
+                    ANCHO,
+                    ALTO,
+                    color_fallback,
+                    limpiar_fondo_falso=limpiar_fondo_falso,
+                    offset_y=offset_y,
+                )
+            )
 
         self.capa_suelo = CapaParallax(
             FONDO_SUELO,
@@ -3064,20 +3287,37 @@ class JuegoEduCore:
             self.sonido_caida = None
             print("[AUDIO] No se pudo cargar el audio de caida:", error)
 
-    def reproducir_musica_fondo(self):
+    def preparar_musica_fondo(self):
+        self.musica_fondo_preparada = False
+
         if not pygame.mixer.get_init():
-            return
+            return False
 
         if not RUTA_MUSICA_FONDO.exists():
             print("[AUDIO] No se encontro la musica:", RUTA_MUSICA_FONDO)
-            return
+            return False
 
         try:
             pygame.mixer.music.load(str(RUTA_MUSICA_FONDO))
             self._aplicar_volumen_musica()
+            self.musica_fondo_preparada = True
+            return True
+        except pygame.error as error:
+            print("[AUDIO] No se pudo reproducir la musica:", error)
+            return False
+
+    def iniciar_musica_fondo_preparada(self):
+        if not pygame.mixer.get_init() or not self.musica_fondo_preparada:
+            return
+
+        try:
             pygame.mixer.music.play(-1)
         except pygame.error as error:
             print("[AUDIO] No se pudo reproducir la musica:", error)
+
+    def reproducir_musica_fondo(self):
+        if self.preparar_musica_fondo():
+            self.iniciar_musica_fondo_preparada()
 
     def _aplicar_volumen_musica(self):
         volumen = 0 if self.musica_silenciada else VOLUMEN_MUSICA
@@ -3131,24 +3371,29 @@ class JuegoEduCore:
         if self.vidas > 0:
             self.game_over = False
 
+    def obtener_centro_transicion_jugador(self):
+        jugador_rect = self.jugador.obtener_rect_pantalla()
+        centro_x = jugador_rect.centerx
+        centro_y = jugador_rect.centery
+        centro_x = max(0, min(ANCHO, centro_x))
+        centro_y = max(0, min(ALTO, centro_y))
+        return centro_x, centro_y
+
+    def iniciar_transicion_entrada(self):
+        self.transicion_vacio.iniciar_apertura(
+            self.obtener_centro_transicion_jugador()
+        )
+
     def iniciar_transicion_caida(self):
         if self.transicion_vacio.activa():
             return
-
-        jugador_rect = self.jugador.obtener_rect_pantalla()
-
-        centro_x = jugador_rect.centerx
-        centro_y = jugador_rect.centery
-
-        centro_x = max(0, min(ANCHO, centro_x))
-        centro_y = max(0, min(ALTO, centro_y))
 
         self.detener_musica_fondo()
         self.reproducir_sonido_caida()
 
         self.transicion_vacio.iniciar(
-            centro=(centro_x, centro_y),
-            accion_en_negro=self.reaparecer_jugador
+            centro=self.obtener_centro_transicion_jugador(),
+            accion_en_negro=self.reaparecer_jugador,
         )
 
     def restar_vida_por_caida(self):
@@ -4452,6 +4697,13 @@ class JuegoEduCore:
         sys.exit()
 
     def ejecutar(self):
+        # La pantalla de carga puede tardar varios segundos en cerrarse.
+        # Reiniciamos el reloj aquí para evitar que el primer dt salte
+        # directamente toda la animación de iris.
+        self.clock.tick()
+        pygame.event.clear()
+        self.iniciar_transicion_entrada()
+
         ejecutando = True
 
         while ejecutando:
@@ -4488,7 +4740,7 @@ class JuegoEduCore:
 
 
 # ============================================================
-# 13. ARGUMENTOS DE INICIO
+# 17. ARGUMENTOS DE INICIO
 # ============================================================
 
 def obtener_argumentos():
@@ -4519,12 +4771,32 @@ def obtener_argumentos():
 
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
     args = obtener_argumentos()
 
-    juego = JuegoEduCore(
-        id_jugador=args.jugador,
-        nombre_lenguaje=args.lenguaje,
-        orden_leccion=args.leccion,
+    proceso_carga, progreso_carga, carga_finalizada = _iniciar_pantalla_carga()
+
+    try:
+        juego = JuegoEduCore(
+            id_jugador=args.jugador,
+            nombre_lenguaje=args.lenguaje,
+            orden_leccion=args.leccion,
+            actualizar_progreso_carga=lambda valor: (
+                _actualizar_progreso_compartido(progreso_carga, valor)
+            ),
+        )
+    except Exception:
+        _cerrar_pantalla_carga(
+            proceso_carga,
+            progreso_carga,
+            carga_finalizada,
+        )
+        raise
+
+    _cerrar_pantalla_carga(
+        proceso_carga,
+        progreso_carga,
+        carga_finalizada,
     )
 
     juego.ejecutar()
