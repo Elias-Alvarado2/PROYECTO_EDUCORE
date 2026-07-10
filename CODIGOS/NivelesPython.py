@@ -2,6 +2,8 @@ import sys
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
 
+from Transicion import FormTransicion, FormAnterior
+
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
@@ -21,10 +23,11 @@ class FondoImagen(QtWidgets.QLabel):
 
 
 class NivelesPython(QtWidgets.QWidget):
-    def __init__(self, jugador=None):
+    def __init__(self, jugador=None, ventana_anterior=None):
         super().__init__()
 
         self.jugador = jugador
+        self.ventana_anterior = ventana_anterior
 
         BASE_DIR = Path(__file__).resolve().parent
         PROYECTO_DIR = BASE_DIR.parent
@@ -43,6 +46,47 @@ class NivelesPython(QtWidgets.QWidget):
         self.resize(1920, 1080)
 
         self.fondo = FondoImagen(self, ruta_imagen)
+
+        self.conectar_eventos()
+
+    def conectar_eventos(self):
+        self.btnVolver.clicked.connect(self.volver_form_anterior)
+
+    def volver_form_anterior(self):
+        try:
+            app = QtWidgets.QApplication.instance()
+
+            if hasattr(app, "historial_forms") and len(app.historial_forms) > 0:
+                FormAnterior(self)
+                return
+
+            if self.ventana_anterior is not None:
+                FormTransicion(
+                    self,
+                    self.ventana_anterior,
+                    guardar_actual=False
+                )
+                return
+
+            from Lecciones import Lecciones
+
+            try:
+                ventana_lecciones = Lecciones(self.jugador)
+            except TypeError:
+                ventana_lecciones = Lecciones()
+
+            FormTransicion(
+                self,
+                ventana_lecciones,
+                guardar_actual=False
+            )
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error al regresar",
+                f"No se pudo regresar al formulario anterior.\n\nDetalles:\n{e}"
+            )
 
     def resizeEvent(self, event):
         if hasattr(self, "fondo"):

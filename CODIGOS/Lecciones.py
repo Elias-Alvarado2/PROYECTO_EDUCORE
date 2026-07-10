@@ -2,6 +2,8 @@ import sys
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui, QtCore
 
+from Transicion import FormTransicion, FormAnterior
+
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
@@ -21,11 +23,14 @@ class FondoImagen(QtWidgets.QLabel):
 
 
 class Lecciones(QtWidgets.QWidget):
-    def __init__(self, jugador=None):
+    def __init__(self, jugador=None, ventana_anterior=None):
         super().__init__()
 
         self.jugador = jugador
+        self.ventana_anterior = ventana_anterior
         self.lenguaje_seleccionado = None
+        self.ventana_niveles = None
+        self.ventana_menu = None
 
         BASE_DIR = Path(__file__).resolve().parent
         PROYECTO_DIR = BASE_DIR.parent
@@ -49,7 +54,12 @@ class Lecciones(QtWidgets.QWidget):
         self.conectar_eventos()
 
     def configurar_botones(self):
-        botones_lenguaje = [self.btnPython, self.btnJava, self.btnC, self.btnMySQL]
+        botones_lenguaje = [
+            self.btnPython,
+            self.btnJava,
+            self.btnC,
+            self.btnMySQL
+        ]
 
         for boton in botones_lenguaje:
             boton.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
@@ -74,8 +84,8 @@ class Lecciones(QtWidgets.QWidget):
         self.btnJava.clicked.connect(lambda: self.seleccionar_lenguaje("Java"))
         self.btnC.clicked.connect(lambda: self.seleccionar_lenguaje("C"))
         self.btnMySQL.clicked.connect(lambda: self.seleccionar_lenguaje("MySQL"))
-
         self.btnComenzar.clicked.connect(self.comenzar_aventura)
+        self.btn_volver.clicked.connect(self.volver_pantalla_anterior)
 
     def seleccionar_lenguaje(self, lenguaje):
         self.lenguaje_seleccionado = lenguaje
@@ -110,7 +120,12 @@ class Lecciones(QtWidgets.QWidget):
             """)
 
     def limpiar_estilos_lenguajes(self):
-        botones_lenguaje = [self.btnPython, self.btnJava, self.btnC, self.btnMySQL]
+        botones_lenguaje = [
+            self.btnPython,
+            self.btnJava,
+            self.btnC,
+            self.btnMySQL
+        ]
 
         for boton in botones_lenguaje:
             boton.setStyleSheet("""
@@ -176,8 +191,10 @@ class Lecciones(QtWidgets.QWidget):
                 )
                 return
 
-            self.ventana_niveles.showMaximized()
-            self.close()
+            FormTransicion(
+                self,
+                self.ventana_niveles
+            )
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(
@@ -186,8 +203,22 @@ class Lecciones(QtWidgets.QWidget):
                 f"No se pudo abrir la ventana de niveles.\n\nDetalles:\n{e}"
             )
 
-    def volver_menu_usuario(self):
+    def volver_pantalla_anterior(self):
         try:
+            app = QtWidgets.QApplication.instance()
+
+            if hasattr(app, "historial_forms") and len(app.historial_forms) > 0:
+                FormAnterior(self)
+                return
+
+            if self.ventana_anterior is not None:
+                FormTransicion(
+                    self,
+                    self.ventana_anterior,
+                    guardar_actual=False
+                )
+                return
+
             from MenuUsuario import MenuUsuario
 
             try:
@@ -195,14 +226,17 @@ class Lecciones(QtWidgets.QWidget):
             except TypeError:
                 self.ventana_menu = MenuUsuario()
 
-            self.ventana_menu.showMaximized()
-            self.close()
+            FormTransicion(
+                self,
+                self.ventana_menu,
+                guardar_actual=False
+            )
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(
                 self,
                 "Error",
-                f"No se pudo volver al menú de usuario.\n\nDetalles:\n{e}"
+                f"No se pudo volver a la pantalla anterior.\n\nDetalles:\n{e}"
             )
 
     def resizeEvent(self, event):
@@ -213,8 +247,52 @@ class Lecciones(QtWidgets.QWidget):
         super().resizeEvent(event)
 
 
+    def volver_pantalla_anterior(self):
+        try:
+            app = QtWidgets.QApplication.instance()
+
+            if hasattr(app, "historial_forms") and len(app.historial_forms) > 0:
+                FormAnterior(self)
+                return
+
+            if self.ventana_anterior is not None:
+                FormTransicion(
+                    self,
+                    self.ventana_anterior,
+                    guardar_actual=False
+                )
+                return
+
+            from MenuAdministrador import MenuAdministrador
+
+            try:
+                self.ventana_menu = MenuAdministrador(self.jugador)
+            except TypeError:
+                self.ventana_menu = MenuAdministrador()
+
+            FormTransicion(
+                self,
+                self.ventana_menu,
+                guardar_actual=False
+            )
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error",
+                f"No se pudo volver a la pantalla anterior.\n\nDetalles:\n{e}"
+            )
+
+    def resizeEvent(self, event):
+        if hasattr(self, "fondo"):
+            self.fondo.actualizar_tamano(self.width(), self.height())
+            self.fondo.lower()
+
+        super().resizeEvent(event)
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
+
     ventana = Lecciones()
-    ventana.show()
+    ventana.showMaximized()
+
     sys.exit(app.exec())
