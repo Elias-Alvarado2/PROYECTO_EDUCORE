@@ -46,14 +46,46 @@ background-color: transparent;
     <property name="cursor">
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
+    <property name="focusPolicy">
+     <enum>Qt::FocusPolicy::NoFocus</enum>
+    </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
-background-color: transparent;
-border: none;
+     <string notr="true">QPushButton#btn_volver {
+    border: none;
+    background: transparent;
+    padding: 1px;
+    border-image: url(&quot;../../../Botones/otros/boton_volver.png&quot;);
+}
+
+QPushButton#btn_volver:hover {
+    border-image: url(&quot;../../../Botones/hover/boton_volver_hover.png&quot;);
+}
+
+QPushButton#btn_volver:pressed {
+    border-image: url(&quot;../../../Botones/hover/boton_volver_hover.png&quot;);
 }</string>
     </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>../Botones/otros/boton_volver.png</normaloff>../Botones/otros/boton_volver.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>245</width>
+      <height>245</height>
+     </size>
+    </property>
+    <property name="shortcut">
+     <string>Ctrl+R</string>
+    </property>
+    <property name="autoDefault">
+     <bool>false</bool>
+    </property>
+    <property name="flat">
+     <bool>true</bool>
     </property>
    </widget>
    <widget class="QTableView" name="dgv_visualizarusuarios">
