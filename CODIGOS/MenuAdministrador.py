@@ -22,11 +22,10 @@ class FondoImagen(QtWidgets.QLabel):
 
 
 class MenuAdministrador(QtWidgets.QWidget):
-    def __init__(self, admin=None, cambiar_form_callback=None):
+    def __init__(self, admin=None):
         super().__init__()
 
         self.admin = admin
-        self.cambiar_form_callback = cambiar_form_callback
 
         BASE_DIR = Path(__file__).resolve().parent
         PROYECTO_DIR = BASE_DIR.parent
@@ -45,10 +44,6 @@ class MenuAdministrador(QtWidgets.QWidget):
         self.resize(1920, 1080)
 
         self.fondo = FondoImagen(self, ruta_imagen)
-
-        self.ventana_gestionar = None
-        self.ventana_lecciones = None
-        self.ventana_login = None
 
         self.conectar_eventos()
 
@@ -89,13 +84,13 @@ class MenuAdministrador(QtWidgets.QWidget):
             from Lecciones import Lecciones
 
             try:
-                self.ventana_lecciones = Lecciones(self.admin)
+                ventana_lecciones = Lecciones(self.admin)
             except TypeError:
-                self.ventana_lecciones = Lecciones()
+                ventana_lecciones = Lecciones()
 
             FormTransicion(
                 self,
-                self.ventana_lecciones
+                ventana_lecciones
             )
 
         except Exception as e:
@@ -122,7 +117,8 @@ class MenuAdministrador(QtWidgets.QWidget):
 
             FormTransicion(
                 self,
-                LoginWindow
+                LoginWindow,
+                guardar_actual=False
             )
 
         except Exception as e:

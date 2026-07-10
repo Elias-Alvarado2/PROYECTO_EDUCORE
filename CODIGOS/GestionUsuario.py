@@ -1,6 +1,8 @@
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
 
+from Transicion import FormTransicion, FormAnterior
+
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
@@ -24,11 +26,6 @@ class GestionUsuario(QtWidgets.QWidget):
         super().__init__()
 
         self.ventana_anterior = ventana_anterior
-
-        self.ventana_visualizar = None
-        self.ventana_eliminar = None
-        self.ventana_editar = None
-        self.menu_admin = None
 
         BASE_DIR = Path(__file__).resolve().parent
         PROYECTO_DIR = BASE_DIR.parent
@@ -70,9 +67,10 @@ class GestionUsuario(QtWidgets.QWidget):
         try:
             from VisualizarUsuario import VisualizarUsuario
 
-            self.ventana_visualizar = VisualizarUsuario()
-            self.ventana_visualizar.showMaximized()
-            self.hide()
+            FormTransicion(
+                self,
+                VisualizarUsuario
+            )
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(
@@ -85,9 +83,10 @@ class GestionUsuario(QtWidgets.QWidget):
         try:
             from EliminarUsuario import EliminarUsuario
 
-            self.ventana_eliminar = EliminarUsuario()
-            self.ventana_eliminar.showMaximized()
-            self.hide()
+            FormTransicion(
+                self,
+                EliminarUsuario
+            )
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(
@@ -100,9 +99,10 @@ class GestionUsuario(QtWidgets.QWidget):
         try:
             from EditarUsuario import EditarUsuario
 
-            self.ventana_editar = EditarUsuario()
-            self.ventana_editar.showMaximized()
-            self.hide()
+            FormTransicion(
+                self,
+                EditarUsuario
+            )
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(
@@ -113,15 +113,29 @@ class GestionUsuario(QtWidgets.QWidget):
 
     def volver_menu_administrador(self):
         try:
-            if self.ventana_anterior is not None:
-                self.ventana_anterior.showMaximized()
-                self.close()
-            else:
-                from MenuAdministrador import MenuAdministrador
+            app = QtWidgets.QApplication.instance()
 
-                self.menu_admin = MenuAdministrador()
-                self.menu_admin.showMaximized()
-                self.close()
+            if hasattr(app, "historial_forms") and len(app.historial_forms) > 0:
+                FormAnterior(
+                    self
+                )
+                return
+
+            if self.ventana_anterior is not None:
+                FormTransicion(
+                    self,
+                    self.ventana_anterior,
+                    guardar_actual=False
+                )
+                return
+
+            from MenuAdministrador import MenuAdministrador
+
+            FormTransicion(
+                self,
+                MenuAdministrador,
+                guardar_actual=False
+            )
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(

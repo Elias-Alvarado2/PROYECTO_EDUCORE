@@ -110,10 +110,22 @@ class CapaTransicionPixel(QtWidgets.QWidget):
                     )
 
 
-def FormTransicion(ventana_actual, clase_o_instancia_destino, *args, **kwargs):
+def FormTransicion(
+    ventana_actual,
+    clase_o_instancia_destino,
+    *args,
+    guardar_actual=True,
+    **kwargs
+):
     app = QtWidgets.QApplication.instance()
 
+    if not hasattr(app, "historial_forms"):
+        app.historial_forms = []
+
     def abrir_destino():
+        if guardar_actual and ventana_actual is not None:
+            app.historial_forms.append(ventana_actual)
+
         if isinstance(clase_o_instancia_destino, QtWidgets.QWidget):
             ventana_destino = clase_o_instancia_destino
         else:
@@ -124,7 +136,7 @@ def FormTransicion(ventana_actual, clase_o_instancia_destino, *args, **kwargs):
         ventana_destino.showMaximized()
 
         if ventana_actual is not None:
-            ventana_actual.close()
+            ventana_actual.hide()
 
     capa = CapaTransicionPixel(
         ventana_actual=ventana_actual,
@@ -133,3 +145,23 @@ def FormTransicion(ventana_actual, clase_o_instancia_destino, *args, **kwargs):
 
     app.capa_transicion = capa
     capa.iniciar()
+
+
+def FormAnterior(ventana_actual):
+    app = QtWidgets.QApplication.instance()
+
+    if not hasattr(app, "historial_forms") or len(app.historial_forms) == 0:
+        QtWidgets.QMessageBox.warning(
+            ventana_actual,
+            "Sin pantalla anterior",
+            "No hay una pantalla anterior a la cual regresar."
+        )
+        return
+
+    ventana_anterior = app.historial_forms.pop()
+
+    FormTransicion(
+        ventana_actual,
+        ventana_anterior,
+        guardar_actual=False
+    )
