@@ -115,11 +115,21 @@ class MenuAdministrador(QtWidgets.QWidget):
         try:
             from Login import LoginWindow
 
-            FormTransicion(
-                self,
-                LoginWindow,
-                guardar_actual=False
-            )
+            app = QtWidgets.QApplication.instance()
+
+            # Limpia el historial para que no regrese por accidente a Registro u otro form
+            if hasattr(app, "historial_forms"):
+                app.historial_forms.clear()
+
+            self.ventana_login = LoginWindow()
+
+            app.ventana_login = self.ventana_login
+
+            # Login en tamaño normal, sin transición y sin pantalla completa
+            self.ventana_login.resize(1020, 720)
+            self.ventana_login.showNormal()
+
+            self.close()
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(

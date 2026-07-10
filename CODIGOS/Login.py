@@ -112,7 +112,7 @@ class LoginWindow(QtWidgets.QDialog):
 
             if jugador:
                 self.db.registrar_historial(
-                    jugador["id_jugador"],
+                    jugador["id_jugador"],  
                     "Inicio de sesión",
                     f"El jugador {jugador['nombre']} inició sesión correctamente."
                 )
