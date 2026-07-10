@@ -152,13 +152,13 @@ class Lecciones(QtWidgets.QWidget):
                 except TypeError:
                     self.ventana_niveles = NivelesJava()
 
-            elif self.lenguaje_seleccionado == "CSharp":
-                from NivelesC import NivelesCSharp
+            elif self.lenguaje_seleccionado == "C":
+                from NivelesC import NivelesC
 
                 try:
-                    self.ventana_niveles = NivelesCSharp(self.jugador)
+                    self.ventana_niveles = NivelesC(self.jugador)
                 except TypeError:
-                    self.ventana_niveles = NivelesCSharp()
+                    self.ventana_niveles = NivelesC()
 
             elif self.lenguaje_seleccionado == "MySQL":
                 from NivelesMySQL import NivelesMySQL

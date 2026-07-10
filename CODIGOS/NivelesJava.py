@@ -29,7 +29,7 @@ class NivelesJava(QtWidgets.QWidget):
         BASE_DIR = Path(__file__).resolve().parent
         PROYECTO_DIR = BASE_DIR.parent
 
-        ruta_ui = PROYECTO_DIR / "EXPO-DISEÑOS" / "DESIGNER" / "Niveles Java.ui"
+        ruta_ui = PROYECTO_DIR / "EXPO-DISEÑOS" / "DESIGNER" / "NivelesJava.ui"
         ruta_imagen = PROYECTO_DIR / "assets" / "DISEÑOS" / "Niveles-Java.png"
 
         if not ruta_ui.exists():
