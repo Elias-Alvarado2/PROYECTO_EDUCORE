@@ -179,7 +179,7 @@ border: none;
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="btn_volver">
+   <widget class="QPushButton" name="btnVolver">
     <property name="geometry">
      <rect>
       <x>62</x>
