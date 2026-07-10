@@ -58,6 +58,16 @@ border: none;
     <property name="text">
      <string/>
     </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>../Botones/botones java/boton 1.png</normaloff>../Botones/botones java/boton 1.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>170</width>
+      <height>175</height>
+     </size>
+    </property>
    </widget>
    <widget class="QPushButton" name="btnNivel2">
     <property name="geometry">
@@ -81,6 +91,16 @@ border: none;
     </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>../Botones/botones java/boton 2.png</normaloff>../Botones/botones java/boton 2.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>170</width>
+      <height>175</height>
+     </size>
     </property>
    </widget>
    <widget class="QPushButton" name="btnNivel3">
@@ -107,6 +127,16 @@ border: none;
     <property name="text">
      <string/>
     </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>../Botones/botones java/boton 3.png</normaloff>../Botones/botones java/boton 3.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>200</width>
+      <height>210</height>
+     </size>
+    </property>
    </widget>
    <widget class="QPushButton" name="btnNivel4">
     <property name="geometry">
@@ -131,6 +161,16 @@ border: none;
     </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>../Botones/botones java/boton 4.png</normaloff>../Botones/botones java/boton 4.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>170</width>
+      <height>175</height>
+     </size>
     </property>
    </widget>
    <widget class="QPushButton" name="btnNivel5">
@@ -157,6 +197,16 @@ border: none;
     <property name="text">
      <string/>
     </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>../Botones/botones java/boton 5.png</normaloff>../Botones/botones java/boton 5.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>170</width>
+      <height>160</height>
+     </size>
+    </property>
    </widget>
    <widget class="QPushButton" name="btnComenzar">
     <property name="geometry">
@@ -181,6 +231,16 @@ border: none;
     </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>../Botones/botones java/prueba.png</normaloff>../Botones/botones java/prueba.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>550</width>
+      <height>570</height>
+     </size>
     </property>
    </widget>
    <widget class="QPushButton" name="btnVolver">
