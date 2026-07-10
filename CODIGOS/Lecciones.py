@@ -2,6 +2,8 @@ import sys
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui, QtCore
 
+from PROYECTO_EDUCORE.CODIGOS import NivelesC
+
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
@@ -152,13 +154,13 @@ class Lecciones(QtWidgets.QWidget):
                 except TypeError:
                     self.ventana_niveles = NivelesJava()
 
-            elif self.lenguaje_seleccionado == "CSharp":
+            elif self.lenguaje_seleccionado == "C":
                 from NivelesC import NivelesCSharp
 
                 try:
-                    self.ventana_niveles = NivelesCSharp(self.jugador)
+                    self.ventana_niveles = NivelesC(self.jugador)
                 except TypeError:
-                    self.ventana_niveles = NivelesCSharp()
+                    self.ventana_niveles = NivelesC()
 
             elif self.lenguaje_seleccionado == "MySQL":
                 from NivelesMySQL import NivelesMySQL

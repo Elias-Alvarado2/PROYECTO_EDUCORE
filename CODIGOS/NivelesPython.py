@@ -29,7 +29,7 @@ class NivelesPython(QtWidgets.QWidget):
         BASE_DIR = Path(__file__).resolve().parent
         PROYECTO_DIR = BASE_DIR.parent
 
-        ruta_ui = PROYECTO_DIR / "EXPO-DISEÑOS" / "DESIGNER" / "Niveles Python.ui"
+        ruta_ui = PROYECTO_DIR / "EXPO-DISEÑOS" / "DESIGNER" / "NivelesPython.ui"
         ruta_imagen = PROYECTO_DIR / "assets" / "DISEÑOS" / "Niveles-Python.png"
 
         if not ruta_ui.exists():
