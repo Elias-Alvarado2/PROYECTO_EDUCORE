@@ -5,7 +5,6 @@ from PyQt6 import QtWidgets, uic, QtGui
 from ConexionBD import ConexionBD
 from Registro import RegistroWindow
 from pantalla_carga import PantallaCarga
-from Transicion import FormTransicion
 
 
 class FondoImagen(QtWidgets.QLabel):
@@ -196,10 +195,13 @@ class LoginWindow(QtWidgets.QDialog):
 
     def abrir_registro(self):
         try:
-            FormTransicion(
-                self,
-                RegistroWindow
-            )
+            self.registro = RegistroWindow()
+
+            app = QtWidgets.QApplication.instance()
+            app.registro = self.registro
+
+            self.registro.show()
+            self.close()
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(
