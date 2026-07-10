@@ -20,7 +20,7 @@ class FondoImagen(QtWidgets.QLabel):
         self.setGeometry(0, 0, ancho, alto)
 
 
-class NivelesJava(QtWidgets.QWidget):
+class NivelesC(QtWidgets.QWidget):
     def __init__(self, jugador=None):
         super().__init__()
 
@@ -54,6 +54,6 @@ class NivelesJava(QtWidgets.QWidget):
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    ventana = NivelesJava()
+    ventana = NivelesC()
     ventana.showMaximized()
     sys.exit(app.exec())

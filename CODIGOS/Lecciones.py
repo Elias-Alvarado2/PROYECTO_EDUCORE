@@ -2,8 +2,6 @@ import sys
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui, QtCore
 
-from PROYECTO_EDUCORE.CODIGOS import NivelesC
-
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
@@ -155,7 +153,7 @@ class Lecciones(QtWidgets.QWidget):
                     self.ventana_niveles = NivelesJava()
 
             elif self.lenguaje_seleccionado == "C":
-                from NivelesC import NivelesCSharp
+                from NivelesC import NivelesC
 
                 try:
                     self.ventana_niveles = NivelesC(self.jugador)
