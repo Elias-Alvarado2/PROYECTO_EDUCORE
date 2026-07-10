@@ -1,0 +1,86 @@
+from juego.core.juego import JuegoBase
+
+
+LENGUAJE_ACTUAL = 'C#'
+NIVEL_ACTUAL = 4
+FONDO_ACTUAL = 'c#'
+
+
+class NivelCSharp04(JuegoBase):
+    # Cada archivo conserva su propia configuración.
+    LENGUAJE_ACTUAL = LENGUAJE_ACTUAL
+    NIVEL_ACTUAL = NIVEL_ACTUAL
+    FONDO_ACTUAL = FONDO_ACTUAL
+    JUGADOR_X_INICIAL = 170
+
+    # Usa valores pequeños.
+    # Negativo = sube.
+    # Positivo = baja.
+    AJUSTE_Y_JUGADOR =0
+    LONGITUD_NIVEL = 6500
+    NPC_X = 825
+    AJUSTE_Y_NPC = -8
+
+    PISOS = (
+        (0, 1060),
+        (1240, LONGITUD_NIVEL),
+    )
+
+    ABISMOS = (
+        (1060, 1240),
+    )
+
+    OBSTACULOS = (
+        {
+            "tipo": "tronco",
+            "imagen": "tronco.png",
+            "x": 740,
+            "ajuste_y": 40,
+            "hitbox_offset_x": 10,
+            "hitbox_offset_y": 40,
+            "hitbox_reducir_ancho": 20,
+            "hitbox_reducir_alto": 70,
+        },
+        {
+            "tipo": "tronco",
+            "imagen": "tronco.png",
+            "x": 1690,
+            "ajuste_y": 40,
+            "hitbox_offset_x": 10,
+            "hitbox_offset_y": 40,
+            "hitbox_reducir_ancho": 20,
+            "hitbox_reducir_alto": 70,
+        },
+        {
+            "tipo": "tronco",
+            "imagen": "tronco.png",
+            "x": 2400,
+            "ajuste_y": 40,
+            "hitbox_offset_x": 10,
+            "hitbox_offset_y": 40,
+            "hitbox_reducir_ancho": 20,
+            "hitbox_reducir_alto": 70,
+        },
+    )
+
+    PRACTICAS = (
+        {
+            "x": 1500,
+            "y": None,
+            "pregunta": 'En C#, una variable debe respetar el tipo de dato declarado.',
+            "respuesta_correcta": True,
+            "nombre": "practica_csharp_04",
+        },
+    )
+
+
+CLASE_NIVEL = NivelCSharp04
+
+
+def ejecutar_nivel(id_jugador: int = 1):
+    juego = CLASE_NIVEL(id_jugador=id_jugador)
+    juego.ejecutar()
+
+
+if __name__ == "__main__":
+    ejecutar_nivel()
