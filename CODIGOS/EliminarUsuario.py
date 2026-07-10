@@ -3,6 +3,7 @@ from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
 
 from ConexionBD import ConexionBD
+from Transicion import FormTransicion, FormAnterior
 
 
 class FondoImagen(QtWidgets.QLabel):
@@ -16,7 +17,6 @@ class FondoImagen(QtWidgets.QLabel):
         self.setGeometry(0, 0, ventana.width(), ventana.height())
         self.setPixmap(self.pixmap_original)
 
-        # Mandar la imagen al fondo
         self.lower()
 
     def actualizar_tamano(self, ancho, alto):
@@ -27,7 +27,6 @@ class EliminarUsuario(QtWidgets.QWidget):
     def __init__(self, ventana_anterior=None):
         super().__init__()
 
-        # Guarda la ventana anterior, en este caso Gestión Usuarios
         self.ventana_anterior = ventana_anterior
         self.ventana_gestion_usuarios = None
 
@@ -63,10 +62,8 @@ class EliminarUsuario(QtWidgets.QWidget):
         super().resizeEvent(event)
 
     def configurar_campos(self):
-        # Solo permite escribir números en el campo ID
         self.txt_idjugador.setValidator(QtGui.QIntValidator(1, 999999))
 
-        # Los datos del jugador solo se muestran, no se editan
         self.txt_nombreusuario.setReadOnly(True)
         self.txt_correo.setReadOnly(True)
         self.txt_personaje.setReadOnly(True)
@@ -75,20 +72,14 @@ class EliminarUsuario(QtWidgets.QWidget):
         self.txt_estado.setReadOnly(True)
 
     def conectar_eventos(self):
-        # Buscar jugador al presionar Enter en el campo ID
         self.txt_idjugador.returnPressed.connect(self.buscar_usuario)
-
-        # Buscar también cuando el admin sale del campo ID
         self.txt_idjugador.editingFinished.connect(self.buscar_usuario)
 
-        # Botón eliminar
         self.btn_eliminarusuario.clicked.connect(self.eliminar_usuario)
 
-        # Botón cancelar
         if hasattr(self, "btn_cancelar"):
             self.btn_cancelar.clicked.connect(self.limpiar_campos)
 
-        # Botón volver
         if hasattr(self, "btn_volver"):
             self.btn_volver.clicked.connect(self.volver_gestion_usuarios)
 
@@ -96,21 +87,28 @@ class EliminarUsuario(QtWidgets.QWidget):
             self.btn_Volver.clicked.connect(self.volver_gestion_usuarios)
 
     def volver_gestion_usuarios(self):
-        # Si EliminarUsuario fue abierto desde Gestión Usuarios,
-        # vuelve a mostrar esa misma ventana.
-        if self.ventana_anterior is not None:
-            self.ventana_anterior.show()
-            self.close()
-            return
-
-        # Si ejecutaste este archivo directamente,
-        # intenta abrir Gestión Usuarios desde su clase.
         try:
+            app = QtWidgets.QApplication.instance()
+
+            if hasattr(app, "historial_forms") and len(app.historial_forms) > 0:
+                FormAnterior(self)
+                return
+
+            if self.ventana_anterior is not None:
+                FormTransicion(
+                    self,
+                    self.ventana_anterior,
+                    guardar_actual=False
+                )
+                return
+
             from GestionUsuario import GestionUsuario
 
-            self.ventana_gestion_usuarios = GestionUsuario()
-            self.ventana_gestion_usuarios.show()
-            self.close()
+            FormTransicion(
+                self,
+                GestionUsuario,
+                guardar_actual=False
+            )
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(
@@ -184,7 +182,6 @@ class EliminarUsuario(QtWidgets.QWidget):
             )
             return
 
-        # Si todavía no se cargaron los datos, intenta buscar el usuario
         if self.jugador_actual is None:
             self.buscar_usuario()
 
@@ -235,6 +232,8 @@ class EliminarUsuario(QtWidgets.QWidget):
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
+
     ventana = EliminarUsuario()
     ventana.show()
+
     sys.exit(app.exec())

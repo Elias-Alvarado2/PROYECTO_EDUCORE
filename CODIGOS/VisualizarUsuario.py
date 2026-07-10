@@ -3,6 +3,7 @@ from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui, QtCore
 
 from ConexionBD import ConexionBD
+from Transicion import FormTransicion, FormAnterior
 
 
 class FondoImagen(QtWidgets.QLabel):
@@ -16,7 +17,6 @@ class FondoImagen(QtWidgets.QLabel):
         self.setGeometry(0, 0, ventana.width(), ventana.height())
         self.setPixmap(self.pixmap_original)
 
-        # Mandar la imagen al fondo
         self.lower()
 
     def actualizar_tamano(self, ancho, alto):
@@ -27,24 +27,16 @@ class VisualizarUsuario(QtWidgets.QWidget):
     def __init__(self, ventana_anterior=None):
         super().__init__()
 
-        # Guarda la ventana anterior, en este caso Gestión Usuarios
         self.ventana_anterior = ventana_anterior
         self.ventana_gestion_usuarios = None
 
-        # Tamaño base del diseño original
         self.ANCHO_BASE = 1920
         self.ALTO_BASE = 1080
 
-        # Carpeta CODIGOS
         BASE_DIR = Path(__file__).resolve().parent
-
-        # Carpeta PROYECTO_EDUCORE
         PROYECTO_DIR = BASE_DIR.parent
 
-        # Ruta del archivo .ui
         ruta_ui = PROYECTO_DIR / "EXPO-DISEÑOS" / "DESIGNER" / "Visualizar-Usuarios.ui"
-
-        # Ruta de la imagen de fondo
         ruta_imagen = PROYECTO_DIR / "assets" / "DISEÑOS" / "Visualizar_Usuarios.png"
 
         if not ruta_ui.exists():
@@ -53,26 +45,20 @@ class VisualizarUsuario(QtWidgets.QWidget):
         if not ruta_imagen.exists():
             raise FileNotFoundError(f"No se encontró la imagen:\n{ruta_imagen}")
 
-        # Cargar diseño
         uic.loadUi(str(ruta_ui), self)
 
-        # Tamaño inicial de la ventana
         self.resize(1920, 1080)
 
-        # Crear fondo
         self.fondo = FondoImagen(self, ruta_imagen)
 
-        # Conexión a la base de datos
         self.db = ConexionBD()
 
-        # Configurar y cargar usuarios
         self.configurar_tabla()
         self.cargar_usuarios()
-
-        # Posicionar tabla y total
         self.posicionar_elementos()
+        self.conectar_eventos()
 
-        # Botón volver
+    def conectar_eventos(self):
         if hasattr(self, "btn_Volver"):
             self.btn_Volver.clicked.connect(self.volver_gestion_usuarios)
 
@@ -80,21 +66,28 @@ class VisualizarUsuario(QtWidgets.QWidget):
             self.btn_volver.clicked.connect(self.volver_gestion_usuarios)
 
     def volver_gestion_usuarios(self):
-        # Si VisualizarUsuario fue abierto desde Gestión Usuarios,
-        # vuelve a mostrar esa misma ventana.
-        if self.ventana_anterior is not None:
-            self.ventana_anterior.show()
-            self.close()
-            return
-
-        # Si ejecutaste este archivo directamente,
-        # intenta abrir Gestión Usuarios desde su clase.
         try:
+            app = QtWidgets.QApplication.instance()
+
+            if hasattr(app, "historial_forms") and len(app.historial_forms) > 0:
+                FormAnterior(self)
+                return
+
+            if self.ventana_anterior is not None:
+                FormTransicion(
+                    self,
+                    self.ventana_anterior,
+                    guardar_actual=False
+                )
+                return
+
             from GestionUsuario import GestionUsuario
 
-            self.ventana_gestion_usuarios = GestionUsuario()
-            self.ventana_gestion_usuarios.show()
-            self.close()
+            FormTransicion(
+                self,
+                GestionUsuario,
+                guardar_actual=False
+            )
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(
@@ -116,7 +109,6 @@ class VisualizarUsuario(QtWidgets.QWidget):
         escala_x = self.width() / self.ANCHO_BASE
         escala_y = self.height() / self.ALTO_BASE
 
-        # Área donde van los datos de la tabla
         x_tabla = int(185 * escala_x)
         y_tabla = int(455 * escala_y)
         ancho_tabla = int(1550 * escala_x)
@@ -133,7 +125,6 @@ class VisualizarUsuario(QtWidgets.QWidget):
 
         self.ajustar_columnas()
 
-        # Número total de usuarios
         if hasattr(self, "lbl_totalusuarios"):
             x_total = int(510 * escala_x)
             y_total = int(882 * escala_y)
@@ -159,7 +150,6 @@ class VisualizarUsuario(QtWidgets.QWidget):
             self.lbl_totalusuarios.raise_()
 
     def configurar_tabla(self):
-        # Modelo para llenar el QTableView
         self.modelo = QtGui.QStandardItemModel()
 
         encabezados = [
@@ -175,46 +165,36 @@ class VisualizarUsuario(QtWidgets.QWidget):
 
         self.modelo.setHorizontalHeaderLabels(encabezados)
 
-        # Conectar modelo al QTableView
         self.dgv_visualizarusuarios.setModel(self.modelo)
 
-        # No permitir editar celdas
         self.dgv_visualizarusuarios.setEditTriggers(
             QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers
         )
 
-        # Seleccionar filas completas
         self.dgv_visualizarusuarios.setSelectionBehavior(
             QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows
         )
 
-        # Solo seleccionar una fila
         self.dgv_visualizarusuarios.setSelectionMode(
             QtWidgets.QAbstractItemView.SelectionMode.SingleSelection
         )
 
-        # Ocultar encabezado vertical y horizontal
         self.dgv_visualizarusuarios.verticalHeader().setVisible(False)
         self.dgv_visualizarusuarios.horizontalHeader().setVisible(False)
 
-        # Usar anchos fijos para alinear con los títulos del diseño
         self.dgv_visualizarusuarios.horizontalHeader().setSectionResizeMode(
             QtWidgets.QHeaderView.ResizeMode.Fixed
         )
 
-        # Quitar líneas fuertes
         self.dgv_visualizarusuarios.setShowGrid(False)
         self.dgv_visualizarusuarios.setAlternatingRowColors(False)
 
-        # Altura de filas
         self.dgv_visualizarusuarios.verticalHeader().setDefaultSectionSize(42)
 
-        # Quitar scroll horizontal para que no se salga del cuadro
         self.dgv_visualizarusuarios.setHorizontalScrollBarPolicy(
             QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff
         )
 
-        # Estilo visual de la tabla
         self.dgv_visualizarusuarios.setStyleSheet("""
             QTableView {
                 background: transparent;
@@ -245,14 +225,14 @@ class VisualizarUsuario(QtWidgets.QWidget):
         ancho_tabla = self.dgv_visualizarusuarios.width()
 
         porcentajes = [
-            0.16,  # ID JUGADOR
-            0.13,  # NOMBRE_USUARIO
-            0.15,  # CORREO
-            0.11,  # CONTRASEÑA
-            0.12,  # PERSONAJE
-            0.08,  # VIDAS
-            0.15,  # FECHA_REGISTRO
-            0.09   # ESTADO
+            0.16,
+            0.13,
+            0.15,
+            0.11,
+            0.12,
+            0.08,
+            0.15,
+            0.09
         ]
 
         for columna, porcentaje in enumerate(porcentajes):
@@ -275,7 +255,6 @@ class VisualizarUsuario(QtWidgets.QWidget):
         try:
             usuarios = self.db.obtener_jugadores()
 
-            # Limpiar tabla antes de cargar datos
             self.modelo.removeRows(0, self.modelo.rowCount())
 
             for usuario in usuarios:
@@ -292,8 +271,6 @@ class VisualizarUsuario(QtWidgets.QWidget):
 
                 self.modelo.appendRow(fila)
 
-            # Aquí solo va el número, porque el texto
-            # "Total de usuarios:" ya está en la imagen.
             self.lbl_totalusuarios.setText(str(len(usuarios)))
 
         except Exception as e:
@@ -303,9 +280,17 @@ class VisualizarUsuario(QtWidgets.QWidget):
                 str(e)
             )
 
+    def showEvent(self, event):
+        super().showEvent(event)
+
+        QtCore.QTimer.singleShot(0, self.posicionar_elementos)
+        QtCore.QTimer.singleShot(100, self.posicionar_elementos)
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
+
     ventana = VisualizarUsuario()
     ventana.show()
+
     sys.exit(app.exec())

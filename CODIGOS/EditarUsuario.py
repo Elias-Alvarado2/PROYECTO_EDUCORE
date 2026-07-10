@@ -3,6 +3,7 @@ from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui, QtCore
 
 from ConexionBD import ConexionBD
+from Transicion import FormTransicion, FormAnterior
 
 
 class FondoImagen(QtWidgets.QLabel):
@@ -16,7 +17,6 @@ class FondoImagen(QtWidgets.QLabel):
         self.setGeometry(0, 0, ventana.width(), ventana.height())
         self.setPixmap(self.pixmap_original)
 
-        # Mandar la imagen al fondo
         self.lower()
 
     def actualizar_tamano(self, ancho, alto):
@@ -44,23 +44,17 @@ class EditarUsuario(QtWidgets.QWidget):
         if not ruta_imagen.exists():
             raise FileNotFoundError(f"No se encontró la imagen:\n{ruta_imagen}")
 
-        # Cargar interfaz
         uic.loadUi(str(ruta_ui), self)
 
-        # Tamaño inicial
         self.resize(1920, 1080)
 
-        # Fondo
         self.fondo = FondoImagen(self, ruta_imagen)
 
-        # Base de datos
         self.db = ConexionBD()
 
-        # Variables de control
         self.jugador_actual = None
         self.ultimo_id_buscado = ""
 
-        # Timer para buscar automáticamente al escribir el ID
         self.timer_busqueda_id = QtCore.QTimer(self)
         self.timer_busqueda_id.setSingleShot(True)
         self.timer_busqueda_id.timeout.connect(self.buscar_usuario_automatico)
@@ -76,30 +70,18 @@ class EditarUsuario(QtWidgets.QWidget):
         super().resizeEvent(event)
 
     def configurar_campos(self):
-        # El ID solo permite números
         self.txt_idjugador.setValidator(QtGui.QIntValidator(1, 999999))
-
-        # Vidas solo permite números
         self.txt_vidas.setValidator(QtGui.QIntValidator(0, 999))
-
-        # Fecha no se edita
         self.txt_fecharegistro.setReadOnly(True)
 
-        # ComboBox de estado
         self.cmb_estado.clear()
         self.cmb_estado.addItems(["Activo", "Inactivo"])
 
     def conectar_eventos(self):
-        # Buscar automáticamente cuando se escriba el ID
         self.txt_idjugador.textChanged.connect(self.iniciar_busqueda_automatica)
-
-        # Buscar también al presionar Enter
         self.txt_idjugador.returnPressed.connect(self.buscar_usuario)
-
-        # Botón confirmar cambios
         self.btn_confirmarcambios.clicked.connect(self.confirmar_cambios)
 
-        # Botón volver a Gestión de Usuarios
         if hasattr(self, "btn_volver"):
             self.btn_volver.clicked.connect(self.volver_gestion_usuario)
 
@@ -107,7 +89,6 @@ class EditarUsuario(QtWidgets.QWidget):
             self.btn_Volver.clicked.connect(self.volver_gestion_usuario)
 
     def iniciar_busqueda_automatica(self):
-        # Espera 500 ms después de escribir para buscar en la BD
         self.timer_busqueda_id.start(500)
 
     def buscar_usuario_automatico(self):
@@ -119,7 +100,6 @@ class EditarUsuario(QtWidgets.QWidget):
             self.limpiar_datos_usuario()
             return
 
-        # Evita buscar varias veces el mismo ID
         if id_jugador == self.ultimo_id_buscado:
             return
 
@@ -201,7 +181,6 @@ class EditarUsuario(QtWidgets.QWidget):
         else:
             self.cmb_estado.setCurrentIndex(0)
 
-        # Forzar que los textos vuelvan a quedar dentro de sus cajas
         self.posicionar_elementos()
 
     def limpiar_datos_usuario(self):
@@ -288,14 +267,12 @@ class EditarUsuario(QtWidgets.QWidget):
         if datos is None:
             return
 
-        # Si todavía no se cargó el jugador, lo busca primero
         if self.jugador_actual is None:
             self.buscar_usuario()
 
             if self.jugador_actual is None:
                 return
 
-        # Si el ID escrito ya no coincide con el jugador cargado, vuelve a buscar
         if str(self.jugador_actual["id_jugador"]) != str(datos["id_jugador"]):
             self.buscar_usuario()
 
@@ -356,23 +333,35 @@ class EditarUsuario(QtWidgets.QWidget):
             )
 
     def volver_gestion_usuario(self):
-        if self.ventana_anterior is not None:
-            self.ventana_anterior.showMaximized()
-            self.close()
-        else:
-            try:
-                from GestionUsuario import GestionUsuario
+        try:
+            app = QtWidgets.QApplication.instance()
 
-                self.ventana_gestion = GestionUsuario()
-                self.ventana_gestion.showMaximized()
-                self.close()
+            if hasattr(app, "historial_forms") and len(app.historial_forms) > 0:
+                FormAnterior(self)
+                return
 
-            except Exception as e:
-                QtWidgets.QMessageBox.critical(
+            if self.ventana_anterior is not None:
+                FormTransicion(
                     self,
-                    "Error",
-                    f"No se pudo abrir Gestión de Usuarios.\n\nDetalles:\n{e}"
+                    self.ventana_anterior,
+                    guardar_actual=False
                 )
+                return
+
+            from GestionUsuario import GestionUsuario
+
+            FormTransicion(
+                self,
+                GestionUsuario,
+                guardar_actual=False
+            )
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error",
+                f"No se pudo abrir Gestión de Usuarios.\n\nDetalles:\n{e}"
+            )
 
     def posicionar_elementos(self):
         escala_x = self.width() / self.ANCHO_BASE
@@ -381,10 +370,6 @@ class EditarUsuario(QtWidgets.QWidget):
         if hasattr(self, "Editar_Usuarios"):
             self.Editar_Usuarios.setGeometry(0, 0, self.width(), self.height())
             self.Editar_Usuarios.raise_()
-
-        # ==============================
-        # AJUSTES GENERALES
-        # ==============================
 
         x_izquierda = 355
         x_derecha = 1025
@@ -401,10 +386,6 @@ class EditarUsuario(QtWidgets.QWidget):
         y_vidas = 550
         y_fecha = 660
         y_estado = 773
-
-        # ==============================
-        # CAMPOS IZQUIERDA
-        # ==============================
 
         self.txt_idjugador.setGeometry(
             int(x_izquierda * escala_x),
@@ -434,10 +415,6 @@ class EditarUsuario(QtWidgets.QWidget):
             int(alto_campo * escala_y)
         )
 
-        # ==============================
-        # CAMPOS DERECHA
-        # ==============================
-
         self.txt_personaje.setGeometry(
             int(x_derecha * escala_x),
             int(y_personaje * escala_y),
@@ -466,20 +443,12 @@ class EditarUsuario(QtWidgets.QWidget):
             int(alto_campo * escala_y)
         )
 
-        # ==============================
-        # BOTÓN CONFIRMAR
-        # ==============================
-
         self.btn_confirmarcambios.setGeometry(
             int(720 * escala_x),
             int(885 * escala_y),
             int(480 * escala_x),
             int(70 * escala_y)
         )
-
-        # ==============================
-        # BOTÓN VOLVER
-        # ==============================
 
         if hasattr(self, "btn_volver"):
             self.btn_volver.setGeometry(
@@ -498,10 +467,6 @@ class EditarUsuario(QtWidgets.QWidget):
                 int(70 * escala_y)
             )
             self.btn_Volver.raise_()
-
-        # ==============================
-        # TRAER CAMPOS AL FRENTE
-        # ==============================
 
         campos = [
             self.txt_idjugador,
@@ -527,6 +492,8 @@ class EditarUsuario(QtWidgets.QWidget):
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
+
     ventana = EditarUsuario()
     ventana.show()
+
     sys.exit(app.exec())
