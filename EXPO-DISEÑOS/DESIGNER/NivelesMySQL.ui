@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QFrame" name="NivelesJava">
+  <widget class="QFrame" name="NivelesMySQL">
    <property name="geometry">
     <rect>
      <x>0</x>
@@ -23,8 +23,8 @@
     </rect>
    </property>
    <property name="styleSheet">
-    <string notr="true">QFrame#NivelesJava{
-border-image: url(&quot;../../assets/DISEÑOS/Niveles-Java.png&quot;) 0 0 0 0 stretch stretch;
+    <string notr="true">QFrame#NivelesMySQL{
+border-image: url(&quot;../../assets/DISEÑOS/Niveles-MySQL.png&quot;) 0 0 0 0 stretch stretch;
 background-color: transparent;
 }</string>
    </property>
@@ -34,7 +34,7 @@ background-color: transparent;
    <property name="frameShadow">
     <enum>QFrame::Shadow::Raised</enum>
    </property>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="btnNivel1">
     <property name="geometry">
      <rect>
       <x>520</x>
@@ -59,7 +59,7 @@ border: none;
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_2">
+   <widget class="QPushButton" name="btnNivel2">
     <property name="geometry">
      <rect>
       <x>702</x>
@@ -83,7 +83,7 @@ border: none;
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_3">
+   <widget class="QPushButton" name="btnNivel3">
     <property name="geometry">
      <rect>
       <x>885</x>
@@ -108,7 +108,7 @@ border: none;
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_4">
+   <widget class="QPushButton" name="btnNivel4">
     <property name="geometry">
      <rect>
       <x>1067</x>
@@ -133,7 +133,7 @@ border: none;
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_5">
+   <widget class="QPushButton" name="btnNivel5">
     <property name="geometry">
      <rect>
       <x>1250</x>
@@ -158,7 +158,7 @@ border: none;
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_6">
+   <widget class="QPushButton" name="btnComenzar">
     <property name="geometry">
      <rect>
       <x>691</x>
@@ -177,6 +177,29 @@ border: none;
 }
 
 
+</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btnVolver">
+    <property name="geometry">
+     <rect>
+      <x>62</x>
+      <y>52</y>
+      <width>203</width>
+      <height>74</height>
+     </rect>
+    </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+    background-color: transparent;
+    border: none;
+}
 </string>
     </property>
     <property name="text">
