@@ -76,13 +76,22 @@ background-color: transparent;
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
-background-color: transparent;
-border: none;
+     <string notr="true">QPushButton#btn_confirmarcambios {
+    border: none;
+    background-color: transparent;
+    padding: 0px;
+    margin: 0px;
+    border-image: url(&quot;../Botones/otros/boton_confirmar_cambios.png&quot;) 0 0 0 0 stretch stretch;
 }</string>
     </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>245</width>
+      <height>245</height>
+     </size>
     </property>
    </widget>
    <widget class="QLineEdit" name="txt_idjugador">

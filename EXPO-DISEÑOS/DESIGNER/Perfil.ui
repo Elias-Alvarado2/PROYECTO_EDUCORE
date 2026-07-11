@@ -61,6 +61,32 @@ background-color: transparent;
      </size>
     </property>
    </widget>
+   <widget class="QLabel" name="lbl_personaje">
+    <property name="geometry">
+     <rect>
+      <x>620</x>
+      <y>285</y>
+      <width>181</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lbl_usuario">
+    <property name="geometry">
+     <rect>
+      <x>590</x>
+      <y>330</y>
+      <width>211</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
   </widget>
  </widget>
  <resources/>

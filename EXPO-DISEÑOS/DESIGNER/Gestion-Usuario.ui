@@ -39,7 +39,7 @@
     <property name="geometry">
      <rect>
       <x>627</x>
-      <y>389</y>
+      <y>460</y>
       <width>650</width>
       <height>121</height>
      </rect>
@@ -48,11 +48,13 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
+     <string notr="true">QPushButton#btn_visualizar {
+    border: 0px;
     background-color: transparent;
-    border: none;
-}
-</string>
+    padding: 0px;
+    margin: 0px;
+    border-image: url(&quot;../Botones/botones_gestion_usuarios/boton_visualizar_usuarios.png&quot;) 0 0 0 0 stretch stretch;
+}</string>
     </property>
     <property name="text">
      <string/>
@@ -62,7 +64,7 @@
     <property name="geometry">
      <rect>
       <x>627</x>
-      <y>517</y>
+      <y>610</y>
       <width>650</width>
       <height>117</height>
      </rect>
@@ -71,9 +73,12 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
+     <string notr="true">QPushButton#btn_editar {
+    border: 0px;
     background-color: transparent;
-    border: none;
+    padding: 0px;
+    margin: 0px;
+    border-image: url(&quot;../Botones/botones_gestion_usuarios/boton_editar_usuarios.png&quot;) 0 0 0 0 stretch stretch;
 }
 </string>
     </property>
@@ -85,7 +90,7 @@
     <property name="geometry">
      <rect>
       <x>627</x>
-      <y>643</y>
+      <y>770</y>
       <width>650</width>
       <height>117</height>
      </rect>
@@ -94,14 +99,22 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
+     <string notr="true">QPushButton#btn_eliminar {
+    border: 0px;
     background-color: transparent;
-    border: none;
-}
-</string>
+    padding: 0px;
+    margin: 0px;
+    border-image: url(&quot;../Botones/botones_gestion_usuarios/boton_eliminar_usuarios.png&quot;) 0 0 0 0 stretch stretch;
+}</string>
     </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>245</width>
+      <height>245</height>
+     </size>
     </property>
    </widget>
    <widget class="QPushButton" name="btn_volver">

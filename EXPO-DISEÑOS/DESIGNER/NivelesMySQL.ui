@@ -47,10 +47,14 @@ background-color: transparent;
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
-background-color: transparent;
-border: none;
+     <string notr="true">QPushButton#btnNivel1 {
+    border: 0px;
+    background-color: transparent;
+    padding: 0px;
+    margin: 0px;
+    border-image: url(&quot;../Botones/botones_MySQL/boton1.png&quot;) 0 0 0 0 stretch stretch;
 }
+
 
 
 </string>
@@ -72,10 +76,14 @@ border: none;
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
-background-color: transparent;
-border: none;
+     <string notr="true">QPushButton#btnNivel2 {
+    border: 0px;
+    background-color: transparent;
+    padding: 0px;
+    margin: 0px;
+    border-image: url(&quot;../Botones/botones_MySQL/boton2.png&quot;) 0 0 0 0 stretch stretch;
 }
+
 
 </string>
     </property>
@@ -96,9 +104,12 @@ border: none;
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
-background-color: transparent;
-border: none;
+     <string notr="true">QPushButton#btnNivel3 {
+    border: 0px;
+    background-color: transparent;
+    padding: 0px;
+    margin: 0px;
+    border-image: url(&quot;../Botones/botones_MySQL/boton3.png&quot;) 0 0 0 0 stretch stretch;
 }
 
 
@@ -121,9 +132,12 @@ border: none;
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
-background-color: transparent;
-border: none;
+     <string notr="true">QPushButton#btnNivel4 {
+    border: 0px;
+    background-color: transparent;
+    padding: 0px;
+    margin: 0px;
+    border-image: url(&quot;../Botones/botones_MySQL/boton4.png&quot;) 0 0 0 0 stretch stretch;
 }
 
 
@@ -146,9 +160,12 @@ border: none;
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
-background-color: transparent;
-border: none;
+     <string notr="true">QPushButton#btnNivel5 {
+    border: 0px;
+    background-color: transparent;
+    padding: 0px;
+    margin: 0px;
+    border-image: url(&quot;../Botones/botones_MySQL/boton5.png&quot;) 0 0 0 0 stretch stretch;
 }
 
 
@@ -171,9 +188,12 @@ border: none;
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
-background-color: transparent;
-border: none;
+     <string notr="true">QPushButton#btnComenzar {
+    border: 0px;
+    background-color: transparent;
+    padding: 0px;
+    margin: 0px;
+    border-image: url(&quot;../Botones/botones_MySQL/boton_prueba.png&quot;) 0 0 0 0 stretch stretch;
 }
 
 

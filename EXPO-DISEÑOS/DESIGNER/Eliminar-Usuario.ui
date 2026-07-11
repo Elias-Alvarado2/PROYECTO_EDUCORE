@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1920</width>
-    <height>1080</height>
+    <height>1085</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,7 +16,7 @@
   <widget class="QFrame" name="Eliminar_Usuario">
    <property name="geometry">
     <rect>
-     <x>-10</x>
+     <x>0</x>
      <y>0</y>
      <width>1920</width>
      <height>1080</height>
@@ -69,8 +69,8 @@ border: none;
    <widget class="QPushButton" name="btn_cancelar">
     <property name="geometry">
      <rect>
-      <x>540</x>
-      <y>825</y>
+      <x>560</x>
+      <y>930</y>
       <width>321</width>
       <height>71</height>
      </rect>
@@ -79,20 +79,29 @@ border: none;
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
-background-color: transparent;
-border: none;
+     <string notr="true">QPushButton#btn_cancelar {
+    border: none;
+    background-color: transparent;
+    padding: 0px;
+    margin: 0px;
+    border-image: url(&quot;../Botones/otros/boton_cancelar.png&quot;) 0 0 0 0 stretch stretch;
 }</string>
     </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>300</width>
+      <height>300</height>
+     </size>
     </property>
    </widget>
    <widget class="QPushButton" name="btn_eliminarusuario">
     <property name="geometry">
      <rect>
       <x>910</x>
-      <y>820</y>
+      <y>930</y>
       <width>471</width>
       <height>71</height>
      </rect>
@@ -101,9 +110,12 @@ border: none;
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
-background-color: transparent;
-border: none;
+     <string notr="true">QPushButton#btn_eliminarusuario {
+    border: 0px;
+    background-color: transparent;
+    padding: 0px;
+    margin: 0px;
+    border-image: url(&quot;../Botones/otros/boton_eliminar_usuario.png&quot;) 0 0 0 0 stretch stretch;
 }</string>
     </property>
     <property name="text">

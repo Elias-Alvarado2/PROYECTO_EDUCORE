@@ -38,8 +38,8 @@
    <widget class="QPushButton" name="btnJugar">
     <property name="geometry">
      <rect>
-      <x>50</x>
-      <y>220</y>
+      <x>630</x>
+      <y>320</y>
       <width>669</width>
       <height>120</height>
      </rect>
@@ -48,12 +48,12 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
-    border-image: url(assets/BOTONES/boton_jugar.png);
-    border: none;
-    color: white;
-    font-size: 16px;
-    padding: 4px;
+     <string notr="true">QPushButton#btnJugar {
+    border: 0px;
+    background-color: transparent;
+    padding: 0px;
+    margin: 0px;
+    border-image: url(&quot;../Botones/botones_menu_jugador/boton_jugar.png&quot;) 0 0 0 0 stretch stretch;
 }</string>
     </property>
     <property name="text">
@@ -73,11 +73,13 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
+     <string notr="true">QPushButton#btnAjustes {
+    border: 0px;
     background-color: transparent;
-    border: none;
-}
-</string>
+    padding: 0px;
+    margin: 0px;
+    border-image: url(&quot;../Botones/botones_menu_jugador/boton_ajustes.png&quot;) 0 0 0 0 stretch stretch;
+}</string>
     </property>
     <property name="text">
      <string/>
@@ -96,11 +98,13 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
+     <string notr="true">QPushButton#btnPerfil {
+    border: 0px;
     background-color: transparent;
-    border: none;
-}
-</string>
+    padding: 0px;
+    margin: 0px;
+    border-image: url(&quot;../Botones/botones_menu_jugador/boton_perfil.png&quot;) 0 0 0 0 stretch stretch;
+}</string>
     </property>
     <property name="text">
      <string/>
@@ -119,9 +123,12 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
+     <string notr="true">QPushButton#btnCerrarSesion {
+    border: 0px;
     background-color: transparent;
-    border: none;
+    padding: 0px;
+    margin: 0px;
+    border-image: url(&quot;../Botones/botones_menu_jugador/boton_cerrar_sesion.png&quot;) 0 0 0 0 stretch stretch;
 }
 </string>
     </property>

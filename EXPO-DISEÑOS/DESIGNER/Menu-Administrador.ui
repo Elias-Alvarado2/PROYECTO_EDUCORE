@@ -48,11 +48,13 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
+     <string notr="true">QPushButton#btnJugar {
+    border: 0px;
     background-color: transparent;
-    border: none;
-}
-</string>
+    padding: 0px;
+    margin: 0px;
+    border-image: url(&quot;../Botones/botones_menu_admin/boton_jugar.png&quot;) 0 0 0 0 stretch stretch;
+}</string>
     </property>
     <property name="text">
      <string/>
@@ -71,9 +73,12 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
+     <string notr="true">QPushButton#btnAjustes {
+    border: 0px;
     background-color: transparent;
-    border: none;
+    padding: 0px;
+    margin: 0px;
+    border-image: url(&quot;../Botones/botones_menu_admin/boton_ajustes.png&quot;) 0 0 0 0 stretch stretch;
 }
 </string>
     </property>
@@ -94,9 +99,12 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
+     <string notr="true">QPushButton#btnPerfil {
+    border: 0px;
     background-color: transparent;
-    border: none;
+    padding: 0px;
+    margin: 0px;
+    border-image: url(&quot;../Botones/botones_menu_admin/boton_perfil.png&quot;) 0 0 0 0 stretch stretch;
 }
 </string>
     </property>
@@ -117,11 +125,13 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
+     <string notr="true">QPushButton#btnGestionUsuarios {
+    border: 0px;
     background-color: transparent;
-    border: none;
-}
-</string>
+    padding: 0px;
+    margin: 0px;
+    border-image: url(&quot;../Botones/botones_menu_admin/boton_gestionar_usuarios.png&quot;) 0 0 0 0 stretch stretch;
+}</string>
     </property>
     <property name="text">
      <string/>
@@ -140,9 +150,12 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton {
+     <string notr="true">QPushButton#btnCerrarSesion {
+    border: 0px;
     background-color: transparent;
-    border: none;
+    padding: 0px;
+    margin: 0px;
+    border-image: url(&quot;../Botones/botones_menu_admin/boton_cerrar_sesion.png&quot;) 0 0 0 0 stretch stretch;
 }
 </string>
     </property>
