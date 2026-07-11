@@ -1,3 +1,3 @@
-from juego.core.motor import TransicionVacio
+from juego.core.motor import TransicionIris
 
-__all__ = ["TransicionVacio"]
+__all__ = ["TransicionIris"]

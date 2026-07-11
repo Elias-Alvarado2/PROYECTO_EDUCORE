@@ -20,14 +20,11 @@ class NivelPython02(JuegoBase):
     LONGITUD_NIVEL = 5500
     NPC_X = 755
     AJUSTE_Y_NPC = -8
-
+    AJUSTE_Y_SPRITE_MONTANAS = 2
+    AJUSTE_Y_SPRITE_SUELO = 0
+    AJUSTE_Y_SPRITE_PLANTAS = 0
     PISOS = (
-        (0, 920),
-        (1080, LONGITUD_NIVEL),
-    )
-
-    ABISMOS = (
-        (920, 1080),
+        (0, LONGITUD_NIVEL),
     )
 
     OBSTACULOS = (

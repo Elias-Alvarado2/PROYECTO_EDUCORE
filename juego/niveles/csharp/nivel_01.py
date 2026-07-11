@@ -17,7 +17,9 @@ class NivelCSharp01(JuegoBase):
     LENGUAJE_ACTUAL = LENGUAJE_ACTUAL
     NIVEL_ACTUAL = NIVEL_ACTUAL
     FONDO_ACTUAL = FONDO_ACTUAL
-
+    AJUSTE_Y_SPRITE_MONTANAS = 0
+    AJUSTE_Y_SPRITE_SUELO = 0
+    AJUSTE_Y_SPRITE_PLANTAS = 0
     # ========================================================
     # POSICIÓN DEL JUGADOR
     # ========================================================
@@ -33,7 +35,6 @@ class NivelCSharp01(JuegoBase):
 
     # Solo mueve visualmente el PNG del suelo de este nivel.
     # Positivo = baja. Negativo = sube. No modifica la hitbox.
-    AJUSTE_Y_SPRITE_SUELO =0
 
     # ========================================================
     # CONFIGURACIÓN DEL NIVEL
@@ -45,12 +46,7 @@ class NivelCSharp01(JuegoBase):
     AJUSTE_Y_NPC = -8
 
     PISOS = (
-        (0, 850),
-        (1000, LONGITUD_NIVEL),
-    )
-
-    ABISMOS = (
-        (850, 1000),
+        (0, LONGITUD_NIVEL),
     )
 
     OBSTACULOS = (

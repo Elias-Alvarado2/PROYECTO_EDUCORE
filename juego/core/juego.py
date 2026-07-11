@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from copy import deepcopy
 
-import pygame
-
 from juego.core import motor
 
 
@@ -12,7 +10,7 @@ class JuegoBase(motor.JuegoEduCore):
 
     Cada archivo de nivel hereda de esta clase y reemplaza solamente las
     variables de configuración: lenguaje, fondo, posición del jugador,
-    pisos, abismos, obstáculos, NPC y prácticas.
+    piso, obstáculos, NPC y prácticas.
     """
 
     # ========================================================
@@ -34,7 +32,7 @@ class JuegoBase(motor.JuegoEduCore):
     AJUSTE_Y_JUGADOR = 0
 
     # Mueve únicamente la imagen del suelo.
-    # No cambia la hitbox, las plataformas, los abismos ni el jugador.
+    # No cambia la hitbox, las plataformas ni el jugador.
     # Positivo = baja el PNG. Negativo = lo sube.
     AJUSTE_Y_SPRITE_SUELO = 0
 
@@ -56,12 +54,7 @@ class JuegoBase(motor.JuegoEduCore):
     # Coordenadas sin ESCALA_JUEGO.
     # JuegoBase aplica la escala automáticamente.
     PISOS = (
-        (0, 850),
-        (1000, 5000),
-    )
-
-    ABISMOS = (
-        (850, 1000),
+        (0, LONGITUD_NIVEL),
     )
 
     OBSTACULOS = (
@@ -149,18 +142,6 @@ class JuegoBase(motor.JuegoEduCore):
         super().reiniciar()
         self.colocar_jugador_en_inicio()
 
-    def reaparecer_jugador(self):
-        """Reaparece después de caer en la posición propia del nivel."""
-        super().reaparecer_jugador()
-        self.colocar_jugador_en_inicio()
-
-        sprite_rect = self.jugador.obtener_rect_sprite_pantalla()
-
-        return (
-            int(sprite_rect.centerx),
-            int(sprite_rect.centery),
-        )
-
     # ========================================================
     # CREACIÓN DEL MUNDO
     # ========================================================
@@ -181,6 +162,10 @@ class JuegoBase(motor.JuegoEduCore):
         )
 
         piso_nivel = self.obtener_piso_colision_nivel()
+        self.limite_camara_x = max(
+            0,
+            self.escalar(self.LONGITUD_NIVEL) - motor.ANCHO,
+        )
 
         # ----------------------------------------------------
         # PISOS
@@ -194,31 +179,6 @@ class JuegoBase(motor.JuegoEduCore):
             )
             for inicio, fin in self.PISOS
         ]
-
-        # ----------------------------------------------------
-        # ABISMOS
-        # ----------------------------------------------------
-
-        self.abismos = [
-            motor.AbismoInvisible(
-                self.escalar(inicio),
-                self.escalar(fin),
-                piso_nivel,
-            )
-            for inicio, fin in self.ABISMOS
-        ]
-
-        # Compatibilidad con métodos antiguos del motor que esperan
-        # un solo atributo llamado self.abismo.
-        self.abismo = (
-            self.abismos[0]
-            if self.abismos
-            else motor.AbismoInvisible(
-                0,
-                0,
-                piso_nivel,
-            )
-        )
 
         # ----------------------------------------------------
         # OBSTÁCULOS
@@ -465,47 +425,3 @@ class JuegoBase(motor.JuegoEduCore):
             )
 
         self.objetos_practica = objetos
-
-    # ========================================================
-    # DIBUJO DE VARIOS ABISMOS
-    # ========================================================
-
-    def dibujar_abismo_visual(self):
-        if not self.abismos:
-            return
-
-        abismo_original = self.abismo
-
-        try:
-            for abismo in self.abismos:
-                self.abismo = abismo
-                super().dibujar_abismo_visual()
-        finally:
-            self.abismo = abismo_original
-
-    # ========================================================
-    # HITBOXES DE DEPURACIÓN
-    # ========================================================
-
-    def dibujar_hitboxes_debug(self):
-        # El método original ya dibuja jugador, pisos, obstáculos
-        # y el primer abismo.
-        super().dibujar_hitboxes_debug()
-
-        if not self.mostrar_hitboxes:
-            return
-
-        for abismo in self.abismos[1:]:
-            rect = pygame.Rect(
-                int(abismo.rect.x - self.camara_x),
-                int(abismo.rect.y),
-                int(abismo.rect.width),
-                int(abismo.rect.height),
-            )
-
-            pygame.draw.rect(
-                self.superficie_logica,
-                (255, 0, 0),
-                rect,
-                2,
-            )

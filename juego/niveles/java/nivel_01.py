@@ -54,12 +54,7 @@ class NivelJava01(JuegoBase):
     AJUSTE_Y_NPC = -8
 
     PISOS = (
-        (0, 850),
-        (1000, LONGITUD_NIVEL),
-    )
-
-    ABISMOS = (
-        (850, 1000),
+        (0, LONGITUD_NIVEL),
     )
 
     OBSTACULOS = (

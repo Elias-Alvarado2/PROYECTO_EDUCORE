@@ -8,7 +8,7 @@ from PyQt6.QtGui import (
     QColor, QPen, QBrush, QPolygon
 )
 from PyQt6.QtCore import Qt, QTimer, QPoint, QRectF
-
+from quitar_barra import quitar
 from Transicion import FormTransicion
 
 
@@ -107,7 +107,7 @@ class BarraPixelArt(QWidget):
 class PantallaCarga(QWidget):
     def __init__(self, ventana_destino=None):
         super().__init__()
-
+        quitar(self)
         self.ventana_destino = ventana_destino
 
         self.setWindowTitle("EduCore - Cargando")

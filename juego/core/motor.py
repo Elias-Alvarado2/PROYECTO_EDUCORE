@@ -84,12 +84,9 @@ NPC_DIR = ASSETS_DIR / "personajes" / "npc"
 UI_DIR = ASSETS_DIR / "ui"
 FUENTES_DIR = ASSETS_DIR / "FUENTES"
 MUSICA_DIR = ASSETS_DIR / "musica"
-EFECTOS_DIR = ASSETS_DIR / "efectos"
 
 RUTA_MUSICA_FONDO = MUSICA_DIR / "musicamecanicogd.ogg"
-RUTA_AUDIO_CAIDA = EFECTOS_DIR / "SonidoMuerte.ogg"
 VOLUMEN_MUSICA = 1000
-VOLUMEN_AUDIO_CAIDA = 0.75
 
 RUTAS_NPC = [
     NPC_DIR / "profesor1.png",
@@ -98,7 +95,6 @@ RUTAS_NPC = [
     NPC_DIR / "profesor4.png",
 ]
 
-RUTA_CUADRO_CAIDA = UI_DIR / "cuadro_caida.png"
 RUTA_CONCEPTO_APRENDIDO = UI_DIR / "concepto_aprendido.png"
 RUTA_VIDA_LLENA = UI_DIR / "vidallena.png"
 RUTA_VIDA_VACIA = UI_DIR / "vidavacia.png"
@@ -144,8 +140,8 @@ TAMANO_OBSTACULO = round(TAMANO_TILE * ESCALA_OBSTACULOS)
 
 PISO_Y = ALTO - round(122 * ESCALA_JUEGO)
 
-# Piso real que usa la colision del jugador, las plataformas, el abismo,
-# el NPC y los obstaculos.
+# Piso real que usa la colision del jugador, las plataformas, el NPC y los
+# obstaculos.
 # Negativo = sube la hitbox del suelo. Positivo = baja la hitbox del suelo.
 # Cambia SOLO este valor si el jugador queda enterrado o flotando.
 AJUSTE_Y_SUELO = -35
@@ -164,14 +160,8 @@ HITBOX_ABAJO = 18
 # Mueve el sprite del jugador Y SU HITBOX al mismo tiempo.
 # Negativo = sube, positivo = baja.
 AJUSTE_Y_JUGADOR = -25
-PISO_1_INICIO = 0
-PISO_1_FIN = round(850 * ESCALA_JUEGO)
-
-ABISMO_INICIO = round(850 * ESCALA_JUEGO)
-ABISMO_FIN = round(1000 * ESCALA_JUEGO)
-
-PISO_2_INICIO = round(1000 * ESCALA_JUEGO)
-PISO_2_FIN = round(5000 * ESCALA_JUEGO)
+PISO_INICIO = 0
+PISO_FIN = round(5000 * ESCALA_JUEGO)
 
 MARGEN_COLISION_VERTICAL = round(20 * ESCALA_JUEGO)
 
@@ -542,61 +532,38 @@ def construir_paginas_leccion(leccion, nombre_lenguaje):
 # 6. TRANSICION DE IRIS
 # ============================================================
 
-class TransicionVacio:
+class TransicionIris:
     def __init__(self, duracion=0.8):
         self.duracion = duracion
         self.tiempo = 0
-        self.estado = "apagado"  # apagado, cerrando, abriendo
+        self.abriendo = False
         self.centro = (ANCHO // 2, ALTO // 2)
-        self.accion_en_negro = None
         self._capa_negra = None
         self._tamano_capa = None
 
     def activa(self):
-        return self.estado != "apagado"
-
-    def iniciar(self, centro, accion_en_negro):
-        if self.activa():
-            return
-
-        self.estado = "cerrando"
-        self.tiempo = 0
-        self.centro = centro
-        self.accion_en_negro = accion_en_negro
+        return self.abriendo
 
     def iniciar_apertura(self, centro):
         if self.activa():
             return
 
-        self.estado = "abriendo"
+        self.abriendo = True
         self.tiempo = 0
         self.centro = centro
-        self.accion_en_negro = None
 
     def actualizar(self, dt):
-        if self.estado == "apagado":
+        if not self.abriendo:
             return
 
         self.tiempo += dt
 
-        if self.estado == "cerrando":
-            if self.tiempo >= self.duracion:
-                self.tiempo = 0
-
-                if self.accion_en_negro:
-                    nuevo_centro = self.accion_en_negro()
-                    if nuevo_centro is not None:
-                        self.centro = nuevo_centro
-
-                self.estado = "abriendo"
-
-        elif self.estado == "abriendo":
-            if self.tiempo >= self.duracion:
-                self.estado = "apagado"
-                self.tiempo = 0
+        if self.tiempo >= self.duracion:
+            self.abriendo = False
+            self.tiempo = 0
 
     def dibujar(self, pantalla):
-        if self.estado == "apagado":
+        if not self.abriendo:
             return
 
         ancho, alto = pantalla.get_size()
@@ -610,10 +577,7 @@ class TransicionVacio:
         radio_maximo = int(math.hypot(ancho, alto))
         progreso = min(self.tiempo / self.duracion, 1)
 
-        if self.estado == "cerrando":
-            radio = int(radio_maximo * (1 - progreso))
-        else:
-            radio = int(radio_maximo * progreso)
+        radio = int(radio_maximo * progreso)
 
         self._capa_negra.fill((0, 0, 0, 255))
         pygame.draw.circle(
@@ -858,7 +822,7 @@ class ConexionEduCore:
     def restar_vida(
         self,
         id_jugador,
-        evento="Caida al vacio",
+        evento="Vida perdida",
         detalle_base="Perdio una vida",
     ):
         cursor = self.obtener_cursor()
@@ -1126,7 +1090,7 @@ class CapaParallax:
 
 
 # ============================================================
-# 9. PLATAFORMA Y ABISMO
+# 9. PLATAFORMA
 # ============================================================
 
 class PlataformaInvisible:
@@ -1144,19 +1108,6 @@ class PlataformaInvisible:
             ancho,
             ALTO - self.y
         )
-
-
-class AbismoInvisible:
-    def __init__(self, x_inicio, x_fin, y):
-        self.rect = pygame.Rect(
-            x_inicio,
-            y + 4,
-            x_fin - x_inicio,
-            ALTO - y
-        )
-
-    def jugador_esta_dentro(self, jugador_rect_mundo):
-        return jugador_rect_mundo.colliderect(self.rect)
 
 
 # ============================================================
@@ -1885,6 +1836,25 @@ class PantallaPractica:
         self.area_practica_relativa = (0.312, 0.167, 0.389, 0.541)
 
         self.boton_presionado = None
+
+        # ====================================================
+        # ANIMACION DE REBOTE DE LOS BOTONES DEL FORMULARIO
+        # ====================================================
+        # El desplazamiento se adapta al tamano real del formulario.
+        self.desplazamiento_rebote = 10
+        self.duracion_subida_rebote = 0.10
+        self.duracion_bajada_rebote = 0.34
+
+        self.estados_rebote = {
+            nombre: {
+                "encima_anterior": False,
+                "animando": False,
+                "tiempo": 0.0,
+                "offset_y": 0,
+            }
+            for nombre in ("cerrar", *BOTONES_RESPUESTA_FORMULARIO)
+        }
+
         self._cache_imagenes_escaladas = {}
         self._sombra_fondo = pygame.Surface((ANCHO, ALTO), pygame.SRCALPHA)
         self._sombra_fondo.fill((0, 0, 0, 75))
@@ -2327,6 +2297,13 @@ class PantallaPractica:
     # CONTROL
     # --------------------------------------------------------
 
+    def reiniciar_rebotes(self):
+        for estado in self.estados_rebote.values():
+            estado["encima_anterior"] = False
+            estado["animando"] = False
+            estado["tiempo"] = 0.0
+            estado["offset_y"] = 0
+
     def iniciar(self, pregunta, respuesta_correcta):
         self.visible = True
         self.pregunta = pregunta
@@ -2336,11 +2313,13 @@ class PantallaPractica:
         self.resultado = ""
         self.respuesta_final = None
         self.boton_presionado = None
+        self.reiniciar_rebotes()
         self.calcular_rects()
 
     def cerrar(self):
         self.visible = False
         self.boton_presionado = None
+        self.reiniciar_rebotes()
 
     def responder(self):
         if self.seleccion is None:
@@ -2432,6 +2411,98 @@ class PantallaPractica:
             return True
 
         return True
+
+    @staticmethod
+    def _ease_out_bounce(progreso):
+        """Curva equivalente a OutBounce de Qt."""
+        n1 = 7.5625
+        d1 = 2.75
+
+        if progreso < 1 / d1:
+            return n1 * progreso * progreso
+
+        if progreso < 2 / d1:
+            progreso -= 1.5 / d1
+            return n1 * progreso * progreso + 0.75
+
+        if progreso < 2.5 / d1:
+            progreso -= 2.25 / d1
+            return n1 * progreso * progreso + 0.9375
+
+        progreso -= 2.625 / d1
+        return n1 * progreso * progreso + 0.984375
+
+    def actualizar(self, dt):
+        """Actualiza el rebote mientras la pantalla de practica esta visible."""
+        if not self.visible:
+            return
+
+        mouse_pos = pygame.mouse.get_pos()
+        rects = {
+            "cerrar": self.rect_cerrar,
+            "falso": self.rect_falso,
+            "verdadero": self.rect_verdadero,
+            "responder": self.rect_responder,
+        }
+
+        desplazamiento = max(
+            8,
+            round(self.desplazamiento_rebote * self.escala_y),
+        )
+
+        for nombre, rect in rects.items():
+            estado = self.estados_rebote[nombre]
+            encima = rect.collidepoint(mouse_pos)
+
+            # Se activa una vez cuando el cursor entra al boton.
+            if encima and not estado["encima_anterior"]:
+                estado["animando"] = True
+                estado["tiempo"] = 0.0
+
+            estado["encima_anterior"] = encima
+
+            if not estado["animando"]:
+                estado["offset_y"] = 0
+                continue
+
+            estado["tiempo"] += max(0.0, dt)
+            tiempo = estado["tiempo"]
+
+            if tiempo <= self.duracion_subida_rebote:
+                progreso = min(
+                    tiempo / self.duracion_subida_rebote,
+                    1.0,
+                )
+                suavizado = 1.0 - (1.0 - progreso) ** 2
+                estado["offset_y"] = -round(
+                    desplazamiento * suavizado
+                )
+                continue
+
+            tiempo_bajada = tiempo - self.duracion_subida_rebote
+
+            if tiempo_bajada <= self.duracion_bajada_rebote:
+                progreso = min(
+                    tiempo_bajada / self.duracion_bajada_rebote,
+                    1.0,
+                )
+                rebote = self._ease_out_bounce(progreso)
+                estado["offset_y"] = -round(
+                    desplazamiento * (1.0 - rebote)
+                )
+                continue
+
+            estado["animando"] = False
+            estado["tiempo"] = 0.0
+            estado["offset_y"] = 0
+
+    def obtener_desplazamiento_rebote(self, nombre):
+        estado = self.estados_rebote.get(nombre)
+
+        if estado is None:
+            return 0
+
+        return int(estado.get("offset_y", 0))
 
     # --------------------------------------------------------
     # DIBUJO DE RESPALDO SI FALTAN PNG
@@ -2530,34 +2601,94 @@ class PantallaPractica:
         return "normal"
 
     def dibujar_boton(self, pantalla, nombre, rect, texto, color):
+        """Dibuja el PNG, el texto y el rebote como una sola pieza."""
+        estado = self.obtener_estado_boton(nombre, rect)
+
+        # La zona de clic conserva el rect original. Solo se desplaza el
+        # dibujo, por lo que el boton no cambia de ancho ni de alto.
+        offset_y = self.obtener_desplazamiento_rebote(nombre)
+        rect_animado = pygame.Rect(rect).move(0, offset_y)
+
         if nombre == "cerrar":
-            estado = self.obtener_estado_boton(nombre, rect)
             imagen = self.img_cerrar.get(estado) or self.img_cerrar.get("normal")
         else:
-            estado = self.obtener_estado_boton(nombre, rect)
-            imagen = self.img_botones[nombre].get(estado) or self.img_botones[nombre].get("normal")
+            imagen = (
+                self.img_botones[nombre].get(estado)
+                or self.img_botones[nombre].get("normal")
+            )
 
-        if self.dibujar_imagen_ajustada(pantalla, imagen, rect, mantener_aspecto=True):
+        # La imagen y el texto utilizan el mismo rect animado.
+        if imagen is not None:
+            rect_texto = self.obtener_rect_escalado(
+                imagen,
+                rect_animado,
+                mantener_aspecto=True,
+            )
+            self.dibujar_imagen_ajustada(
+                pantalla,
+                imagen,
+                rect_animado,
+                mantener_aspecto=True,
+            )
+        else:
+            # Respaldo visual si falta alguna imagen del botón.
+            rect_texto = pygame.Rect(rect_animado)
+            borde = (7, 35, 70)
+
+            if estado == "hover":
+                borde = (255, 255, 255)
+
+            if estado == "clic":
+                rect_texto = rect_texto.move(
+                    0,
+                    max(1, round(4 * self.escala_y)),
+                )
+
+            self.dibujar_caja_pixel(
+                pantalla,
+                rect_texto,
+                color,
+                borde,
+                sombra=True,
+            )
+
+        # El botón de cerrar ya incluye su símbolo en el PNG.
+        # Los textos que se agregan dinámicamente son FALSO,
+        # VERDADERO, RESPONDER y CONTINUAR.
+        if nombre == "cerrar":
             return
 
-        borde = (7, 35, 70)
-
-        if estado == "hover":
-            borde = (255, 255, 255)
-
-        if estado == "clic":
-            rect = rect.move(0, max(1, round(4 * self.escala_y)))
-
-        self.dibujar_caja_pixel(pantalla, rect, color, borde, sombra=True)
-
-        render = self.fuente_boton.render(texto, False, (255, 255, 255))
-        pantalla.blit(
-            render,
-            (
-                rect.centerx - render.get_width() // 2,
-                rect.centery - render.get_height() // 2 - 2
-            )
+        texto_boton = str(texto).upper()
+        render = self.fuente_boton.render(
+            texto_boton,
+            False,
+            (255, 255, 255),
         )
+
+        # Evita que un texto largo se salga del botón.
+        margen_x = max(8, round(28 * self.escala_x))
+        margen_y = max(4, round(12 * self.escala_y))
+        ancho_maximo = max(1, rect_texto.width - margen_x * 2)
+        alto_maximo = max(1, rect_texto.height - margen_y * 2)
+
+        if (
+            render.get_width() > ancho_maximo
+            or render.get_height() > alto_maximo
+        ):
+            escala_texto = min(
+                ancho_maximo / max(1, render.get_width()),
+                alto_maximo / max(1, render.get_height()),
+            )
+            nuevo_ancho = max(1, round(render.get_width() * escala_texto))
+            nuevo_alto = max(1, round(render.get_height() * escala_texto))
+            render = pygame.transform.scale(
+                render,
+                (nuevo_ancho, nuevo_alto),
+            )
+
+        posicion_texto = render.get_rect(center=rect_texto.center)
+        posicion_texto.y -= max(0, round(2 * self.escala_y))
+        pantalla.blit(render, posicion_texto)
 
     def dividir_lineas(self, texto, fuente, ancho_max):
         return dividir_lineas_por_ancho(texto, fuente, ancho_max)
@@ -2720,7 +2851,7 @@ class Interaccion:
         if juego.game_over:
             return False
 
-        if hasattr(juego, "transicion_vacio") and juego.transicion_vacio.activa():
+        if hasattr(juego, "transicion_iris") and juego.transicion_iris.activa():
             return False
 
         if juego.en_dialogo:
@@ -3090,7 +3221,6 @@ class JuegoEduCore:
         self._informar_progreso_carga(90)
 
         self.registrar_interacciones()
-        self.cargar_sonido_caida()
         self.preparar_musica_fondo()
         self._informar_progreso_carga(97)
 
@@ -3151,14 +3281,11 @@ class JuegoEduCore:
         self.boton_pausa_rects = {}
         self.musica_silenciada = False
         self.musica_fondo_preparada = False
-        self.sonido_caida = None
         self.interacciones = []
         self.interaccion_actual = None
         self.mensaje_aprendido_visible = False
         self.tiempo_mensaje_aprendido = 0
-        self.mensaje_caida_visible = False
-        self.tiempo_mensaje_caida = 0
-        self.transicion_vacio = TransicionVacio(duracion=0.8)
+        self.transicion_iris = TransicionIris(duracion=0.8)
 
     def _cargar_datos_iniciales(self, nombre_lenguaje):
         self.datos_jugador = (
@@ -3211,14 +3338,9 @@ class JuegoEduCore:
 
         self.jugador = Jugador(self.personaje_elegido, escala_default=5.1)
         self.plataformas = [
-            PlataformaInvisible(PISO_1_INICIO, PISO_1_FIN, PISO_COLISION_Y),
-            PlataformaInvisible(PISO_2_INICIO, PISO_2_FIN, PISO_COLISION_Y),
+            PlataformaInvisible(PISO_INICIO, PISO_FIN, PISO_COLISION_Y),
         ]
-        self.abismo = AbismoInvisible(
-            ABISMO_INICIO,
-            ABISMO_FIN,
-            PISO_COLISION_Y,
-        )
+        self.limite_camara_x = max(0, PISO_FIN - ANCHO)
         self.obstaculos = [
             Obstaculo(
                 round(500 * ESCALA_JUEGO),
@@ -3250,7 +3372,6 @@ class JuegoEduCore:
 
     def _cargar_assets_interfaz(self):
         rutas_por_atributo = (
-            ("cuadro_caida_original", RUTA_CUADRO_CAIDA),
             ("concepto_aprendido_original", RUTA_CONCEPTO_APRENDIDO),
             ("vida_llena_original", RUTA_VIDA_LLENA),
             ("vida_vacia_original", RUTA_VIDA_VACIA),
@@ -3359,21 +3480,6 @@ class JuegoEduCore:
                 interaccion.activa = False
                 interaccion.usada = True
 
-    def cargar_sonido_caida(self):
-        if not pygame.mixer.get_init():
-            return
-
-        if not RUTA_AUDIO_CAIDA.exists():
-            print("[AUDIO] No se encontro el audio de caida:", RUTA_AUDIO_CAIDA)
-            return
-
-        try:
-            self.sonido_caida = pygame.mixer.Sound(str(RUTA_AUDIO_CAIDA))
-            self.sonido_caida.set_volume(VOLUMEN_AUDIO_CAIDA)
-        except pygame.error as error:
-            self.sonido_caida = None
-            print("[AUDIO] No se pudo cargar el audio de caida:", error)
-
     def preparar_musica_fondo(self):
         self.musica_fondo_preparada = False
 
@@ -3410,30 +3516,6 @@ class JuegoEduCore:
         volumen = 0 if self.musica_silenciada else VOLUMEN_MUSICA
         pygame.mixer.music.set_volume(volumen)
 
-    def detener_musica_fondo(self):
-        if not pygame.mixer.get_init():
-            return
-
-        pygame.mixer.music.stop()
-
-    def reiniciar_musica_fondo_desde_cero(self):
-        if not pygame.mixer.get_init():
-            return
-
-        self.reproducir_musica_fondo()
-
-    def reproducir_sonido_caida(self):
-        if not pygame.mixer.get_init():
-            return
-
-        if self.sonido_caida is None:
-            return
-
-        try:
-            self.sonido_caida.play()
-        except pygame.error as error:
-            print("[AUDIO] No se pudo reproducir el audio de caida:", error)
-
     def alternar_musica(self):
         if not pygame.mixer.get_init():
             return
@@ -3445,7 +3527,6 @@ class JuegoEduCore:
         self.camara_x = 0
         self.en_dialogo = False
         self.mensaje_aprendido_visible = False
-        self.mensaje_caida_visible = False
         self.objeto_practica_actual = None
         self.objeto_en_contacto = None
 
@@ -3467,24 +3548,9 @@ class JuegoEduCore:
         return centro_x, centro_y
 
     def iniciar_transicion_entrada(self):
-        self.transicion_vacio.iniciar_apertura(
+        self.transicion_iris.iniciar_apertura(
             self.obtener_centro_transicion_jugador()
         )
-
-    def iniciar_transicion_caida(self):
-        if self.transicion_vacio.activa():
-            return
-
-        self.detener_musica_fondo()
-        self.reproducir_sonido_caida()
-
-        self.transicion_vacio.iniciar(
-            centro=self.obtener_centro_transicion_jugador(),
-            accion_en_negro=self.reaparecer_jugador,
-        )
-
-    def restar_vida_por_caida(self):
-        self._restar_vida()
 
     def _restar_vida(self, evento=None, detalle_base=None):
         if self.datos_jugador and self.db.activa:
@@ -3507,38 +3573,12 @@ class JuegoEduCore:
         if self.vidas <= 0:
             self.game_over = True
 
-    def reaparecer_jugador(self):
-        self.restar_vida_por_caida()
-
-        self.camara_x = 0
-        self.en_dialogo = False
-        self.objeto_practica_actual = None
-        self.objeto_en_contacto = None
-        self.practica.cerrar()
-        self.jugador.velocidad_y = 0
-        self.jugador.colocar_sobre_piso(PISO_COLISION_Y)
-
-        self.mensaje_caida_visible = True
-        self.tiempo_mensaje_caida = 3.0
-
-        if not self.game_over:
-            self.reiniciar_musica_fondo_desde_cero()
-
-        # Devuelve el centro del jugador en su nueva posicion.
-        # Asi la pantalla se abre desde donde reaparece.
-        sprite_rect = self.jugador.obtener_rect_sprite_pantalla()
-
-        return (
-            int(sprite_rect.centerx),
-            int(sprite_rect.centery),
-        )
-
     def obtener_direccion(self):
         if (
             self.en_dialogo
             or self.en_pausa
             or self.game_over
-            or self.transicion_vacio.activa()
+            or self.transicion_iris.activa()
             or (hasattr(self, "practica") and self.practica.visible)
         ):
             return 0
@@ -3570,7 +3610,7 @@ class JuegoEduCore:
                 not self.game_over
                 and not self.en_dialogo
                 and not self.en_pausa
-                and not self.transicion_vacio.activa()
+                and not self.transicion_iris.activa()
                 and not self.practica.visible
             ):
                 self.jugador.saltar()
@@ -3594,9 +3634,9 @@ class JuegoEduCore:
             self.crear_objeto_practica_prueba()
 
     def crear_objeto_practica_prueba(self):
-        """Crea una sola moneda de prueba despues del abismo inicial."""
+        """Crea una sola moneda de prueba para el nivel base."""
         tamano_objeto = round(48 * ESCALA_JUEGO)
-        x_moneda = PISO_2_INICIO + round(260 * ESCALA_JUEGO)
+        x_moneda = round(1260 * ESCALA_JUEGO)
         y_moneda = PISO_COLISION_Y - tamano_objeto - round(18 * ESCALA_JUEGO)
 
         pregunta = (
@@ -3671,7 +3711,7 @@ class JuegoEduCore:
             or self.en_dialogo
             or self.en_pausa
             or self.practica.visible
-            or self.transicion_vacio.activa()
+            or self.transicion_iris.activa()
             or not self.leccion_npc_leida
         ):
             return
@@ -3822,16 +3862,18 @@ class JuegoEduCore:
             return
 
         if self.practica.visible:
+            # Se detiene al jugador, pero la interfaz sigue actualizandose.
+            self.practica.actualizar(dt)
             self.jugador.actualizar_animacion(0)
             return
 
         for objeto in self.objetos_practica:
             objeto.actualizar(dt)
 
-        # Mientras la transicion esta activa, se pausa el movimiento,
-        # las colisiones y las interacciones del jugador.
-        if self.transicion_vacio.activa():
-            self.transicion_vacio.actualizar(dt)
+        # Mientras la transicion de entrada esta activa, se pausa el
+        # movimiento, las colisiones y las interacciones del jugador.
+        if self.transicion_iris.activa():
+            self.transicion_iris.actualizar(dt)
             self.jugador.actualizar_animacion(0)
             return
 
@@ -3850,15 +3892,15 @@ class JuegoEduCore:
         if self.camara_x < 0:
             self.camara_x = 0
 
+        if self.camara_x > self.limite_camara_x:
+            self.camara_x = self.limite_camara_x
+
         if not self.game_over:
             self.jugador.aplicar_gravedad()
             self.revisar_colision_piso(y_anterior)
 
             if self.revisar_colision_obstaculos(y_anterior, x_mundo_anterior):
                 self.camara_x = camara_anterior
-
-        if not self.game_over and self.jugador.y > ALTO + 100:
-            self.iniciar_transicion_caida()
 
         if self.npc:
             self.npc.actualizar(PISO_COLISION_Y + CONFIGURACION_NPC, dt)
@@ -3876,66 +3918,7 @@ class JuegoEduCore:
             if self.tiempo_mensaje_aprendido <= 0:
                 self.mensaje_aprendido_visible = False
 
-        if self.mensaje_caida_visible:
-            self.tiempo_mensaje_caida -= dt
-
-            if self.tiempo_mensaje_caida <= 0:
-                self.mensaje_caida_visible = False
-
         self.jugador.actualizar_animacion(direccion)
-
-    def dibujar_abismo_visual(self):
-        rect = self.abismo.rect
-
-        x = int(rect.x - self.camara_x)
-        ancho = int(rect.width)
-
-        if x + ancho < -120 or x > ANCHO + 120:
-            return
-
-        alto_abismo = ALTO - PISO_COLISION_Y + 180
-
-        rect_vacio = pygame.Rect(x, PISO_COLISION_Y - 8, ancho, alto_abismo)
-        pygame.draw.rect(self.superficie_logica, (7, 13, 28), rect_vacio)
-
-        for i in range(7):
-            y = PISO_COLISION_Y + i * 28
-            color = (
-                max(2, 14 - i * 2),
-                max(5, 24 - i * 3),
-                max(12, 46 - i * 4)
-            )
-
-            pygame.draw.rect(
-                self.superficie_logica,
-                color,
-                (x, y, ancho, ALTO - y + 40)
-            )
-
-        pygame.draw.rect(self.superficie_logica, (55, 42, 38), (x - 28, PISO_COLISION_Y - 10, 28, alto_abismo))
-        pygame.draw.rect(self.superficie_logica, (40, 32, 34), (x - 12, PISO_COLISION_Y + 20, 12, alto_abismo))
-
-        pygame.draw.rect(self.superficie_logica, (55, 42, 38), (x + ancho, PISO_COLISION_Y - 10, 28, alto_abismo))
-        pygame.draw.rect(self.superficie_logica, (40, 32, 34), (x + ancho, PISO_COLISION_Y + 20, 12, alto_abismo))
-
-        pygame.draw.rect(self.superficie_logica, (90, 70, 48), (x - 36, PISO_COLISION_Y - 18, 36, 18))
-        pygame.draw.rect(self.superficie_logica, (90, 70, 48), (x + ancho, PISO_COLISION_Y - 18, 36, 18))
-
-        pygame.draw.rect(self.superficie_logica, (130, 190, 60), (x - 40, PISO_COLISION_Y - 25, 40, 8))
-        pygame.draw.rect(self.superficie_logica, (130, 190, 60), (x + ancho, PISO_COLISION_Y - 25, 40, 8))
-
-        for i in range(10):
-            roca_y = PISO_COLISION_Y + 30 + i * 38
-            roca_x = x + 18 + ((i * 47) % max(1, ancho - 60))
-
-            pygame.draw.rect(self.superficie_logica, (18, 25, 40), (roca_x, roca_y, 22, 16))
-            pygame.draw.rect(self.superficie_logica, (28, 36, 55), (roca_x + 4, roca_y + 3, 10, 5))
-
-        pygame.draw.rect(
-            self.superficie_logica,
-            (3, 7, 16),
-            (x, PISO_COLISION_Y + 120, ancho, ALTO - PISO_COLISION_Y)
-        )
 
     def dibujar_hitboxes_debug(self):
         if not self.mostrar_hitboxes:
@@ -3961,15 +3944,6 @@ class JuegoEduCore:
             )
 
             pygame.draw.rect(pantalla, (0, 120, 255), rect_pantalla, 2)
-
-        rect_abismo = pygame.Rect(
-            int(self.abismo.rect.x - self.camara_x),
-            int(self.abismo.rect.y),
-            int(self.abismo.rect.width),
-            int(self.abismo.rect.height),
-        )
-
-        pygame.draw.rect(pantalla, (255, 0, 0), rect_abismo, 2)
 
         for obstaculo in self.obstaculos:
             pygame.draw.rect(
@@ -4148,36 +4122,6 @@ class JuegoEduCore:
             texto_y = y + alto_cuadro // 2 - texto.get_height() // 2
             pantalla.blit(texto, (texto_x, texto_y))
 
-    def dibujar_mensaje_caida(self):
-        if not self.mensaje_caida_visible:
-            return
-
-        pantalla = self.superficie_logica
-
-        if self.cuadro_caida_original is None:
-            return
-
-        proporcion = (
-            self.cuadro_caida_original.get_width()
-            / self.cuadro_caida_original.get_height()
-        )
-
-        ancho_cuadro = int(ANCHO * 0.82)
-        alto_cuadro = int(ancho_cuadro / proporcion)
-
-        alto_cuadro = max(110, min(alto_cuadro, 300))
-        ancho_cuadro = int(alto_cuadro * proporcion)
-
-        x = ANCHO // 2 - ancho_cuadro // 2
-        y = 140
-
-        cuadro = self.obtener_imagen_escalada_ui(
-            self.cuadro_caida_original,
-            ancho_cuadro,
-            alto_cuadro,
-        )
-        pantalla.blit(cuadro, (x, y))
-
     def dibujar_game_over(self):
         if not self.game_over:
             return
@@ -4224,7 +4168,7 @@ class JuegoEduCore:
 
 
     def alternar_pausa(self):
-        if self.game_over or self.transicion_vacio.activa():
+        if self.game_over or self.transicion_iris.activa():
             return
 
         self.en_pausa = not self.en_pausa
@@ -4680,7 +4624,7 @@ class JuegoEduCore:
         # todo el escenario; se reutiliza la captura desenfocada.
         if self.en_pausa:
             self.dibujar_menu_pausa()
-            self.transicion_vacio.dibujar(surface)
+            self.transicion_iris.dibujar(surface)
             pygame.display.flip()
             return
 
@@ -4714,8 +4658,6 @@ class JuegoEduCore:
                 FRANJA_SEGURIDAD_INFERIOR,
             ),
         )
-
-        self.dibujar_abismo_visual()
 
         # ----------------------------------------------------
         # OBJETOS: no se dibujan cuando están fuera de pantalla
@@ -4761,14 +4703,13 @@ class JuegoEduCore:
         )
 
         self.dibujar_hitboxes_debug()
-        self.dibujar_mensaje_caida()
         self.dibujar_game_over()
         self.dibujar_fps()
 
         if self.practica:
             self.practica.dibujar(surface)
 
-        self.transicion_vacio.dibujar(surface)
+        self.transicion_iris.dibujar(surface)
         pygame.display.flip()
 
     def _manejar_evento_practica(self, evento):
@@ -4805,7 +4746,7 @@ class JuegoEduCore:
         if (
             evento.key == pygame.K_r
             and not self.game_over
-            and not self.transicion_vacio.activa()
+            and not self.transicion_iris.activa()
         ):
             self.reiniciar()
 
@@ -4819,7 +4760,7 @@ class JuegoEduCore:
             self.alternar_musica()
 
         if evento.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-            if not self.transicion_vacio.activa():
+            if not self.transicion_iris.activa():
                 self.usar_interaccion_actual()
 
         if evento.key == pygame.K_SPACE and self.en_dialogo:

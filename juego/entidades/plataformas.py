@@ -1,3 +1,3 @@
-from juego.core.motor import PlataformaInvisible, AbismoInvisible
+from juego.core.motor import PlataformaInvisible
 
-__all__ = ["PlataformaInvisible", "AbismoInvisible"]
+__all__ = ["PlataformaInvisible"]

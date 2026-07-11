@@ -20,14 +20,11 @@ class NivelMySQL06(JuegoBase):
     LONGITUD_NIVEL = 7500
     NPC_X = 895
     AJUSTE_Y_NPC = -8
-
+    AJUSTE_Y_SPRITE_MONTANAS = 0
+    AJUSTE_Y_SPRITE_SUELO = 0
+    AJUSTE_Y_SPRITE_PLANTAS = 0
     PISOS = (
-        (0, 1200),
-        (1400, LONGITUD_NIVEL),
-    )
-
-    ABISMOS = (
-        (1200, 1400),
+        (0, LONGITUD_NIVEL),
     )
 
     OBSTACULOS = (

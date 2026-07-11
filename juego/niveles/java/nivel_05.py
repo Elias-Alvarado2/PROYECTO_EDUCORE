@@ -20,14 +20,23 @@ class NivelJava05(JuegoBase):
     LONGITUD_NIVEL = 7000
     NPC_X = 860
     AJUSTE_Y_NPC = -8
+    AJUSTE_Y_SPRITE_MONTANAS = 10
+    # ========================================================
+    # AJUSTES VISUALES DEL FONDO
+    # ========================================================
+
+    # Solo mueve visualmente el PNG del suelo de este nivel.
+    # Positivo = baja. Negativo = sube.
+    # No modifica la hitbox.
+    AJUSTE_Y_SPRITE_SUELO = 55
+
+    # Solo mueve visualmente la capa de plantas de este nivel.
+    # Positivo = baja. Negativo = sube.
+    # No modifica hitboxes ni otros objetos.
+    AJUSTE_Y_SPRITE_PLANTAS = -41
 
     PISOS = (
-        (0, 1130),
-        (1320, LONGITUD_NIVEL),
-    )
-
-    ABISMOS = (
-        (1130, 1320),
+        (0, LONGITUD_NIVEL),
     )
 
     OBSTACULOS = (
