@@ -47,7 +47,7 @@ def abrir_nivel(
 def obtener_argumentos():
     parser = argparse.ArgumentParser(description="EduCore")
     parser.add_argument("--jugador", type=int, default=8)
-    parser.add_argument("--lenguaje", type=str, default="python")
+    parser.add_argument("--lenguaje", type=str, default="mysql")
     parser.add_argument("--nivel", type=int, default=1)
     parser.add_argument(
         "--sin-carga",
