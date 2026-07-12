@@ -1055,6 +1055,35 @@ class CapaParallax:
         if self.tiene_alpha:
             visible = escalada.get_bounding_rect(min_alpha=1)
 
+            # Algunos PNG contienen uno o dos píxeles aislados en filas que
+            # deberían ser transparentes. Esos píxeles impedían el recorte y
+            # obligaban a mezclar una superficie 1920x1080 completa. Se toman
+            # solo componentes visibles de al menos 2x2 píxeles para calcular
+            # el recorte vertical, sin alterar el contenido dentro de él.
+            try:
+                componentes = pygame.mask.from_surface(
+                    escalada,
+                    threshold=1,
+                ).get_bounding_rects()
+                componentes = [
+                    rect
+                    for rect in componentes
+                    if rect.width * rect.height >= 4
+                ]
+
+                if componentes:
+                    y_superior = min(rect.top for rect in componentes)
+                    y_inferior = max(rect.bottom for rect in componentes)
+                    visible = pygame.Rect(
+                        0,
+                        y_superior,
+                        escalada.get_width(),
+                        y_inferior - y_superior,
+                    )
+            except pygame.error:
+                # El bounding rect normal sigue siendo una alternativa segura.
+                pass
+
             if visible.height > 0 and visible.height < escalada.get_height():
                 recorte = pygame.Rect(
                     0,
@@ -1075,7 +1104,13 @@ class CapaParallax:
 
         # Dibuja exactamente el ancho de una pantalla usando dos regiones
         # fuente; evita hacer dos blits completos y depender del recorte.
-        desplazamiento = int((camara_x * self.factor) % self.ancho)
+        # La cámara se conserva como float durante la lógica y se redondea
+        # solamente al dibujar. El módulo final evita que round() produzca
+        # exactamente self.ancho en el borde de repetición.
+        desplazamiento = (
+            round((float(camara_x) * self.factor) % self.ancho)
+            % self.ancho
+        )
         ancho_primera = self.ancho - desplazamiento
 
         pantalla.blit(
@@ -1158,14 +1193,17 @@ class Obstaculo:
 
     def obtener_rect_pantalla(self, camara_x):
         return pygame.Rect(
-            int(self.rect.x - camara_x),
-            int(self.rect.y),
+            round(self.rect.x - camara_x),
+            round(self.rect.y),
             int(self.rect.width),
             int(self.rect.height),
         )
 
     def dibujar(self, pantalla, camara_x):
-        pantalla.blit(self.imagen, (int(self.x - camara_x), int(self.y)))
+        pantalla.blit(
+            self.imagen,
+            (round(self.x - camara_x), round(self.y)),
+        )
 
     def es_solido(self):
         return self.tipo in TIPOS_OBSTACULOS_SOLIDOS
@@ -1255,19 +1293,22 @@ class ObjetoPractica:
         if self.completado:
             return
 
-        movimiento_y = int(math.sin(self.tiempo_animacion * 5) * round(5 * ESCALA_JUEGO))
+        movimiento_y = round(
+            math.sin(self.tiempo_animacion * 5)
+            * round(5 * ESCALA_JUEGO)
+        )
         pantalla.blit(
             self.imagen,
             (
-                int(self.rect.x - camara_x),
-                int(self.rect.y + movimiento_y)
+                round(self.rect.x - camara_x),
+                round(self.rect.y + movimiento_y)
             )
         )
 
     def obtener_rect_pantalla(self, camara_x):
         return pygame.Rect(
-            int(self.rect.x - camara_x),
-            int(self.rect.y),
+            round(self.rect.x - camara_x),
+            round(self.rect.y),
             int(self.rect.width),
             int(self.rect.height)
         )
@@ -1516,8 +1557,8 @@ class Jugador:
         hitbox_local = self.obtener_hitbox_local()
 
         return pygame.Rect(
-            int(self.x_pantalla + hitbox_local.x),
-            int(self.y + hitbox_local.y),
+            round(self.x_pantalla + hitbox_local.x),
+            round(self.y + hitbox_local.y),
             int(hitbox_local.width),
             int(hitbox_local.height),
         )
@@ -1526,7 +1567,7 @@ class Jugador:
         rect_pantalla = self.obtener_rect_pantalla()
 
         return pygame.Rect(
-            int(rect_pantalla.x + camara_x),
+            round(rect_pantalla.x + camara_x),
             rect_pantalla.y,
             rect_pantalla.width,
             rect_pantalla.height,
@@ -1534,7 +1575,10 @@ class Jugador:
 
     def dibujar(self, pantalla):
         sprite = self.obtener_sprite_actual()
-        pantalla.blit(sprite, (int(self.x_pantalla), int(self.y)))
+        pantalla.blit(
+            sprite,
+            (round(self.x_pantalla), round(self.y)),
+        )
 
 # ============================================================
 # 12. NPC ANIMADO
@@ -1611,7 +1655,7 @@ class NPC:
         pantalla.blit(self.burbuja_dialogo_escalada, (x, y))
 
     def dibujar(self, pantalla, camara_x):
-        x_pantalla = int(self.rect.x - camara_x)
+        x_pantalla = round(self.rect.x - camara_x)
 
         pantalla.blit(self.imagen, (x_pantalla, self.rect.y))
 
@@ -2328,6 +2372,7 @@ class JuegoEduCore:
 
     def _inicializar_mundo(self):
         self.capas = []
+        self.capas_primer_plano = []
         self.capa_suelo = None
         self.cargar_fondo_personalizado()
 
@@ -2436,9 +2481,10 @@ class JuegoEduCore:
         }
 
     def cargar_fondo_personalizado(self):
+        # Capas lejanas: se mantienen a media resolución para reducir carga.
         self.capas = []
 
-        for configuracion in _CAPAS_FONDO_CONFIG:
+        for configuracion in _CAPAS_FONDO_CONFIG[:2]:
             (
                 ruta,
                 factor,
@@ -2446,6 +2492,7 @@ class JuegoEduCore:
                 limpiar_fondo_falso,
                 offset_y,
             ) = configuracion
+
             self.capas.append(
                 CapaParallax(
                     ruta,
@@ -2458,16 +2505,40 @@ class JuegoEduCore:
                 )
             )
 
+        # La capa de plantas está cerca de la cámara. Dibujarla directamente
+        # a 1920x1080 evita los saltos de dos píxeles que aparecían al ampliar
+        # el fondo de 960x540.
+        (
+            ruta_plantas,
+            factor_plantas,
+            color_plantas,
+            limpiar_plantas,
+            offset_plantas,
+        ) = _CAPAS_FONDO_CONFIG[2]
+
+        self.capas_primer_plano = [
+            CapaParallax(
+                ruta_plantas,
+                factor_plantas,
+                ANCHO,
+                ALTO,
+                color_plantas,
+                limpiar_fondo_falso=limpiar_plantas,
+                offset_y=offset_plantas,
+            )
+        ]
+
+        # El suelo también se dibuja a resolución completa para que avance
+        # exactamente un píxel cuando la cámara avanza un píxel.
         self.capa_suelo = CapaParallax(
             FONDO_SUELO,
             1.00,
-            ANCHO_FONDO,
-            ALTO_FONDO,
+            ANCHO,
+            ALTO,
             (0, 0, 0, 0),
             limpiar_fondo_falso=True,
-            cortar_arriba_y=round(
-                (PISO_COLISION_Y - round(70 * ESCALA_JUEGO))
-                * ESCALA_RENDER_FONDO
+            cortar_arriba_y=(
+                PISO_COLISION_Y - round(70 * ESCALA_JUEGO)
             ),
         )
 
@@ -3665,18 +3736,20 @@ class JuegoEduCore:
             pygame.display.flip()
             return
 
+        # Se calcula una sola posición entera de cámara por fotograma.
+        # Obstáculos, NPC, plantas y suelo reciben exactamente ese valor,
+        # evitando que cada elemento redondee en un instante diferente.
+        camara_px = round(self.camara_x)
+
         # ----------------------------------------------------
-        # FONDO EN MEDIA RESOLUCIÓN
+        # CAPAS LEJANAS EN MEDIA RESOLUCIÓN
         # ----------------------------------------------------
         fondo = self.superficie_fondo
         fondo.fill(COLOR_CIELO_BASE)
-        camara_fondo = self.camara_x * ESCALA_RENDER_FONDO
+        camara_fondo = camara_px * ESCALA_RENDER_FONDO
 
         for capa in self.capas:
             capa.dibujar(fondo, camara_fondo)
-
-        if self.capa_suelo is not None:
-            self.capa_suelo.dibujar(fondo, camara_fondo)
 
         # Escalado nearest-neighbor apropiado para pixel art.
         pygame.transform.scale(
@@ -3684,6 +3757,15 @@ class JuegoEduCore:
             (ANCHO, ALTO),
             surface,
         )
+
+        # ----------------------------------------------------
+        # CAPAS CERCANAS A RESOLUCIÓN COMPLETA
+        # ----------------------------------------------------
+        for capa in getattr(self, "capas_primer_plano", ()):
+            capa.dibujar(surface, camara_px)
+
+        if self.capa_suelo is not None:
+            self.capa_suelo.dibujar(surface, camara_px)
 
         pygame.draw.rect(
             surface,
@@ -3702,24 +3784,24 @@ class JuegoEduCore:
         margen = 220
 
         for obstaculo in self.obstaculos:
-            rect = obstaculo.obtener_rect_pantalla(self.camara_x)
+            rect = obstaculo.obtener_rect_pantalla(camara_px)
             if rect.right >= -margen and rect.left <= ANCHO + margen:
-                obstaculo.dibujar(surface, self.camara_x)
+                obstaculo.dibujar(surface, camara_px)
 
         for objeto in self.objetos_practica:
             if objeto.completado:
                 continue
-            rect = objeto.obtener_rect_pantalla(self.camara_x)
+            rect = objeto.obtener_rect_pantalla(camara_px)
             if rect.right >= -margen and rect.left <= ANCHO + margen:
-                objeto.dibujar(surface, self.camara_x)
+                objeto.dibujar(surface, camara_px)
 
         if self.npc:
-            npc_x = int(self.npc.rect.x - self.camara_x)
+            npc_x = round(self.npc.rect.x - camara_px)
             if (
                 npc_x + self.npc.rect.width >= -margen
                 and npc_x <= ANCHO + margen
             ):
-                self.npc.dibujar(surface, self.camara_x)
+                self.npc.dibujar(surface, camara_px)
 
         self.jugador.dibujar(surface)
         self.dibujar_panel_jugador()
@@ -3835,7 +3917,7 @@ class JuegoEduCore:
 
         while ejecutando:
             dt = min(
-                self.clock.tick(FPS) / 1000.0,
+                self.clock.tick_busy_loop(FPS) / 1000.0,
                 0.05,
             )
 
