@@ -149,6 +149,7 @@ class JuegoBase(motor.JuegoEduCore):
 
     def _inicializar_mundo(self):
         self.capas = []
+        self.capas_primer_plano = []
         self.capa_suelo = None
 
         self.cargar_fondo_personalizado()
@@ -286,29 +287,18 @@ class JuegoBase(motor.JuegoEduCore):
     # ========================================================
 
     def cargar_fondo_personalizado(self):
-        carpeta = (
-            motor.FONDOS_DIR
-            / self.FONDO_ACTUAL
-        )
+        carpeta = motor.FONDOS_DIR / self.FONDO_ACTUAL
 
-        ruta_cielo = (
-            carpeta
-            / f"{self.FONDO_ACTUAL}_cielo.png"
-        )
-        ruta_montanas = (
-            carpeta
-            / f"{self.FONDO_ACTUAL}_montanas.png"
-        )
-        ruta_plantas = (
-            carpeta
-            / f"{self.FONDO_ACTUAL}_plantas.png"
-        )
-        ruta_suelo = (
-            carpeta
-            / f"{self.FONDO_ACTUAL}_suelo.png"
-        )
+        ruta_cielo = carpeta / f"{self.FONDO_ACTUAL}_cielo.png"
+        ruta_montanas = carpeta / f"{self.FONDO_ACTUAL}_montanas.png"
+        ruta_plantas = carpeta / f"{self.FONDO_ACTUAL}_plantas.png"
+        ruta_suelo = carpeta / f"{self.FONDO_ACTUAL}_suelo.png"
 
-        configuraciones = (
+        # ====================================================
+        # CAPAS LEJANAS
+        # Se componen a media resolución para conservar FPS.
+        # ====================================================
+        configuraciones_lejanas = (
             (
                 ruta_cielo,
                 0.10,
@@ -321,43 +311,23 @@ class JuegoBase(motor.JuegoEduCore):
                 0.30,
                 (0, 0, 0, 0),
                 True,
-
-                # Posición base de la capa de montañas
-                # más el ajuste definido por cada nivel.
                 (
                     round(6 * motor.ESCALA_JUEGO)
-                    + self.escalar(
-                        self.AJUSTE_Y_SPRITE_MONTANAS
-                    )
-                ),
-            ),
-            (
-                ruta_plantas,
-                0.70,
-                (0, 0, 0, 0),
-                True,
-
-                # Posición base de la capa de plantas
-                # más el ajuste definido por cada nivel.
-                (
-                    round(26 * motor.ESCALA_JUEGO)
-                    + self.escalar(
-                        self.AJUSTE_Y_SPRITE_PLANTAS
-                    )
+                    + self.escalar(self.AJUSTE_Y_SPRITE_MONTANAS)
                 ),
             ),
         )
 
         self.capas = []
 
-        for ruta, factor, color, limpiar, offset_y in configuraciones:
+        for ruta, factor, color, limpiar, offset_y in configuraciones_lejanas:
             self.capas.append(
                 motor.CapaParallax(
-                    ruta,
-                    factor,
-                    motor.ANCHO_FONDO,
-                    motor.ALTO_FONDO,
-                    color,
+                    ruta_imagen=ruta,
+                    factor=factor,
+                    ancho=motor.ANCHO_FONDO,
+                    alto=motor.ALTO_FONDO,
+                    color_fallback=color,
                     limpiar_fondo_falso=limpiar,
                     offset_y=round(
                         offset_y * motor.ESCALA_RENDER_FONDO
@@ -365,27 +335,40 @@ class JuegoBase(motor.JuegoEduCore):
                 )
             )
 
-        self.capa_suelo = motor.CapaParallax(
-            ruta_suelo,
-            1.00,
-            motor.ANCHO_FONDO,
-            motor.ALTO_FONDO,
-            (0, 0, 0, 0),
-            limpiar_fondo_falso=True,
-            cortar_arriba_y=round(
-                (
-                    self.obtener_piso_colision_nivel()
-                    - round(70 * motor.ESCALA_JUEGO)
-                )
-                * motor.ESCALA_RENDER_FONDO
-            ),
+        # ====================================================
+        # PLANTAS Y SUELO
+        # Se dibujan a resolución completa para eliminar el
+        # movimiento a saltos causado por ampliar 960x540.
+        # ====================================================
+        self.capas_primer_plano = [
+            motor.CapaParallax(
+                ruta_imagen=ruta_plantas,
+                factor=0.70,
+                ancho=motor.ANCHO,
+                alto=motor.ALTO,
+                color_fallback=(0, 0, 0, 0),
+                limpiar_fondo_falso=True,
+                offset_y=(
+                    round(26 * motor.ESCALA_JUEGO)
+                    + self.escalar(self.AJUSTE_Y_SPRITE_PLANTAS)
+                ),
+            )
+        ]
 
-            # Este desplazamiento afecta únicamente al dibujo del PNG.
-            # Se convierte a la resolución interna del fondo optimizado.
-            offset_y=round(
-                self.escalar(self.AJUSTE_Y_SPRITE_SUELO)
-                * motor.ESCALA_RENDER_FONDO
+        self.capa_suelo = motor.CapaParallax(
+            ruta_imagen=ruta_suelo,
+            factor=1.00,
+            ancho=motor.ANCHO,
+            alto=motor.ALTO,
+            color_fallback=(0, 0, 0, 0),
+            limpiar_fondo_falso=True,
+            cortar_arriba_y=(
+                self.obtener_piso_colision_nivel()
+                - round(70 * motor.ESCALA_JUEGO)
             ),
+            # Este ajuste es únicamente visual y ya está expresado
+            # en la resolución real de la pantalla.
+            offset_y=self.escalar(self.AJUSTE_Y_SPRITE_SUELO),
         )
 
     # ========================================================
