@@ -214,8 +214,10 @@ _CAPAS_FONDO_CONFIG = (
 # ============================================================
 
 _FRAMES_CERDO = tuple(f"jugador_caminar{i}.png" for i in range(1, 5))
-_FRAMES_GATO_CAMINAR = tuple(f"personajegato{i}.png" for i in range(1, 7))
-_FRAMES_GATO_SALTAR = ("personajegato7.png", "personajegato8.png")
+_FRAMES_GATO_CAMINAR = tuple(
+    f"gato_caminar{i}.png" for i in range(2, 7)
+)
+_FRAMES_GATO_SALTAR = ("gato_caminar5.png", "gato_caminar6.png",)
 _FRAMES_PATO = tuple(f"Pato_Caminar{i}.png" for i in range(1, 6))
 
 
