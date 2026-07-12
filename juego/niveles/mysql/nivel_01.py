@@ -32,7 +32,7 @@ class NivelMySQL01(JuegoBase):
     OBSTACULOS = (
         {
             "tipo": "tronco",
-            "imagen": "tronco.png",
+            "imagen": "python/tronco.png",
             "x": 500,
             "ajuste_y": 40,
             "hitbox_offset_x": 10,

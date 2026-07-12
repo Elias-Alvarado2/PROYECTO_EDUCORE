@@ -798,6 +798,19 @@ class PantallaPracticaCodigo:
             imagen,
             rect_animado,
         )
+        if self.respondido:
+            texto_boton="CONTINUAR"
+        else:
+            texto_boton="RESPONDER"
+        texto=self.fuente_boton.render(
+            texto_boton,
+            False,
+            (255,255,255)
+        )
+        rect_texto = texto.get_rect(
+            center=rect_animado.center
+        )
+        superficie.blit(texto,rect_texto)
 
     def _dibujar_cerrar(self, superficie: pygame.Surface) -> None:
         estado = self._estado_boton("cerrar", self.rect_cerrar)
