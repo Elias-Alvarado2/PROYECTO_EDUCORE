@@ -3,6 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 
 from juego.core import motor
+from juego.interfaz.practica_codigo import PantallaPracticaCodigo
 
 
 class JuegoBase(motor.JuegoEduCore):
@@ -215,6 +216,10 @@ class JuegoBase(motor.JuegoEduCore):
         )
 
         self.practica = motor.PantallaPractica()
+        self.practica_codigo = PantallaPracticaCodigo(
+            motor.ANCHO,
+            motor.ALTO,
+        )
 
         self.objeto_practica_actual = None
         self.objeto_en_contacto = None
@@ -415,12 +420,27 @@ class JuegoBase(motor.JuegoEduCore):
                     y=y,
                     pregunta=config["pregunta"],
                     respuesta_correcta=bool(
-                        config["respuesta_correcta"]
+                        config.get("respuesta_correcta", True)
                     ),
                     nombre=config.get(
                         "nombre",
                         f"practica_{indice}",
                     ),
+                    tipo=config.get(
+                        "tipo",
+                        "verdadero_falso",
+                    ),
+                    configuracion_codigo={
+                        "respuestas": deepcopy(
+                            config.get("respuestas", {})
+                        ),
+                        "codigo": deepcopy(
+                            config.get("codigo", [])
+                        ),
+                        "opciones": deepcopy(
+                            config.get("opciones", [])
+                        ),
+                    },
                 )
             )
 
