@@ -1,7 +1,9 @@
 from pathlib import Path
+
 from PyQt6 import QtWidgets, uic, QtGui
 
 from Transicion import FormTransicion
+from AjusteResponsive import BotonesResponsivos
 
 
 class FondoImagen(QtWidgets.QLabel):
@@ -9,16 +11,28 @@ class FondoImagen(QtWidgets.QLabel):
         super().__init__(ventana)
 
         self.ruta_imagen = ruta_imagen
-        self.pixmap_original = QtGui.QPixmap(str(self.ruta_imagen))
+        self.pixmap_original = QtGui.QPixmap(
+            str(self.ruta_imagen)
+        )
 
         self.setScaledContents(True)
-        self.setGeometry(0, 0, ventana.width(), ventana.height())
+        self.setGeometry(
+            0,
+            0,
+            ventana.width(),
+            ventana.height()
+        )
         self.setPixmap(self.pixmap_original)
 
         self.lower()
 
     def actualizar_tamano(self, ancho, alto):
-        self.setGeometry(0, 0, ancho, alto)
+        self.setGeometry(
+            0,
+            0,
+            ancho,
+            alto
+        )
 
 
 class MenuAdministrador(QtWidgets.QWidget):
@@ -30,38 +44,85 @@ class MenuAdministrador(QtWidgets.QWidget):
         BASE_DIR = Path(__file__).resolve().parent
         PROYECTO_DIR = BASE_DIR.parent
 
-        ruta_ui = PROYECTO_DIR / "EXPO-DISEÑOS" / "DESIGNER" / "Menu-Administrador.ui"
-        ruta_imagen = PROYECTO_DIR / "assets" / "DISEÑOS" / "Menu-Administrador.png"
+        ruta_ui = (
+            PROYECTO_DIR
+            / "EXPO-DISEÑOS"
+            / "DESIGNER"
+            / "Menu-Administrador.ui"
+        )
+
+        ruta_imagen = (
+            PROYECTO_DIR
+            / "assets"
+            / "DISEÑOS"
+            / "Menu-Administrador.png"
+        )
 
         if not ruta_ui.exists():
-            raise FileNotFoundError(f"No se encontró el archivo UI:\n{ruta_ui}")
+            raise FileNotFoundError(
+                f"No se encontró el archivo UI:\n{ruta_ui}"
+            )
 
         if not ruta_imagen.exists():
-            raise FileNotFoundError(f"No se encontró la imagen:\n{ruta_imagen}")
+            raise FileNotFoundError(
+                f"No se encontró la imagen:\n{ruta_imagen}"
+            )
 
+        # Carga el archivo creado en Qt Designer.
         uic.loadUi(str(ruta_ui), self)
 
+        # Resolución original del diseño.
         self.resize(1920, 1080)
 
-        self.fondo = FondoImagen(self, ruta_imagen)
+        # Permite cambiar libremente el tamaño de la ventana.
+        self.setMinimumSize(0, 0)
+        self.setMaximumSize(
+            16777215,
+            16777215
+        )
+
+        # Fondo adaptable.
+        self.fondo = FondoImagen(
+            self,
+            ruta_imagen
+        )
+
+        # Hace responsivos todos los botones del menú.
+        self.botones_responsivos = BotonesResponsivos(
+            ventana=self,
+            botones=[
+                self.btnAjustes,
+                self.btnCerrarSesion,
+                self.btnGestionUsuarios,
+                self.btnJugar,
+                self.btnPerfil,
+            ],
+            ancho_base=1920,
+            alto_base=1080,
+            escalar_iconos=True,
+            escalar_fuentes=False,
+        )
 
         self.conectar_eventos()
 
     def conectar_eventos(self):
-        if hasattr(self, "btnGestionUsuarios"):
-            self.btnGestionUsuarios.clicked.connect(self.abrir_gestionar_usuarios)
-        else:
-            QtWidgets.QMessageBox.warning(
-                self,
-                "Botón no encontrado",
-                "No existe un botón llamado btnGestionUsuarios en el archivo .ui."
-            )
+        self.btnGestionUsuarios.clicked.connect(
+            self.abrir_gestionar_usuarios
+        )
 
-        if hasattr(self, "btnJugar"):
-            self.btnJugar.clicked.connect(self.abrir_lecciones)
+        self.btnJugar.clicked.connect(
+            self.abrir_lecciones
+        )
 
-        if hasattr(self, "btnCerrarSesion"):
-            self.btnCerrarSesion.clicked.connect(self.cerrar_sesion)
+        self.btnCerrarSesion.clicked.connect(
+            self.cerrar_sesion
+        )
+
+        # Cuando tengas las ventanas de ajustes y perfil,
+        # puedes conectar aquí sus eventos.
+        #
+        # self.btnAjustes.clicked.connect(self.abrir_ajustes)
+        # self.btnPerfil.clicked.connect(self.abrir_perfil)
 
     def abrir_gestionar_usuarios(self):
         try:
@@ -76,7 +137,8 @@ class MenuAdministrador(QtWidgets.QWidget):
             QtWidgets.QMessageBox.critical(
                 self,
                 "Error",
-                f"No se pudo abrir Gestión de Usuarios.\n\nDetalles:\n{e}"
+                "No se pudo abrir Gestión de Usuarios."
+                f"\n\nDetalles:\n{e}"
             )
 
     def abrir_lecciones(self):
@@ -84,7 +146,9 @@ class MenuAdministrador(QtWidgets.QWidget):
             from Lecciones import Lecciones
 
             try:
-                ventana_lecciones = Lecciones(self.admin)
+                ventana_lecciones = Lecciones(
+                    self.admin
+                )
             except TypeError:
                 ventana_lecciones = Lecciones()
 
@@ -97,7 +161,8 @@ class MenuAdministrador(QtWidgets.QWidget):
             QtWidgets.QMessageBox.critical(
                 self,
                 "Error",
-                f"No se pudo abrir Lecciones.\n\nDetalles:\n{e}"
+                "No se pudo abrir Lecciones."
+                f"\n\nDetalles:\n{e}"
             )
 
     def cerrar_sesion(self):
@@ -105,11 +170,14 @@ class MenuAdministrador(QtWidgets.QWidget):
             self,
             "Cerrar sesión",
             "¿Seguro que deseas cerrar sesión?",
-            QtWidgets.QMessageBox.StandardButton.Yes |
-            QtWidgets.QMessageBox.StandardButton.No
+            QtWidgets.QMessageBox.StandardButton.Yes
+            | QtWidgets.QMessageBox.StandardButton.No
         )
 
-        if respuesta != QtWidgets.QMessageBox.StandardButton.Yes:
+        if (
+            respuesta
+            != QtWidgets.QMessageBox.StandardButton.Yes
+        ):
             return
 
         try:
@@ -117,15 +185,15 @@ class MenuAdministrador(QtWidgets.QWidget):
 
             app = QtWidgets.QApplication.instance()
 
-            # Limpia el historial para que no regrese por accidente a Registro u otro form
+            # Limpia el historial para evitar que el usuario
+            # pueda regresar al menú después de cerrar sesión.
             if hasattr(app, "historial_forms"):
                 app.historial_forms.clear()
 
             self.ventana_login = LoginWindow()
-
             app.ventana_login = self.ventana_login
 
-            # Login en tamaño normal, sin transición y sin pantalla completa
+            # El Login se abre en tamaño normal.
             self.ventana_login.resize(1020, 720)
             self.ventana_login.showNormal()
 
@@ -139,8 +207,28 @@ class MenuAdministrador(QtWidgets.QWidget):
             )
 
     def resizeEvent(self, event):
+        # Ajusta el fondo a la ventana.
         if hasattr(self, "fondo"):
-            self.fondo.actualizar_tamano(self.width(), self.height())
+            self.fondo.actualizar_tamano(
+                self.width(),
+                self.height()
+            )
             self.fondo.lower()
+
+        # El QFrame contiene todos los botones y también
+        # debe ocupar toda la ventana.
+        if hasattr(self, "MenuAdministrador"):
+            self.MenuAdministrador.setGeometry(
+                0,
+                0,
+                self.width(),
+                self.height()
+            )
+            self.MenuAdministrador.raise_()
+
+        # Actualiza los botones después de cambiar
+        # el tamaño del QFrame.
+        if hasattr(self, "botones_responsivos"):
+            self.botones_responsivos.ajustar()
 
         super().resizeEvent(event)
