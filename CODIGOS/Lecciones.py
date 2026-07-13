@@ -455,11 +455,14 @@ class Lecciones(QtWidgets.QWidget):
 
         super().resizeEvent(event)
 
-    def volver_pantalla_anterior(self):
+    def volver_menu_administrador(self):
         try:
             app = QtWidgets.QApplication.instance()
 
-            if hasattr(app, "historial_forms") and len(app.historial_forms) > 0:
+            if (
+                hasattr(app, "historial_forms")
+                and len(app.historial_forms) > 0
+            ):
                 FormAnterior(self)
                 return
 
@@ -473,14 +476,9 @@ class Lecciones(QtWidgets.QWidget):
 
             from MenuAdministrador import MenuAdministrador
 
-            try:
-                self.ventana_menu = MenuAdministrador(self.jugador)
-            except TypeError:
-                self.ventana_menu = MenuAdministrador()
-
             FormTransicion(
                 self,
-                self.ventana_menu,
+                MenuAdministrador,
                 guardar_actual=False
             )
 
@@ -488,7 +486,7 @@ class Lecciones(QtWidgets.QWidget):
             Alertas.mostrar(
                 self,
                 "Error",
-                f"No se pudo volver a la pantalla anterior.\n\nDetalles:\n{e}",
+                f"No se pudo volver al Menú Administrador.\n\nDetalles:\n{e}",
                 "error"
             )
 

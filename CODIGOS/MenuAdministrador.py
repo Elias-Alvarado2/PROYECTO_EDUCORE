@@ -192,7 +192,7 @@ class MenuAdministrador(QtWidgets.QWidget):
             "Cerrar sesión",
             "¿Seguro que deseas cerrar sesión?",
             tipo="error",
-            texto_confirmar="SÍ, ELIMINAR",
+            texto_confirmar="SÍ, CERRAR",
             texto_cancelar="CANCELAR"
         )
 

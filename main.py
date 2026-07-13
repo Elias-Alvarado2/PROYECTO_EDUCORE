@@ -15,16 +15,20 @@ def abrir_nivel(
     numero_nivel: int,
     usar_pantalla_carga: bool = True,
 ):
-    proceso = progreso = evento = None
+    proceso = None
+    progreso = None
+    evento = None
 
     if usar_pantalla_carga:
         proceso, progreso, evento = _iniciar_pantalla_carga()
 
     try:
         callback = None
+
         if progreso is not None:
             callback = lambda valor: _actualizar_progreso_compartido(
-                progreso, valor
+                progreso,
+                valor,
             )
 
         juego = crear_nivel(
@@ -33,33 +37,64 @@ def abrir_nivel(
             id_jugador=id_jugador,
             actualizar_progreso_carga=callback,
         )
+
     except Exception:
         if proceso is not None:
-            _cerrar_pantalla_carga(proceso, progreso, evento)
+            _cerrar_pantalla_carga(
+                proceso,
+                progreso,
+                evento,
+            )
+
         raise
 
     if proceso is not None:
-        _cerrar_pantalla_carga(proceso, progreso, evento)
+        _cerrar_pantalla_carga(
+            proceso,
+            progreso,
+            evento,
+        )
 
-    juego.ejecutar()
+    # El motor devuelve el control cuando se pulsa SALIR.
+    resultado = juego.ejecutar()
+    return resultado
 
 
 def obtener_argumentos():
     parser = argparse.ArgumentParser(description="EduCore")
-    parser.add_argument("--jugador", type=int, default=2)
-    parser.add_argument("--lenguaje", type=str, default="python")
-    parser.add_argument("--nivel", type=int, default=1)
+
+    parser.add_argument(
+        "--jugador",
+        type=int,
+        default=2,
+    )
+
+    parser.add_argument(
+        "--lenguaje",
+        type=str,
+        default="python",
+    )
+
+    parser.add_argument(
+        "--nivel",
+        type=int,
+        default=1,
+    )
+
     parser.add_argument(
         "--sin-carga",
         action="store_true",
         help="Inicia sin la pantalla de carga PyQt6",
     )
+
     return parser.parse_args()
 
 
 def main():
     multiprocessing.freeze_support()
+
     args = obtener_argumentos()
+
     abrir_nivel(
         id_jugador=args.jugador,
         lenguaje=args.lenguaje,

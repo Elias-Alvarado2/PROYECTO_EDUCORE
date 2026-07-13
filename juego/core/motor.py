@@ -4099,18 +4099,20 @@ class JuegoEduCore:
             pygame.mixer.music.stop()
 
         self.db.cerrar()
+
+        # Cierra únicamente Pygame. No se usa sys.exit() porque el menú
+        # de niveles PyQt6 debe continuar abierto en el mismo proceso.
         pygame.quit()
-        sys.exit()
 
     def ejecutar(self):
         # La pantalla de carga puede tardar varios segundos en cerrarse.
-        # Reiniciamos el reloj aquí para evitar que el primer dt salte
-        # directamente toda la animación de iris.
+        # Reiniciamos el reloj para evitar un salto grande en el primer frame.
         self.clock.tick()
         pygame.event.clear()
         self.iniciar_transicion_entrada()
 
         ejecutando = True
+        motivo_salida = "menu_niveles"
 
         while ejecutando:
             dt = min(
@@ -4120,7 +4122,9 @@ class JuegoEduCore:
 
             for evento in pygame.event.get():
                 if evento.type == pygame.QUIT:
+                    motivo_salida = "menu_niveles"
                     ejecutando = False
+                    break
 
                 if self._manejar_evento_practica(evento):
                     continue
@@ -4130,19 +4134,34 @@ class JuegoEduCore:
                     and evento.button == 1
                     and self.en_pausa
                 ):
-                    accion_pausa = self.manejar_click_pausa(evento.pos)
+                    accion_pausa = self.manejar_click_pausa(
+                        evento.pos
+                    )
 
                     if accion_pausa == "salir":
+                        motivo_salida = "menu_niveles"
                         ejecutando = False
+                        break
 
                 if (
                     evento.type == pygame.KEYDOWN
                     and self._manejar_evento_teclado(evento)
                 ):
+                    motivo_salida = "menu_niveles"
                     ejecutando = False
+                    break
+
+            if not ejecutando:
+                break
 
             if not self.en_pausa:
                 self.actualizar(dt)
+
             self.dibujar()
 
         self._cerrar()
+
+        # Regresa a abrir_nivel(), que a su vez devuelve el control
+        # al formulario PyQt6 que inició este nivel.
+        return motivo_salida
+
