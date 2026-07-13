@@ -1,7 +1,9 @@
 from pathlib import Path
+
 from PyQt6 import QtWidgets, uic, QtGui
 
 from Transicion import FormTransicion, FormAnterior
+from AjusteResponsive import BotonesResponsivos
 
 
 class FondoImagen(QtWidgets.QLabel):
@@ -9,16 +11,31 @@ class FondoImagen(QtWidgets.QLabel):
         super().__init__(ventana)
 
         self.ruta_imagen = ruta_imagen
-        self.pixmap_original = QtGui.QPixmap(str(self.ruta_imagen))
+        self.pixmap_original = QtGui.QPixmap(
+            str(self.ruta_imagen)
+        )
 
         self.setScaledContents(True)
-        self.setGeometry(0, 0, ventana.width(), ventana.height())
+
+        self.setGeometry(
+            0,
+            0,
+            ventana.width(),
+            ventana.height()
+        )
+
         self.setPixmap(self.pixmap_original)
 
+        # Mantiene el fondo detrás del frame y los botones.
         self.lower()
 
     def actualizar_tamano(self, ancho, alto):
-        self.setGeometry(0, 0, ancho, alto)
+        self.setGeometry(
+            0,
+            0,
+            ancho,
+            alto
+        )
 
 
 class GestionUsuario(QtWidgets.QWidget):
@@ -30,38 +47,82 @@ class GestionUsuario(QtWidgets.QWidget):
         BASE_DIR = Path(__file__).resolve().parent
         PROYECTO_DIR = BASE_DIR.parent
 
-        ruta_ui = PROYECTO_DIR / "EXPO-DISEÑOS" / "DESIGNER" / "Gestion-Usuario.ui"
-        ruta_imagen = PROYECTO_DIR / "assets" / "DISEÑOS" / "Gestion-Usuarios.png"
+        ruta_ui = (
+            PROYECTO_DIR
+            / "EXPO-DISEÑOS"
+            / "DESIGNER"
+            / "Gestion-Usuario.ui"
+        )
+
+        ruta_imagen = (
+            PROYECTO_DIR
+            / "assets"
+            / "DISEÑOS"
+            / "Gestion-Usuarios.png"
+        )
 
         if not ruta_ui.exists():
-            raise FileNotFoundError(f"No se encontró el archivo UI:\n{ruta_ui}")
+            raise FileNotFoundError(
+                f"No se encontró el archivo UI:\n{ruta_ui}"
+            )
 
         if not ruta_imagen.exists():
-            raise FileNotFoundError(f"No se encontró la imagen:\n{ruta_imagen}")
+            raise FileNotFoundError(
+                f"No se encontró la imagen:\n{ruta_imagen}"
+            )
 
+        # Carga el diseño.
         uic.loadUi(str(ruta_ui), self)
 
+        # Resolución original utilizada en Designer.
         self.resize(1920, 1080)
 
-        self.fondo = FondoImagen(self, ruta_imagen)
+        # Permite que la ventana se adapte a otras resoluciones.
+        self.setMinimumSize(0, 0)
+        self.setMaximumSize(
+            16777215,
+            16777215
+        )
+
+        # Crea el fondo.
+        self.fondo = FondoImagen(
+            self,
+            ruta_imagen
+        )
+
+        # Ajusta automáticamente los cuatro botones.
+        self.botones_responsivos = BotonesResponsivos(
+            ventana=self,
+            botones=[
+                self.btn_editar,
+                self.btn_eliminar,
+                self.btn_visualizar,
+                self.btn_volver,
+            ],
+            ancho_base=1920,
+            alto_base=1080,
+            escalar_iconos=True,
+            escalar_fuentes=False,
+        )
 
         self.conectar_eventos()
 
     def conectar_eventos(self):
-        if hasattr(self, "btn_visualizar"):
-            self.btn_visualizar.clicked.connect(self.abrir_visualizar_usuario)
+        self.btn_visualizar.clicked.connect(
+            self.abrir_visualizar_usuario
+        )
 
-        if hasattr(self, "btn_eliminar"):
-            self.btn_eliminar.clicked.connect(self.abrir_eliminar_usuario)
+        self.btn_eliminar.clicked.connect(
+            self.abrir_eliminar_usuario
+        )
 
-        if hasattr(self, "btn_editar"):
-            self.btn_editar.clicked.connect(self.abrir_editar_usuario)
+        self.btn_editar.clicked.connect(
+            self.abrir_editar_usuario
+        )
 
-        if hasattr(self, "btn_volver"):
-            self.btn_volver.clicked.connect(self.volver_menu_administrador)
-
-        if hasattr(self, "btn_Volver"):
-            self.btn_Volver.clicked.connect(self.volver_menu_administrador)
+        self.btn_volver.clicked.connect(
+            self.volver_menu_administrador
+        )
 
     def abrir_visualizar_usuario(self):
         try:
@@ -76,7 +137,8 @@ class GestionUsuario(QtWidgets.QWidget):
             QtWidgets.QMessageBox.critical(
                 self,
                 "Error",
-                f"No se pudo abrir Visualizar Usuarios.\n\nDetalles:\n{e}"
+                "No se pudo abrir Visualizar Usuarios."
+                f"\n\nDetalles:\n{e}"
             )
 
     def abrir_eliminar_usuario(self):
@@ -92,7 +154,8 @@ class GestionUsuario(QtWidgets.QWidget):
             QtWidgets.QMessageBox.critical(
                 self,
                 "Error",
-                f"No se pudo abrir Eliminar Usuario.\n\nDetalles:\n{e}"
+                "No se pudo abrir Eliminar Usuario."
+                f"\n\nDetalles:\n{e}"
             )
 
     def abrir_editar_usuario(self):
@@ -108,17 +171,19 @@ class GestionUsuario(QtWidgets.QWidget):
             QtWidgets.QMessageBox.critical(
                 self,
                 "Error",
-                f"No se pudo abrir Editar Usuario.\n\nDetalles:\n{e}"
+                "No se pudo abrir Editar Usuario."
+                f"\n\nDetalles:\n{e}"
             )
 
     def volver_menu_administrador(self):
         try:
             app = QtWidgets.QApplication.instance()
 
-            if hasattr(app, "historial_forms") and len(app.historial_forms) > 0:
-                FormAnterior(
-                    self
-                )
+            if (
+                hasattr(app, "historial_forms")
+                and len(app.historial_forms) > 0
+            ):
+                FormAnterior(self)
                 return
 
             if self.ventana_anterior is not None:
@@ -141,12 +206,34 @@ class GestionUsuario(QtWidgets.QWidget):
             QtWidgets.QMessageBox.critical(
                 self,
                 "Error",
-                f"No se pudo volver al Menú Administrador.\n\nDetalles:\n{e}"
+                "No se pudo volver al Menú Administrador."
+                f"\n\nDetalles:\n{e}"
             )
 
     def resizeEvent(self, event):
+        # Ajusta el fondo.
         if hasattr(self, "fondo"):
-            self.fondo.actualizar_tamano(self.width(), self.height())
+            self.fondo.actualizar_tamano(
+                self.width(),
+                self.height()
+            )
+
             self.fondo.lower()
+
+        # El frame contiene los cuatro botones.
+        # También debe ocupar toda la ventana.
+        if hasattr(self, "GestionUsuario"):
+            self.GestionUsuario.setGeometry(
+                0,
+                0,
+                self.width(),
+                self.height()
+            )
+
+            self.GestionUsuario.raise_()
+
+        # Fuerza el ajuste después de redimensionar el frame.
+        if hasattr(self, "botones_responsivos"):
+            self.botones_responsivos.ajustar()
 
         super().resizeEvent(event)

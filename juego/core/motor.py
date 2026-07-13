@@ -171,7 +171,7 @@ MARGEN_COLISION_VERTICAL = round(20 * ESCALA_JUEGO)
 
 VIDAS_MAXIMAS = 5
 
-TIPOS_OBSTACULOS_SOLIDOS = frozenset({"piedra", "tronco", "caja"})
+TIPOS_OBSTACULOS_SOLIDOS = frozenset({"piedra", "tronco", "caja", "fragmento"})
 TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser"})
 
 ALIAS_PERSONAJES = {
@@ -1179,8 +1179,21 @@ class Obstaculo:
         if not ruta_imagen.exists():
             raise FileNotFoundError(f"No se encontro la imagen del obstaculo: {ruta_imagen}")
 
-        self.imagen = pygame.image.load(str(ruta_imagen)).convert_alpha()
-        self.imagen = pygame.transform.scale(self.imagen, (ancho, alto))
+        self.imagen = pygame.image.load(
+            str(ruta_imagen)
+        ).convert_alpha()
+
+        # Recorta el espacio transparente alrededor del obstáculo
+        self.imagen = recortar_transparencia_png(
+            self.imagen,
+            margen=0,
+        )
+
+        # Escala solamente la parte visible del PNG
+        self.imagen = pygame.transform.scale(
+            self.imagen,
+            (int(ancho), int(alto)),
+        )
 
         if hitbox_ancho is None:
             hitbox_ancho = ancho
