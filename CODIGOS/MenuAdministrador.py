@@ -1,7 +1,8 @@
 from pathlib import Path
 
 from PyQt6 import QtWidgets, uic, QtGui
-
+from Alertas import Alertas
+from quitar_barra import quitar
 from Transicion import FormTransicion
 from AjusteResponsive import BotonesResponsivos
 
@@ -38,24 +39,30 @@ class FondoImagen(QtWidgets.QLabel):
 class MenuAdministrador(QtWidgets.QWidget):
     def __init__(self, admin=None):
         super().__init__()
-
+        quitar(self)
         self.admin = admin
 
         BASE_DIR = Path(__file__).resolve().parent
         PROYECTO_DIR = BASE_DIR.parent
 
         ruta_ui = (
-            PROYECTO_DIR
-            / "EXPO-DISEÑOS"
-            / "DESIGNER"
-            / "Menu-Administrador.ui"
+                PROYECTO_DIR
+                / "EXPO-DISEÑOS"
+                / "DESIGNER"
+                / "Menu-Administrador.ui"
         )
 
         ruta_imagen = (
-            PROYECTO_DIR
-            / "assets"
-            / "DISEÑOS"
-            / "Menu-Administrador.png"
+                PROYECTO_DIR
+                / "assets"
+                / "DISEÑOS"
+                / "Menu-Administrador.png"
+        )
+
+        ruta_botones = (
+                PROYECTO_DIR
+                / "EXPO-DISEÑOS"
+                / "Botones"
         )
 
         if not ruta_ui.exists():
@@ -68,8 +75,15 @@ class MenuAdministrador(QtWidgets.QWidget):
                 f"No se encontró la imagen:\n{ruta_imagen}"
             )
 
-        # Carga el archivo creado en Qt Designer.
+        if not ruta_botones.exists():
+            raise FileNotFoundError(
+                f"No se encontró la carpeta de botones:\n{ruta_botones}"
+            )
+
         uic.loadUi(str(ruta_ui), self)
+
+        # Conserva los StyleSheet de Designer y corrige sus rutas.
+        self.corregir_rutas_stylesheet(ruta_botones)
 
         # Resolución original del diseño.
         self.resize(1920, 1080)
@@ -106,9 +120,16 @@ class MenuAdministrador(QtWidgets.QWidget):
         self.conectar_eventos()
 
     def conectar_eventos(self):
-        self.btnGestionUsuarios.clicked.connect(
-            self.abrir_gestionar_usuarios
-        )
+
+        if hasattr(self, "btnGestionUsuarios"):
+            self.btnGestionUsuarios.clicked.connect(self.abrir_gestionar_usuarios)
+        else:
+            Alertas.mostrar(
+                self,
+                "Botón no encontrado",
+                "No existe un botón llamado btnGestionUsuarios en el archivo .ui.",
+                "error"
+            )
 
         self.btnJugar.clicked.connect(
             self.abrir_lecciones
@@ -134,11 +155,11 @@ class MenuAdministrador(QtWidgets.QWidget):
             )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error",
-                "No se pudo abrir Gestión de Usuarios."
-                f"\n\nDetalles:\n{e}"
+                f"No se pudo abrir Gestión de Usuarios.\n\nDetalles:\n{e}",
+                "error"
             )
 
     def abrir_lecciones(self):
@@ -158,26 +179,24 @@ class MenuAdministrador(QtWidgets.QWidget):
             )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error",
-                "No se pudo abrir Lecciones."
-                f"\n\nDetalles:\n{e}"
+                f"No se pudo abrir Lecciones.\n\nDetalles:\n{e}",
+                "error"
             )
 
     def cerrar_sesion(self):
-        respuesta = QtWidgets.QMessageBox.question(
+        respuesta = Alertas.confirmar(
             self,
             "Cerrar sesión",
             "¿Seguro que deseas cerrar sesión?",
-            QtWidgets.QMessageBox.StandardButton.Yes
-            | QtWidgets.QMessageBox.StandardButton.No
+            tipo="error",
+            texto_confirmar="SÍ, ELIMINAR",
+            texto_cancelar="CANCELAR"
         )
 
-        if (
-            respuesta
-            != QtWidgets.QMessageBox.StandardButton.Yes
-        ):
+        if not respuesta:
             return
 
         try:
@@ -200,10 +219,11 @@ class MenuAdministrador(QtWidgets.QWidget):
             self.close()
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error al cerrar sesión",
-                f"No se pudo abrir el Login:\n{e}"
+                f"No se pudo abrir el Login:\n{e}",
+                "error"
             )
 
     def resizeEvent(self, event):
@@ -232,3 +252,32 @@ class MenuAdministrador(QtWidgets.QWidget):
             self.botones_responsivos.ajustar()
 
         super().resizeEvent(event)
+
+    def corregir_rutas_stylesheet(self, ruta_botones):
+        """
+        Conserva los StyleSheet creados en Qt Designer,
+        pero transforma ../Botones/ en una ruta absoluta.
+        """
+
+        ruta_absoluta = ruta_botones.resolve().as_posix()
+
+        botones = [
+            self.btnAjustes,
+            self.btnCerrarSesion,
+            self.btnGestionUsuarios,
+            self.btnJugar,
+            self.btnPerfil,
+        ]
+
+        for boton in botones:
+            estilo = boton.styleSheet()
+
+            if not estilo:
+                continue
+
+            estilo_corregido = estilo.replace(
+                'url("../Botones/',
+                f'url("{ruta_absoluta}/'
+            )
+
+            boton.setStyleSheet(estilo_corregido)

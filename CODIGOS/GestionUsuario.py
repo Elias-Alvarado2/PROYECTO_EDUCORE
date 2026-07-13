@@ -1,10 +1,9 @@
 from pathlib import Path
-
-from PyQt6 import QtWidgets, uic, QtGui
-
+from PyQt6 import QtWidgets, uic, QtGui, QtCore
+from Alertas import Alertas
 from Transicion import FormTransicion, FormAnterior
 from AjusteResponsive import BotonesResponsivos
-
+from quitar_barra import quitar
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
@@ -41,24 +40,30 @@ class FondoImagen(QtWidgets.QLabel):
 class GestionUsuario(QtWidgets.QWidget):
     def __init__(self, ventana_anterior=None):
         super().__init__()
-
+        quitar(self)
         self.ventana_anterior = ventana_anterior
 
         BASE_DIR = Path(__file__).resolve().parent
         PROYECTO_DIR = BASE_DIR.parent
 
         ruta_ui = (
-            PROYECTO_DIR
-            / "EXPO-DISEÑOS"
-            / "DESIGNER"
-            / "Gestion-Usuario.ui"
+                PROYECTO_DIR
+                / "EXPO-DISEÑOS"
+                / "DESIGNER"
+                / "Gestion-Usuario.ui"
         )
 
         ruta_imagen = (
-            PROYECTO_DIR
-            / "assets"
-            / "DISEÑOS"
-            / "Gestion-Usuarios.png"
+                PROYECTO_DIR
+                / "assets"
+                / "DISEÑOS"
+                / "Gestion-Usuarios.png"
+        )
+
+        ruta_botones = (
+                PROYECTO_DIR
+                / "EXPO-DISEÑOS"
+                / "Botones"
         )
 
         if not ruta_ui.exists():
@@ -71,26 +76,30 @@ class GestionUsuario(QtWidgets.QWidget):
                 f"No se encontró la imagen:\n{ruta_imagen}"
             )
 
-        # Carga el diseño.
+        if not ruta_botones.exists():
+            raise FileNotFoundError(
+                f"No se encontró la carpeta de botones:\n{ruta_botones}"
+            )
+
+        # Carga el diseño de Qt Designer.
         uic.loadUi(str(ruta_ui), self)
 
-        # Resolución original utilizada en Designer.
+        # Corrige las rutas de las imágenes de los StyleSheet.
+        self.corregir_rutas_stylesheet(ruta_botones)
+
         self.resize(1920, 1080)
 
-        # Permite que la ventana se adapte a otras resoluciones.
         self.setMinimumSize(0, 0)
         self.setMaximumSize(
             16777215,
             16777215
         )
 
-        # Crea el fondo.
         self.fondo = FondoImagen(
             self,
             ruta_imagen
         )
 
-        # Ajusta automáticamente los cuatro botones.
         self.botones_responsivos = BotonesResponsivos(
             ventana=self,
             botones=[
@@ -105,6 +114,7 @@ class GestionUsuario(QtWidgets.QWidget):
             escalar_fuentes=False,
         )
 
+        self.configurar_botones()
         self.conectar_eventos()
 
     def conectar_eventos(self):
@@ -134,11 +144,11 @@ class GestionUsuario(QtWidgets.QWidget):
             )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error",
-                "No se pudo abrir Visualizar Usuarios."
-                f"\n\nDetalles:\n{e}"
+                f"No se pudo abrir Visualizar Usuarios.\n\nDetalles:\n{e}",
+                "error"
             )
 
     def abrir_eliminar_usuario(self):
@@ -151,11 +161,11 @@ class GestionUsuario(QtWidgets.QWidget):
             )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error",
-                "No se pudo abrir Eliminar Usuario."
-                f"\n\nDetalles:\n{e}"
+                f"No se pudo abrir Eliminar Usuario.\n\nDetalles:\n{e}",
+                "error"
             )
 
     def abrir_editar_usuario(self):
@@ -168,11 +178,11 @@ class GestionUsuario(QtWidgets.QWidget):
             )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error",
-                "No se pudo abrir Editar Usuario."
-                f"\n\nDetalles:\n{e}"
+                f"No se pudo abrir Editar Usuario.\n\nDetalles:\n{e}",
+                "error"
             )
 
     def volver_menu_administrador(self):
@@ -203,11 +213,11 @@ class GestionUsuario(QtWidgets.QWidget):
             )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error",
-                "No se pudo volver al Menú Administrador."
-                f"\n\nDetalles:\n{e}"
+                f"No se pudo volver al Menú Administrador.\n\nDetalles:\n{e}",
+                "error"
             )
 
     def resizeEvent(self, event):
@@ -237,3 +247,56 @@ class GestionUsuario(QtWidgets.QWidget):
             self.botones_responsivos.ajustar()
 
         super().resizeEvent(event)
+
+    def corregir_rutas_stylesheet(self, ruta_botones):
+        """
+        Conserva los StyleSheet creados en Qt Designer,
+        pero convierte ../Botones/ en una ruta absoluta.
+        """
+
+        ruta_absoluta = ruta_botones.resolve().as_posix()
+
+        # Incluye esta ventana, el QFrame y todos sus controles.
+        controles = [
+            self,
+            *self.findChildren(QtWidgets.QWidget),
+        ]
+
+        for control in controles:
+            estilo_original = control.styleSheet()
+
+            if not estilo_original:
+                continue
+
+            estilo_corregido = estilo_original.replace(
+                'url("../Botones/',
+                f'url("{ruta_absoluta}/'
+            )
+
+            estilo_corregido = estilo_corregido.replace(
+                "url('../Botones/",
+                f"url('{ruta_absoluta}/"
+            )
+
+            estilo_corregido = estilo_corregido.replace(
+                "url(../Botones/",
+                f"url({ruta_absoluta}/"
+            )
+
+            if estilo_corregido != estilo_original:
+                control.setStyleSheet(estilo_corregido)
+
+    def configurar_botones(self):
+        botones = [
+            self.btn_editar,
+            self.btn_eliminar,
+            self.btn_visualizar,
+            self.btn_volver,
+        ]
+
+        for boton in botones:
+            boton.setCursor(
+                QtGui.QCursor(
+                    QtCore.Qt.CursorShape.PointingHandCursor
+                )
+            )

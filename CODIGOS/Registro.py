@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 from PyQt6 import QtWidgets, uic
-
+from Alertas import Alertas
 from ConexionBD import ConexionBD
 
 
@@ -58,10 +58,11 @@ class RegistroWindow(QtWidgets.QDialog):
             self.txtCorreo.returnPressed.connect(self.registrar_usuario)
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error de Sistema",
-                f"No se pudo cargar la ventana de registro.\n\nDetalles:\n{str(e)}"
+                f"No se pudo cargar la ventana de registro.\n\nDetalles:\n{str(e)}",
+                "error"
             )
             sys.exit(1)
 
@@ -77,27 +78,30 @@ class RegistroWindow(QtWidgets.QDialog):
         contrasena = self.txtContrasena.text().strip()
 
         if nombre == "" or correo == "" or contrasena == "":
-            QtWidgets.QMessageBox.warning(
+            Alertas.mostrar(
                 self,
                 "Campos vacíos",
-                "Debes llenar usuario, correo electrónico y contraseña."
+                "Debes llenar usuario, correo electrónico y contraseña.",
+                "advertencia"
             )
             return
 
         if "@" not in correo or "." not in correo:
-            QtWidgets.QMessageBox.warning(
+            Alertas.mostrar(
                 self,
                 "Correo inválido",
-                "Debes ingresar un correo electrónico válido."
+                "Debes ingresar un correo electrónico válido.",
+                "advertencia"
             )
             self.txtCorreo.setFocus()
             return
 
         if len(contrasena) < 4:
-            QtWidgets.QMessageBox.warning(
+            Alertas.mostrar(
                 self,
                 "Contraseña débil",
-                "La contraseña debe tener al menos 4 caracteres."
+                "La contraseña debe tener al menos 4 caracteres.",
+                "advertencia"
             )
             self.txtContrasena.setFocus()
             return
@@ -106,27 +110,30 @@ class RegistroWindow(QtWidgets.QDialog):
             registrado = self.db.registrar_jugador(nombre, correo, contrasena)
 
             if registrado:
-                QtWidgets.QMessageBox.information(
+                Alertas.mostrar(
                     self,
                     "Registro exitoso",
-                    "Tu cuenta fue creada correctamente.\n\nAhora puedes iniciar sesión."
+                    "Tu cuenta fue creada correctamente.\n\nAhora puedes iniciar sesión.",
+                    "exito"
                 )
 
                 self.volver_login()
 
             else:
-                QtWidgets.QMessageBox.warning(
+                Alertas.mostrar(
                     self,
                     "Usuario existente",
                     "Ya existe un jugador con ese usuario o correo electrónico.\n\n"
-                    "Intenta con otros datos o inicia sesión."
+                    "Intenta con otros datos o inicia sesión.",
+                    "advertencia"
                 )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error de base de datos",
-                str(e)
+                str(e),
+                "error"
             )
 
     def volver_login(self):

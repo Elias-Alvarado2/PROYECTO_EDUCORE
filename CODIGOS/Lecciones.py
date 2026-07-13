@@ -2,10 +2,10 @@ import sys
 from pathlib import Path
 
 from PyQt6 import QtWidgets, uic, QtGui, QtCore
-
+from Alertas import Alertas
 from Transicion import FormTransicion, FormAnterior
 from AjusteResponsive import BotonesResponsivos
-
+from quitar_barra import quitar
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
@@ -41,13 +41,9 @@ class FondoImagen(QtWidgets.QLabel):
 
 
 class Lecciones(QtWidgets.QWidget):
-    def __init__(
-        self,
-        jugador=None,
-        ventana_anterior=None
-    ):
+    def __init__(self,jugador=None,ventana_anterior=None):
         super().__init__()
-
+        quitar(self)
         self.jugador = jugador
         self.ventana_anterior = ventana_anterior
 
@@ -255,11 +251,11 @@ class Lecciones(QtWidgets.QWidget):
 
     def comenzar_aventura(self):
         if self.lenguaje_seleccionado is None:
-            QtWidgets.QMessageBox.warning(
+            Alertas.mostrar(
                 self,
                 "Selecciona un lenguaje",
-                "Debes seleccionar un lenguaje antes "
-                "de comenzar la aventura."
+                "Debes seleccionar un lenguaje antes de comenzar la aventura.",
+                "advertencia"
             )
             return
 
@@ -293,10 +289,11 @@ class Lecciones(QtWidgets.QWidget):
                 )
 
             else:
-                QtWidgets.QMessageBox.warning(
+                Alertas.mostrar(
                     self,
                     "Lenguaje no válido",
-                    "El lenguaje seleccionado no es válido."
+                    "El lenguaje seleccionado no es válido.",
+                    "advertencia"
                 )
                 return
 
@@ -306,11 +303,11 @@ class Lecciones(QtWidgets.QWidget):
             )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error al abrir niveles",
-                "No se pudo abrir la ventana de niveles."
-                f"\n\nDetalles:\n{e}"
+                f"No se pudo abrir la ventana de niveles.\n\nDetalles:\n{e}",
+                "error"
             )
 
     def crear_ventana_niveles(self, clase_niveles):
@@ -389,11 +386,11 @@ class Lecciones(QtWidgets.QWidget):
             )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error",
-                "No se pudo volver a la pantalla anterior."
-                f"\n\nDetalles:\n{e}"
+                f"No se pudo volver a la pantalla anterior.\n\nDetalles:\n{e}",
+                "error"         
             )
 
     def es_administrador(self):
@@ -458,6 +455,49 @@ class Lecciones(QtWidgets.QWidget):
 
         super().resizeEvent(event)
 
+    def volver_pantalla_anterior(self):
+        try:
+            app = QtWidgets.QApplication.instance()
+
+            if hasattr(app, "historial_forms") and len(app.historial_forms) > 0:
+                FormAnterior(self)
+                return
+
+            if self.ventana_anterior is not None:
+                FormTransicion(
+                    self,
+                    self.ventana_anterior,
+                    guardar_actual=False
+                )
+                return
+
+            from MenuAdministrador import MenuAdministrador
+
+            try:
+                self.ventana_menu = MenuAdministrador(self.jugador)
+            except TypeError:
+                self.ventana_menu = MenuAdministrador()
+
+            FormTransicion(
+                self,
+                self.ventana_menu,
+                guardar_actual=False
+            )
+
+        except Exception as e:
+            Alertas.mostrar(
+                self,
+                "Error",
+                f"No se pudo volver a la pantalla anterior.\n\nDetalles:\n{e}",
+                "error"
+            )
+
+    def resizeEvent(self, event):
+        if hasattr(self, "fondo"):
+            self.fondo.actualizar_tamano(self.width(), self.height())
+            self.fondo.lower()
+
+        super().resizeEvent(event)
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
