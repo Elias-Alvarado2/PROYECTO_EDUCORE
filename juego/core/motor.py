@@ -87,7 +87,8 @@ NPC_DIR = ASSETS_DIR / "personajes" / "npc"
 UI_DIR = ASSETS_DIR / "ui"
 FUENTES_DIR = ASSETS_DIR / "FUENTES"
 MUSICA_DIR = ASSETS_DIR / "musica"
-
+EFECTOS_DIR = ASSETS_DIR / "efectos"
+RUTA_SONIDO_MUERTE = EFECTOS_DIR / "sonido_muerte.ogg"
 RUTA_MUSICA_FONDO = MUSICA_DIR / "musicamecanicogd.ogg"
 VOLUMEN_MUSICA = 1000
 
@@ -112,7 +113,7 @@ RUTA_BOTON_CONFIGURACION = UI_DIR / "configuracion.png"
 RUTA_BOTON_CONFIGURACION_CLICK = UI_DIR / "configuracion_click.png"
 RUTA_BOTON_SALIR = UI_DIR / "salir.png"
 RUTA_BOTON_SALIR_CLICK = UI_DIR / "salir_click.png"
-
+RUTA_GAME_OVER = UI_DIR / "game_over.png"
 DISENOS_DIR = ASSETS_DIR / "DISEÑOS"
 RUTA_LOGO_MENU_PAUSA = DISENOS_DIR / "logo.png"
 RUTA_FUENTE_ORBITRON = FUENTES_DIR / "Orbitron-Medium.ttf"
@@ -542,57 +543,76 @@ def construir_paginas_leccion(leccion, nombre_lenguaje):
 class TransicionIris:
     def __init__(self, duracion=0.8):
         self.duracion = duracion
-        self.tiempo = 0
-        self.abriendo = False
+        self.tiempo = 0.0
+        self.modo = None
         self.centro = (ANCHO // 2, ALTO // 2)
         self._capa_negra = None
         self._tamano_capa = None
 
     def activa(self):
-        return self.abriendo
+        return self.modo is not None
+
+    def esta_cerrando(self):
+        return self.modo == "cerrando"
 
     def iniciar_apertura(self, centro):
         if self.activa():
             return
 
-        self.abriendo = True
-        self.tiempo = 0
+        self.modo = "abriendo"
+        self.tiempo = 0.0
+        self.centro = centro
+
+    def iniciar_cierre(self, centro):
+        if self.activa():
+            return
+
+        self.modo = "cerrando"
+        self.tiempo = 0.0
         self.centro = centro
 
     def actualizar(self, dt):
-        if not self.abriendo:
-            return
+        if not self.activa():
+            return False
 
         self.tiempo += dt
 
         if self.tiempo >= self.duracion:
-            self.abriendo = False
-            self.tiempo = 0
+            modo_terminado = self.modo
+            self.modo = None
+            self.tiempo = 0.0
+            return modo_terminado == "cerrando"
+
+        return False
 
     def dibujar(self, pantalla):
-        if not self.abriendo:
+        if not self.activa():
             return
 
         ancho, alto = pantalla.get_size()
         tamano = (ancho, alto)
 
-        # Reutiliza la misma superficie durante toda la transición.
         if self._capa_negra is None or self._tamano_capa != tamano:
             self._capa_negra = pygame.Surface(tamano, pygame.SRCALPHA)
             self._tamano_capa = tamano
 
         radio_maximo = int(math.hypot(ancho, alto))
-        progreso = min(self.tiempo / self.duracion, 1)
+        progreso = min(self.tiempo / self.duracion, 1.0)
 
-        radio = int(radio_maximo * progreso)
+        if self.modo == "abriendo":
+            radio = int(radio_maximo * progreso)
+        else:
+            radio = int(radio_maximo * (1.0 - progreso))
 
         self._capa_negra.fill((0, 0, 0, 255))
+
         pygame.draw.circle(
             self._capa_negra,
             (0, 0, 0, 0),
             self.centro,
-            radio,
+            max(0, radio),
         )
+
         pantalla.blit(self._capa_negra, (0, 0))
 
 
@@ -2268,6 +2288,7 @@ class JuegoEduCore:
         self._informar_progreso_carga(90)
 
         self.registrar_interacciones()
+        self.cargar_sonido_muerte()
         self.preparar_musica_fondo()
         self._informar_progreso_carga(97)
 
@@ -2321,6 +2342,13 @@ class JuegoEduCore:
     def _inicializar_estado(self):
         self.camara_x = 0
         self.game_over = self.vidas <= 0
+
+        self.tiempo_game_over = 0.0
+        self.sonido_muerte_reproducido = False
+        self.cierre_game_over_iniciado = False
+        self.salir_por_game_over = False
+        self.sonido_muerte = None
+
         self.mostrar_hitboxes = MOSTRAR_HITBOXES
         self.salto_presionado_anterior = False
         self.en_dialogo = False
@@ -2332,7 +2360,7 @@ class JuegoEduCore:
         self.interaccion_actual = None
         self.mensaje_aprendido_visible = False
         self.tiempo_mensaje_aprendido = 0
-        self.transicion_iris = TransicionIris(duracion=0.8)
+        self.transicion_iris = TransicionIris(duracion=1.0)
 
     def _cargar_datos_iniciales(self, nombre_lenguaje):
         self.datos_jugador = (
@@ -2547,6 +2575,7 @@ class JuegoEduCore:
             ),
             ("boton_salir_original", RUTA_BOTON_SALIR),
             ("boton_salir_click_original", RUTA_BOTON_SALIR_CLICK),
+            ("cuadro_game_over", RUTA_GAME_OVER),
         )
 
         for atributo, ruta in rutas_por_atributo:
@@ -2716,6 +2745,34 @@ class JuegoEduCore:
                 interaccion.activa = False
                 interaccion.usada = True
 
+    def cargar_sonido_muerte(self):
+        self.sonido_muerte = None
+
+        if not pygame.mixer.get_init():
+            print("[AUDIO] El mezclador de Pygame no está inicializado.")
+            return False
+
+        if not RUTA_SONIDO_MUERTE.exists():
+            print(
+                "[AUDIO] No se encontró el sonido de muerte:",
+                RUTA_SONIDO_MUERTE,
+            )
+            return False
+
+        try:
+            self.sonido_muerte = pygame.mixer.Sound(
+                str(RUTA_SONIDO_MUERTE)
+            )
+            self.sonido_muerte.set_volume(0.8)
+            return True
+        except pygame.error as error:
+            print(
+                "[AUDIO] No se pudo cargar el sonido de muerte:",
+                error,
+            )
+            self.sonido_muerte = None
+            return False
+
     def preparar_musica_fondo(self):
         self.musica_fondo_preparada = False
 
@@ -2787,6 +2844,38 @@ class JuegoEduCore:
             self.obtener_centro_transicion_jugador()
         )
 
+    def actualizar_game_over(self, dt):
+        if not self.game_over:
+            self.tiempo_game_over = 0.0
+            return
+
+        if self.cierre_game_over_iniciado:
+            cierre_terminado = self.transicion_iris.actualizar(dt)
+
+            if cierre_terminado:
+                self.salir_por_game_over = True
+
+            return
+
+        self.tiempo_game_over += dt
+
+        if self.tiempo_game_over < 3.0:
+            return
+
+        if not self.sonido_muerte_reproducido:
+            if pygame.mixer.get_init():
+                pygame.mixer.music.stop()
+
+            if self.sonido_muerte is not None:
+                self.sonido_muerte.play()
+
+            self.sonido_muerte_reproducido = True
+
+        self.transicion_iris.iniciar_cierre(
+            self.obtener_centro_transicion_jugador()
+        )
+        self.cierre_game_over_iniciado = True
+
     def _restar_vida(self, evento=None, detalle_base=None):
         if self.datos_jugador and self.db.activa:
             if evento is None:
@@ -2806,6 +2895,12 @@ class JuegoEduCore:
             self.vidas = max(self.vidas - 1, 0)
 
         if self.vidas <= 0:
+            if not self.game_over:
+                self.tiempo_game_over = 0.0
+                self.sonido_muerte_reproducido = False
+                self.cierre_game_over_iniciado = False
+                self.salir_por_game_over = False
+
             self.game_over = True
 
     def obtener_direccion(self):
@@ -3138,6 +3233,11 @@ class JuegoEduCore:
         if self.en_pausa:
             return
 
+        if self.game_over:
+            self.actualizar_game_over(dt)
+            self.jugador.actualizar_animacion(0)
+            return
+
         practica_visible = self.obtener_practica_visible()
 
         if practica_visible is not None:
@@ -3417,44 +3517,34 @@ class JuegoEduCore:
 
         pantalla = self.superficie_logica
 
-        texto = self.fuente_titulo.render("GAME OVER", True, (255, 255, 255))
-        texto_2 = self.fuente_texto.render("Te quedaste sin vidas", True, (255, 255, 255))
-        texto_3 = self.fuente_texto.render("Presiona ESC para salir", True, (255, 255, 255))
+        if self.cuadro_game_over is None:
+            return
 
-        panel = pygame.Rect(
-            ANCHO // 2 - 380,
-            ALTO // 2 - 165,
+        cuadro = self.obtener_imagen_escalada_ui(
+            self.cuadro_game_over,
             760,
-            330
+            255,
         )
 
-        pygame.draw.rect(pantalla, (0, 0, 0), panel)
-        pygame.draw.rect(pantalla, (255, 255, 255), panel, 4)
-
-        pantalla.blit(
-            texto,
-            (
-                ANCHO // 2 - texto.get_width() // 2,
-                ALTO // 2 - 115
-            )
+        rect_cuadro = cuadro.get_rect(
+            center=(ANCHO // 2, ALTO // 2)
         )
 
-        pantalla.blit(
-            texto_2,
-            (
-                ANCHO // 2 - texto_2.get_width() // 2,
-                ALTO // 2 - 10
-            )
+        pantalla.blit(cuadro, rect_cuadro)
+
+        fuente_game_over = cargar_fuente_pixel(60)
+
+        texto = fuente_game_over.render(
+            "GAME OVER",
+            False,
+            (255, 255, 255),
         )
 
-        pantalla.blit(
-            texto_3,
-            (
-                ANCHO // 2 - texto_3.get_width() // 2,
-                ALTO // 2 + 55
-            )
+        rect_texto = texto.get_rect(
+            center=rect_cuadro.center
         )
 
+        pantalla.blit(texto, rect_texto)
 
     def alternar_pausa(self):
         if self.game_over or self.transicion_iris.activa():
@@ -4051,7 +4141,7 @@ class JuegoEduCore:
 
         if evento.key == pygame.K_ESCAPE:
             if self.game_over:
-                return True
+                return False
 
             self.alternar_pausa()
             return False
@@ -4158,6 +4248,10 @@ class JuegoEduCore:
                 self.actualizar(dt)
 
             self.dibujar()
+
+            if self.salir_por_game_over:
+                motivo_salida = "menu_niveles"
+                ejecutando = False
 
         self._cerrar()
 

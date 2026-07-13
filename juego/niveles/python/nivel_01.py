@@ -177,7 +177,7 @@ class NivelPython01(JuegoBase):
                 "funcion": "print",
             },
             "codigo": [
-                {
+                {   
                     "indentacion": 0,
                     "segmentos": [
                         {"hueco": "variable"},
