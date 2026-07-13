@@ -171,7 +171,7 @@ MARGEN_COLISION_VERTICAL = round(20 * ESCALA_JUEGO)
 
 VIDAS_MAXIMAS = 5
 
-TIPOS_OBSTACULOS_SOLIDOS = frozenset({"piedra", "tronco", "caja"})
+TIPOS_OBSTACULOS_SOLIDOS = frozenset({"piedra", "tronco", "caja", "fragmento"})
 TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser"})
 
 ALIAS_PERSONAJES = {
@@ -1179,8 +1179,21 @@ class Obstaculo:
         if not ruta_imagen.exists():
             raise FileNotFoundError(f"No se encontro la imagen del obstaculo: {ruta_imagen}")
 
-        self.imagen = pygame.image.load(str(ruta_imagen)).convert_alpha()
-        self.imagen = pygame.transform.scale(self.imagen, (ancho, alto))
+        self.imagen = pygame.image.load(
+            str(ruta_imagen)
+        ).convert_alpha()
+
+        # Recorta el espacio transparente alrededor del obstáculo
+        self.imagen = recortar_transparencia_png(
+            self.imagen,
+            margen=0,
+        )
+
+        # Escala solamente la parte visible del PNG
+        self.imagen = pygame.transform.scale(
+            self.imagen,
+            (int(ancho), int(alto)),
+        )
 
         if hitbox_ancho is None:
             hitbox_ancho = ancho
@@ -3887,14 +3900,24 @@ class JuegoEduCore:
         estaba_visible = practica_visible.visible
         practica_visible.manejar_evento(evento)
 
-        if (
-            estaba_visible
-            and not practica_visible.visible
-            and practica_visible.respondido
-        ):
-            self.finalizar_practica_objeto(
-                practica_visible.respuesta_final
-            )
+        # Cada fallo descuenta una vida inmediatamente, aunque el formulario
+        # siga abierto para mostrar el botón REINTENTAR.
+        if practica_visible.consumir_intento_incorrecto():
+            self.restar_vida_por_respuesta_incorrecta()
+
+            if self.game_over:
+                practica_visible.cerrar()
+
+        # Solo una respuesta correcta completa y elimina la práctica.
+        # Cerrar con X o cerrar después de fallar no descuenta otra vida.
+        if estaba_visible and not practica_visible.visible:
+            if (
+                practica_visible.respondido
+                and practica_visible.respuesta_final is True
+            ):
+                self.finalizar_practica_objeto(True)
+            else:
+                self.objeto_practica_actual = None
 
         return True
 

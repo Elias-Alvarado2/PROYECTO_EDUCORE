@@ -39,8 +39,8 @@ background-color: transparent;
      <rect>
       <x>70</x>
       <y>60</y>
-      <width>191</width>
-      <height>61</height>
+      <width>201</width>
+      <height>71</height>
      </rect>
     </property>
     <property name="cursor">
@@ -61,8 +61,8 @@ border: none;
     </property>
     <property name="iconSize">
      <size>
-      <width>230</width>
-      <height>230</height>
+      <width>245</width>
+      <height>245</height>
      </size>
     </property>
    </widget>

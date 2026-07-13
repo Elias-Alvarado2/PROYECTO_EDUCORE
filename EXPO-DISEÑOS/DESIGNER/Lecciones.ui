@@ -48,16 +48,23 @@ background-color: transparent;
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton#btnPython {
-    border: 0px;
+     <string notr="true">QPushButton {
     background-color: transparent;
-    padding: 0px;
-    margin: 0px;
-    border-image: url(&quot;../Botones/botones_lecciones/boton_python.png&quot;) 0 0 0 0 stretch stretch;
+    border: none;
 }</string>
     </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>../Botones/botones_lecciones/boton_python.png</normaloff>../Botones/botones_lecciones/boton_python.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>440</width>
+      <height>440</height>
+     </size>
     </property>
    </widget>
    <widget class="QPushButton" name="btnJava">
@@ -73,16 +80,23 @@ background-color: transparent;
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton#btnJava {
-    border: 0px;
+     <string notr="true">QPushButton {
     background-color: transparent;
-    padding: 0px;
-    margin: 0px;
-    border-image: url(&quot;../Botones/botones_lecciones/boton_java.png&quot;) 0 0 0 0 stretch stretch;
+    border: none;
 }</string>
     </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>../Botones/botones_lecciones/boton_java.png</normaloff>../Botones/botones_lecciones/boton_java.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>440</width>
+      <height>440</height>
+     </size>
     </property>
    </widget>
    <widget class="QPushButton" name="btnC">
@@ -98,18 +112,25 @@ background-color: transparent;
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton#btnC {
-    border: 0px;
+     <string notr="true">QPushButton {
     background-color: transparent;
-    padding: 0px;
-    margin: 0px;
-    border-image: url(&quot;../Botones/botones_lecciones/boton_C.png&quot;) 0 0 0 0 stretch stretch;
+    border: none;
 }
 
 </string>
     </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>../Botones/botones_lecciones/boton_C.png</normaloff>../Botones/botones_lecciones/boton_C.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>440</width>
+      <height>440</height>
+     </size>
     </property>
    </widget>
    <widget class="QPushButton" name="btnMySQL">
@@ -125,16 +146,23 @@ background-color: transparent;
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton#btnMySQL {
-    border: 0px;
+     <string notr="true">QPushButton {
     background-color: transparent;
-    padding: 0px;
-    margin: 0px;
-    border-image: url(&quot;../Botones/botones_lecciones/boton_MySQL.png&quot;) 0 0 0 0 stretch stretch;
+    border: none;
 }</string>
     </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>../Botones/botones_lecciones/boton_MySQL.png</normaloff>../Botones/botones_lecciones/boton_MySQL.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>440</width>
+      <height>440</height>
+     </size>
     </property>
    </widget>
    <widget class="QPushButton" name="btnComenzar">
@@ -150,18 +178,23 @@ background-color: transparent;
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton#btnComenzar {
-    border: 0px;
+     <string notr="true">QPushButton {
     background-color: transparent;
-    padding: 0px;
-    margin: 0px;
-    border-image: url(&quot;../Botones/botones_lecciones/boton_comenzar.png&quot;) 0 0 0 0 stretch stretch;
-}
-
-</string>
+    border: none;
+}</string>
     </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>../Botones/botones_lecciones/boton_comenzar.png</normaloff>../Botones/botones_lecciones/boton_comenzar.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>550</width>
+      <height>550</height>
+     </size>
     </property>
    </widget>
    <widget class="QPushButton" name="btn_volver">
