@@ -1,5 +1,5 @@
 from pathlib import Path
-from PyQt6 import QtWidgets, uic, QtGui
+from PyQt6 import QtWidgets, uic, QtGui, QtCore
 from Alertas import Alertas
 from Transicion import FormTransicion, FormAnterior
 from AjusteResponsive import BotonesResponsivos

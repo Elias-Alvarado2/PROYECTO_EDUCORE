@@ -1,5 +1,5 @@
 from pathlib import Path
-from PyQt6 import QtWidgets, uic, QtGui
+from PyQt6 import QtWidgets, uic, QtGui, QtCore
 from Alertas import Alertas
 from AjusteResponsive import BotonesResponsivos
 class FondoImagen(QtWidgets.QLabel):
