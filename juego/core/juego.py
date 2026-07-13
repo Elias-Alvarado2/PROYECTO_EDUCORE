@@ -55,7 +55,7 @@ class JuegoBase(motor.JuegoEduCore):
     # Coordenadas sin ESCALA_JUEGO.
     # JuegoBase aplica la escala automáticamente.
     PISOS = (
-        (0, LONGITUD_NIVEL),
+        (0, LONGITUD_NIVEL + 500),
     )
 
     OBSTACULOS = (
