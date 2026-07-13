@@ -154,5 +154,70 @@ class NivelPython01(JuegoBase):
             "hitbox_offset_y": 8,
         },
     )
+    PRACTICAS = (
+        {
+            "x": 2000,
+            "y": None,
+            "pregunta": 'En Python, una variable sirve para almacenar un dato que puede utilizarse después.',
+            "respuesta_correcta": True,
+            "nombre": "practica_python_01",
+        },
+        {
+            "x": 1900,
+            "y": None,
+            "tipo": "codigo",
+            "pregunta": (
+                "Arrastra las opciones correctas para completar el código "
+                "que comprueba si edad es mayor o igual que 18."
+            ),
+            "nombre": "practica_codigo_python_01",
+            "respuestas": {
+                "variable": "edad",
+                "condicional": "if",
+                "funcion": "print",
+            },
+            "codigo": [
+                {
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"hueco": "variable"},
+                        {"texto": " = 18"},
+                    ],
+                },
+                {
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"hueco": "condicional"},
+                        {"texto": " edad >= 18:"},
+                    ],
+                },
+                {
+                    "indentacion": 1,
+                    "segmentos": [
+                        {"hueco": "funcion"},
+                        {"texto": '("Mayor de edad")'},
+                    ],
+                },
+            ],
+            "opciones": [
+                "while",
+                "print",
+                "edad",
+                "input",
+                "if",
+                "18",
+            ],
+        },
+    )
+
 
 CLASE_NIVEL = NivelPython01
+
+
+def ejecutar_nivel(id_jugador: int = 1):
+    juego = CLASE_NIVEL(id_jugador=id_jugador)
+    juego.ejecutar()
+
+
+if __name__ == "__main__":
+    ejecutar_nivel()
