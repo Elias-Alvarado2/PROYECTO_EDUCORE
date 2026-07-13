@@ -45,17 +45,23 @@ class MenuAdministrador(QtWidgets.QWidget):
         PROYECTO_DIR = BASE_DIR.parent
 
         ruta_ui = (
-            PROYECTO_DIR
-            / "EXPO-DISEÑOS"
-            / "DESIGNER"
-            / "Menu-Administrador.ui"
+                PROYECTO_DIR
+                / "EXPO-DISEÑOS"
+                / "DESIGNER"
+                / "Menu-Administrador.ui"
         )
 
         ruta_imagen = (
-            PROYECTO_DIR
-            / "assets"
-            / "DISEÑOS"
-            / "Menu-Administrador.png"
+                PROYECTO_DIR
+                / "assets"
+                / "DISEÑOS"
+                / "Menu-Administrador.png"
+        )
+
+        ruta_botones = (
+                PROYECTO_DIR
+                / "EXPO-DISEÑOS"
+                / "Botones"
         )
 
         if not ruta_ui.exists():
@@ -68,8 +74,15 @@ class MenuAdministrador(QtWidgets.QWidget):
                 f"No se encontró la imagen:\n{ruta_imagen}"
             )
 
-        # Carga el archivo creado en Qt Designer.
+        if not ruta_botones.exists():
+            raise FileNotFoundError(
+                f"No se encontró la carpeta de botones:\n{ruta_botones}"
+            )
+
         uic.loadUi(str(ruta_ui), self)
+
+        # Conserva los StyleSheet de Designer y corrige sus rutas.
+        self.corregir_rutas_stylesheet(ruta_botones)
 
         # Resolución original del diseño.
         self.resize(1920, 1080)
@@ -232,3 +245,32 @@ class MenuAdministrador(QtWidgets.QWidget):
             self.botones_responsivos.ajustar()
 
         super().resizeEvent(event)
+
+    def corregir_rutas_stylesheet(self, ruta_botones):
+        """
+        Conserva los StyleSheet creados en Qt Designer,
+        pero transforma ../Botones/ en una ruta absoluta.
+        """
+
+        ruta_absoluta = ruta_botones.resolve().as_posix()
+
+        botones = [
+            self.btnAjustes,
+            self.btnCerrarSesion,
+            self.btnGestionUsuarios,
+            self.btnJugar,
+            self.btnPerfil,
+        ]
+
+        for boton in botones:
+            estilo = boton.styleSheet()
+
+            if not estilo:
+                continue
+
+            estilo_corregido = estilo.replace(
+                'url("../Botones/',
+                f'url("{ruta_absoluta}/'
+            )
+
+            boton.setStyleSheet(estilo_corregido)
