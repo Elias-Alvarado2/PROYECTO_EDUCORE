@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui, QtCore
-
+from Alertas import Alertas
 from Transicion import FormTransicion, FormAnterior
 
 
@@ -143,10 +143,11 @@ class Lecciones(QtWidgets.QWidget):
 
     def comenzar_aventura(self):
         if self.lenguaje_seleccionado is None:
-            QtWidgets.QMessageBox.warning(
+            Alertas.mostrar(
                 self,
                 "Selecciona un lenguaje",
-                "Debes seleccionar un lenguaje antes de comenzar la aventura."
+                "Debes seleccionar un lenguaje antes de comenzar la aventura.",
+                "advertencia"
             )
             return
 
@@ -184,10 +185,11 @@ class Lecciones(QtWidgets.QWidget):
                     self.ventana_niveles = NivelesMySQL()
 
             else:
-                QtWidgets.QMessageBox.warning(
+                Alertas.mostrar(
                     self,
                     "Lenguaje no válido",
-                    "El lenguaje seleccionado no es válido."
+                    "El lenguaje seleccionado no es válido.",
+                    "advertencia"
                 )
                 return
 
@@ -197,10 +199,11 @@ class Lecciones(QtWidgets.QWidget):
             )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error al abrir niveles",
-                f"No se pudo abrir la ventana de niveles.\n\nDetalles:\n{e}"
+                f"No se pudo abrir la ventana de niveles.\n\nDetalles:\n{e}",
+                "error"
             )
 
     def volver_pantalla_anterior(self):
@@ -233,10 +236,11 @@ class Lecciones(QtWidgets.QWidget):
             )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error",
-                f"No se pudo volver a la pantalla anterior.\n\nDetalles:\n{e}"
+                f"No se pudo volver a la pantalla anterior.\n\nDetalles:\n{e}",
+                "error"
             )
 
     def resizeEvent(self, event):
@@ -277,10 +281,11 @@ class Lecciones(QtWidgets.QWidget):
             )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error",
-                f"No se pudo volver a la pantalla anterior.\n\nDetalles:\n{e}"
+                f"No se pudo volver a la pantalla anterior.\n\nDetalles:\n{e}",
+                "error"
             )
 
     def resizeEvent(self, event):

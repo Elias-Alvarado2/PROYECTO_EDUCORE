@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
-
+from Alertas import Alertas
 from ConexionBD import ConexionBD
 from Transicion import FormTransicion, FormAnterior
 from AjusteResponsive import ElementosResponsivos
@@ -151,10 +151,11 @@ class EliminarUsuario(QtWidgets.QWidget):
             )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error al volver",
-                f"No se pudo abrir Gestión Usuarios:\n{e}"
+                f"No se pudo abrir Gestión Usuarios:\n{e}",
+                "error"
             )
 
     def buscar_usuario(self):
@@ -172,10 +173,11 @@ class EliminarUsuario(QtWidgets.QWidget):
                 self.jugador_actual = None
                 self.limpiar_datos_usuario()
 
-                QtWidgets.QMessageBox.warning(
+                Alertas.mostrar(
                     self,
                     "Usuario no encontrado",
-                    f"No existe un jugador con ID {id_jugador}."
+                    f"No existe un jugador con ID {id_jugador}.",
+                    "advertencia"
                 )
                 return
 
@@ -183,10 +185,11 @@ class EliminarUsuario(QtWidgets.QWidget):
             self.mostrar_datos_usuario(jugador)
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error de base de datos",
-                str(e)
+                str(e),
+                "error"
             )
 
     def mostrar_datos_usuario(self, jugador):
@@ -215,10 +218,11 @@ class EliminarUsuario(QtWidgets.QWidget):
         id_jugador = self.txt_idjugador.text().strip()
 
         if id_jugador == "":
-            QtWidgets.QMessageBox.warning(
+            Alertas.mostrar(
                 self,
                 "ID vacío",
-                "Debes ingresar el ID del jugador que deseas eliminar."
+                "Debes ingresar el ID del jugador que deseas eliminar.",
+                "advertencia"
             )
             return
 
@@ -228,7 +232,7 @@ class EliminarUsuario(QtWidgets.QWidget):
             if self.jugador_actual is None:
                 return
 
-        respuesta = QtWidgets.QMessageBox.question(
+        respuesta = Alertas.confirmar(
             self,
             "Confirmar eliminación",
             f"¿Seguro que deseas eliminar este jugador?\n\n"
@@ -236,37 +240,41 @@ class EliminarUsuario(QtWidgets.QWidget):
             f"Nombre: {self.jugador_actual['nombre']}\n"
             f"Correo: {self.jugador_actual['correo']}\n\n"
             f"Esta acción también eliminará sus datos relacionados.",
-            QtWidgets.QMessageBox.StandardButton.Yes |
-            QtWidgets.QMessageBox.StandardButton.No
+            tipo="error",
+            texto_confirmar="SÍ, ELIMINAR",
+            texto_cancelar="CANCELAR"
         )
 
-        if respuesta != QtWidgets.QMessageBox.StandardButton.Yes:
+        if not respuesta:
             return
 
         try:
             eliminado = self.db.eliminar_jugador(id_jugador)
 
             if eliminado:
-                QtWidgets.QMessageBox.information(
+                Alertas.mostrar(
                     self,
                     "Usuario eliminado",
-                    "El jugador fue eliminado correctamente."
+                    "El jugador fue eliminado correctamente.",
+                    "exito"
                 )
 
                 self.limpiar_campos()
 
             else:
-                QtWidgets.QMessageBox.warning(
+                Alertas.mostrar(
                     self,
                     "No se pudo eliminar",
-                    "No se encontró el jugador o no se pudo eliminar."
+                    "No se encontró el jugador o no se pudo eliminar.",
+                    "advertencia"
                 )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error de base de datos",
-                str(e)
+                str(e),
+                "error"
             )
 
 

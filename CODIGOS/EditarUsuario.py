@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 from PyQt6 import QtWidgets, uic, QtGui, QtCore
-
+from Alertas import Alertas
 from ConexionBD import ConexionBD
 from Transicion import FormTransicion, FormAnterior
 from AjusteResponsive import ElementosResponsivos
@@ -46,18 +46,10 @@ class EditarUsuario(QtWidgets.QWidget):
         BASE_DIR = Path(__file__).resolve().parent
         PROYECTO_DIR = BASE_DIR.parent
 
-        ruta_ui = (
-            PROYECTO_DIR
-            / "EXPO-DISEÑOS"
-            / "DESIGNER"
-            / "Editar-Usuarios.ui"
+        ruta_ui = (PROYECTO_DIR/ "EXPO-DISEÑOS"/ "DESIGNER"/ "Editar-Usuarios.ui"
         )
 
-        ruta_imagen = (
-            PROYECTO_DIR
-            / "assets"
-            / "DISEÑOS"
-            / "Editar_Usuarios.png"
+        ruta_imagen = (PROYECTO_DIR/ "assets"/ "DISEÑOS"/ "Editar_Usuarios.png"
         )
 
         if not ruta_ui.exists():
@@ -210,10 +202,11 @@ class EditarUsuario(QtWidgets.QWidget):
             self.mostrar_datos_usuario(jugador)
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error de base de datos",
-                str(e)
+                str(e),
+                "error"
             )
 
     def buscar_usuario(self):
@@ -224,10 +217,11 @@ class EditarUsuario(QtWidgets.QWidget):
             self.ultimo_id_buscado = ""
             self.limpiar_datos_usuario()
 
-            QtWidgets.QMessageBox.warning(
+            Alertas.mostrar(
                 self,
                 "ID vacío",
-                "Debes ingresar el ID del jugador."
+                "Debes ingresar el ID del jugador.",
+                "advertencia"
             )
             return
 
@@ -241,10 +235,11 @@ class EditarUsuario(QtWidgets.QWidget):
                 self.ultimo_id_buscado = id_jugador
                 self.limpiar_datos_usuario()
 
-                QtWidgets.QMessageBox.warning(
+                Alertas.mostrar(
                     self,
                     "Usuario no encontrado",
-                    f"No existe un jugador con ID {id_jugador}."
+                    f"No existe un jugador con ID {id_jugador}.",
+                    "advertencia"
                 )
                 return
 
@@ -254,12 +249,13 @@ class EditarUsuario(QtWidgets.QWidget):
             self.mostrar_datos_usuario(jugador)
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error de base de datos",
-                str(e)
+                str(e),
+                "error"
             )
-
+            
     def mostrar_datos_usuario(self, jugador):
         self.txt_nombreusuario.setText(
             str(jugador["nombre"])
@@ -319,50 +315,65 @@ class EditarUsuario(QtWidgets.QWidget):
         estado = self.cmb_estado.currentText().strip()
 
         if id_jugador == "":
-            QtWidgets.QMessageBox.warning(
+            Alertas.mostrar(
                 self,
                 "ID vacío",
-                "Debes ingresar el ID del jugador."
+                "Debes ingresar el ID del jugador.",
+                "advertencia"
             )
             return None
 
         if nombre == "":
-            QtWidgets.QMessageBox.warning(
+            Alertas.mostrar(
                 self,
                 "Nombre vacío",
-                "El nombre del usuario no puede estar vacío."
+                "El nombre del usuario no puede estar vacío.",
+                "advertencia"
             )
             return None
 
         if correo == "":
-            QtWidgets.QMessageBox.warning(
+            Alertas.mostrar(
                 self,
                 "Correo vacío",
-                "El correo no puede estar vacío."
+                "El correo no puede estar vacío.",
+                "advertencia"
             )
             return None
 
         if contrasena == "":
-            QtWidgets.QMessageBox.warning(
+            Alertas.mostrar(
                 self,
                 "Contraseña vacía",
-                "La contraseña no puede estar vacía."
+                "La contraseña no puede estar vacía.",
+                "advertencia"
+            )
+            return None
+
+        if contrasena == "":
+            Alertas.mostrar(
+                self,
+                "Contraseña vacía",
+                "La contraseña no puede estar vacía.",
+                "advertencia"
             )
             return None
 
         if personaje == "":
-            QtWidgets.QMessageBox.warning(
+            Alertas.mostrar(
                 self,
                 "Personaje vacío",
-                "El personaje no puede estar vacío."
+                "El personaje no puede estar vacío.",
+                "advertencia"
             )
             return None
 
         if vidas == "":
-            QtWidgets.QMessageBox.warning(
+            Alertas.mostrar(
                 self,
                 "Vidas vacías",
-                "Las vidas no pueden estar vacías."
+                "Las vidas no pueden estar vacías.",
+                "advertencia"
             )
             return None
 
@@ -397,21 +408,19 @@ class EditarUsuario(QtWidgets.QWidget):
             if self.jugador_actual is None:
                 return
 
-        respuesta = QtWidgets.QMessageBox.question(
+        respuesta = Alertas.confirmar(
             self,
             "Confirmar cambios",
             f"¿Seguro que deseas actualizar este jugador?\n\n"
             f"ID: {datos['id_jugador']}\n"
             f"Nombre: {datos['nombre']}\n"
             f"Correo: {datos['correo']}",
-            QtWidgets.QMessageBox.StandardButton.Yes
-            | QtWidgets.QMessageBox.StandardButton.No
+            tipo="error",
+            texto_confirmar="SÍ, ELIMINAR",
+            texto_cancelar="CANCELAR"
         )
 
-        if (
-            respuesta
-            != QtWidgets.QMessageBox.StandardButton.Yes
-        ):
+        if not respuesta:
             return
 
         try:
@@ -426,11 +435,12 @@ class EditarUsuario(QtWidgets.QWidget):
             )
 
             if actualizado:
-                QtWidgets.QMessageBox.information(
+                Alertas.mostrar(
                     self,
                     "Usuario actualizado",
                     "Los datos del jugador fueron "
-                    "actualizados correctamente."
+                    "actualizados correctamente.",
+                    "informacion"
                 )
 
                 jugador_actualizado = (
@@ -455,18 +465,20 @@ class EditarUsuario(QtWidgets.QWidget):
                     )
 
             else:
-                QtWidgets.QMessageBox.information(
+                Alertas.mostrar(
                     self,
                     "Sin cambios",
                     "No se realizaron cambios "
-                    "en el jugador."
+                    "en el jugador.",
+                    "informacion"
                 )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error de base de datos",
-                str(e)
+                str(e),
+                "error"
             )
 
     def volver_gestion_usuario(self):
@@ -497,11 +509,12 @@ class EditarUsuario(QtWidgets.QWidget):
             )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error",
                 "No se pudo abrir Gestión de Usuarios."
-                f"\n\nDetalles:\n{e}"
+                f"\n\nDetalles:\n{e}",
+                "error"
             )
 
 

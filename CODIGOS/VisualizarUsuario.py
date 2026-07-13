@@ -1,8 +1,9 @@
 import sys
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui, QtCore
-
+from Alertas import Alertas
 from ConexionBD import ConexionBD
+from quitar_barra import quitar
 from Transicion import FormTransicion, FormAnterior
 from AjusteResponsive import BotonesResponsivos
 
@@ -24,6 +25,9 @@ class FondoImagen(QtWidgets.QLabel):
 
 
 class VisualizarUsuario(QtWidgets.QWidget):
+    def quitar(self):
+        pass
+
     def __init__(self, ventana_anterior=None):
         super().__init__()
 
@@ -104,10 +108,11 @@ class VisualizarUsuario(QtWidgets.QWidget):
             )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error al volver",
-                f"No se pudo abrir Gestión Usuarios:\n{e}"
+                f"No se pudo abrir Gestión Usuarios:\n{e}",
+                "error"
             )
 
     def resizeEvent(self, event):
@@ -300,10 +305,11 @@ class VisualizarUsuario(QtWidgets.QWidget):
             self.lbl_totalusuarios.setText(str(len(usuarios)))
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error de base de datos",
-                str(e)
+                str(e),
+                "error"
             )
 
     def showEvent(self, event):

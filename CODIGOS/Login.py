@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
-
+from Alertas import Alertas
 from ConexionBD import ConexionBD
 from Registro import RegistroWindow
 from pantalla_carga import PantallaCarga
@@ -63,10 +63,11 @@ class LoginWindow(QtWidgets.QDialog):
                 self.txtUsuario.returnPressed.connect(self.iniciar_sesion)
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error de Sistema",
-                f"No se pudo cargar la interfaz o el fondo.\n\nDetalles:\n{str(e)}"
+                f"No se pudo cargar la interfaz o el fondo.\n\nDetalles:\n{str(e)}",
+                "error"
             )
             sys.exit(1)
 
@@ -88,10 +89,11 @@ class LoginWindow(QtWidgets.QDialog):
         contrasena = self.txtContrasena.text().strip()
 
         if usuario == "" or contrasena == "":
-            QtWidgets.QMessageBox.warning(
+            Alertas.mostrar(
                 self,
                 "Campos vacíos",
-                "Debes ingresar tu usuario/correo y contraseña."
+                "Debes ingresar tu usuario/correo y contraseña.",
+                "advertencia"
             )
             return
 
@@ -99,10 +101,11 @@ class LoginWindow(QtWidgets.QDialog):
             admin = self.db.validar_admin(usuario, contrasena)
 
             if admin:
-                QtWidgets.QMessageBox.information(
+                Alertas.mostrar(
                     self,
                     "Bienvenido administrador",
-                    f"Inicio de sesión correcto.\n\nBienvenido, {admin['nombre']}."
+                    f"Inicio de sesión correcto.\n\nBienvenido, {admin['nombre']}.",
+                    "exito"
                 )
 
                 self.abrir_menu_admin(admin)
@@ -117,30 +120,33 @@ class LoginWindow(QtWidgets.QDialog):
                     f"El jugador {jugador['nombre']} inició sesión correctamente."
                 )
 
-                QtWidgets.QMessageBox.information(
+                Alertas.mostrar(
                     self,
                     "Bienvenido",
-                    f"Inicio de sesión correcto.\n\nBienvenido, {jugador['nombre']}."
+                    f"Inicio de sesión correcto.\n\nBienvenido, {jugador['nombre']}.",
+                    "exito"
                 )
 
                 self.abrir_menu_usuario(jugador)
                 return
 
-            QtWidgets.QMessageBox.warning(
+            Alertas.mostrar(
                 self,
                 "Usuario no encontrado",
                 "El usuario o la contraseña son incorrectos.\n\n"
-                "Si no tienes una cuenta, debes registrarte antes de iniciar sesión."
+                "Si no tienes una cuenta, debes registrarte antes de iniciar sesión.",
+                "error"
             )
 
             self.txtContrasena.clear()
             self.txtContrasena.setFocus()
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error de base de datos",
-                str(e)
+                str(e),
+                "error"
             )
 
     def abrir_menu_usuario(self, jugador):
@@ -162,10 +168,11 @@ class LoginWindow(QtWidgets.QDialog):
             self.close()
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error",
-                f"No se pudo abrir el menú del jugador.\n\nDetalles:\n{e}"
+                f"No se pudo abrir el menú del jugador.\n\nDetalles:\n{e}",
+                "error"
             )
 
     def abrir_menu_admin(self, admin):
@@ -187,10 +194,11 @@ class LoginWindow(QtWidgets.QDialog):
             self.close()
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error",
-                f"No se pudo abrir el menú del administrador.\n\nDetalles:\n{e}"
+                f"No se pudo abrir el menú del administrador.\n\nDetalles:\n{e}",
+                "error"
             )
 
     def abrir_registro(self):
@@ -204,10 +212,11 @@ class LoginWindow(QtWidgets.QDialog):
             self.close()
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error",
-                f"No se pudo abrir el registro.\n\nDetalles:\n{e}"
+                f"No se pudo abrir el registro.\n\nDetalles:\n{e}",
+                "error"
             )
 
 

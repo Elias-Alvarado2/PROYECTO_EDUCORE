@@ -1,6 +1,7 @@
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
-
+from Alertas import Alertas
+from quitar_barra import quitar
 from Transicion import FormTransicion
 
 
@@ -24,7 +25,7 @@ class FondoImagen(QtWidgets.QLabel):
 class MenuAdministrador(QtWidgets.QWidget):
     def __init__(self, admin=None):
         super().__init__()
-
+        quitar(self)
         self.admin = admin
 
         BASE_DIR = Path(__file__).resolve().parent
@@ -51,10 +52,11 @@ class MenuAdministrador(QtWidgets.QWidget):
         if hasattr(self, "btnGestionUsuarios"):
             self.btnGestionUsuarios.clicked.connect(self.abrir_gestionar_usuarios)
         else:
-            QtWidgets.QMessageBox.warning(
+            Alertas.mostrar(
                 self,
                 "Botón no encontrado",
-                "No existe un botón llamado btnGestionUsuarios en el archivo .ui."
+                "No existe un botón llamado btnGestionUsuarios en el archivo .ui.",
+                "error"
             )
 
         if hasattr(self, "btnJugar"):
@@ -73,10 +75,11 @@ class MenuAdministrador(QtWidgets.QWidget):
             )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error",
-                f"No se pudo abrir Gestión de Usuarios.\n\nDetalles:\n{e}"
+                f"No se pudo abrir Gestión de Usuarios.\n\nDetalles:\n{e}",
+                "error"
             )
 
     def abrir_lecciones(self):
@@ -94,22 +97,24 @@ class MenuAdministrador(QtWidgets.QWidget):
             )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error",
-                f"No se pudo abrir Lecciones.\n\nDetalles:\n{e}"
+                f"No se pudo abrir Lecciones.\n\nDetalles:\n{e}",
+                "error"
             )
 
     def cerrar_sesion(self):
-        respuesta = QtWidgets.QMessageBox.question(
+        respuesta = Alertas.confirmar(
             self,
             "Cerrar sesión",
             "¿Seguro que deseas cerrar sesión?",
-            QtWidgets.QMessageBox.StandardButton.Yes |
-            QtWidgets.QMessageBox.StandardButton.No
+            tipo="error",
+            texto_confirmar="SÍ, ELIMINAR",
+            texto_cancelar="CANCELAR"
         )
 
-        if respuesta != QtWidgets.QMessageBox.StandardButton.Yes:
+        if not respuesta:
             return
 
         try:
@@ -132,10 +137,11 @@ class MenuAdministrador(QtWidgets.QWidget):
             self.close()
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error al cerrar sesión",
-                f"No se pudo abrir el Login:\n{e}"
+                f"No se pudo abrir el Login:\n{e}",
+                "error"
             )
 
     def resizeEvent(self, event):

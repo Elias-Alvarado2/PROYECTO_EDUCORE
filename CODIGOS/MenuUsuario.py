@@ -1,6 +1,6 @@
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
-
+from Alertas import Alertas
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
@@ -71,22 +71,24 @@ class MenuUsuario(QtWidgets.QWidget):
             self.close()
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error al abrir lecciones",
-                f"No se pudo abrir la ventana de lecciones.\n\nDetalles:\n{e}"
+                f"No se pudo abrir la ventana de lecciones.\n\nDetalles:\n{e}",
+                "error"
             )
 
     def cerrar_sesion(self):
-        respuesta = QtWidgets.QMessageBox.question(
+        respuesta = Alertas.confirmar(
             self,
             "Cerrar sesión",
             "¿Seguro que deseas cerrar sesión?",
-            QtWidgets.QMessageBox.StandardButton.Yes |
-            QtWidgets.QMessageBox.StandardButton.No
+            tipo="error",
+            texto_confirmar="SÍ, ELIMINAR",
+            texto_cancelar="CANCELAR"
         )
 
-        if respuesta != QtWidgets.QMessageBox.StandardButton.Yes:
+        if not respuesta:
             return
 
         try:
@@ -97,10 +99,11 @@ class MenuUsuario(QtWidgets.QWidget):
             self.close()
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error al cerrar sesión",
-                f"No se pudo abrir el Login:\n{e}"
+                f"No se pudo abrir el Login:\n{e}",
+                "error"
             )
 
     def resizeEvent(self, event):

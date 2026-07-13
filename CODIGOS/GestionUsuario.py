@@ -1,6 +1,6 @@
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
-
+from Alertas import Alertas
 from Transicion import FormTransicion, FormAnterior
 
 
@@ -73,10 +73,11 @@ class GestionUsuario(QtWidgets.QWidget):
             )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error",
-                f"No se pudo abrir Visualizar Usuarios.\n\nDetalles:\n{e}"
+                f"No se pudo abrir Visualizar Usuarios.\n\nDetalles:\n{e}",
+                "error"
             )
 
     def abrir_eliminar_usuario(self):
@@ -89,10 +90,11 @@ class GestionUsuario(QtWidgets.QWidget):
             )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error",
-                f"No se pudo abrir Eliminar Usuario.\n\nDetalles:\n{e}"
+                f"No se pudo abrir Eliminar Usuario.\n\nDetalles:\n{e}",
+                "error"
             )
 
     def abrir_editar_usuario(self):
@@ -105,10 +107,11 @@ class GestionUsuario(QtWidgets.QWidget):
             )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error",
-                f"No se pudo abrir Editar Usuario.\n\nDetalles:\n{e}"
+                f"No se pudo abrir Editar Usuario.\n\nDetalles:\n{e}",
+                "error"
             )
 
     def volver_menu_administrador(self):
@@ -138,10 +141,11 @@ class GestionUsuario(QtWidgets.QWidget):
             )
 
         except Exception as e:
-            QtWidgets.QMessageBox.critical(
+            Alertas.mostrar(
                 self,
                 "Error",
-                f"No se pudo volver al Menú Administrador.\n\nDetalles:\n{e}"
+                f"No se pudo volver al Menú Administrador.\n\nDetalles:\n{e}",
+                "error"
             )
 
     def resizeEvent(self, event):
