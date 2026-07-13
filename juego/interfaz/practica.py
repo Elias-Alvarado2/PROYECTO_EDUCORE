@@ -121,6 +121,7 @@ class PantallaPractica:
         self.respondido = False
         self.resultado = ""
         self.respuesta_final = None
+        self.intento_incorrecto_pendiente = False
 
         # Las fuentes se recalculan según el tamaño real del formulario.
         # Así, cuando el formulario se hace más pequeño, el texto y los
@@ -629,6 +630,7 @@ class PantallaPractica:
         self.respondido = False
         self.resultado = ""
         self.respuesta_final = None
+        self.intento_incorrecto_pendiente = False
         self.boton_presionado = None
         self.reiniciar_rebotes()
         self.calcular_rects()
@@ -637,6 +639,23 @@ class PantallaPractica:
         self.visible = False
         self.boton_presionado = None
         self.reiniciar_rebotes()
+
+    def reintentar(self):
+        """Permite escoger FALSO o VERDADERO nuevamente."""
+        self.seleccion = None
+        self.respondido = False
+        self.respuesta_final = None
+        self.resultado = ""
+        self.boton_presionado = None
+        self.reiniciar_rebotes()
+
+    def consumir_intento_incorrecto(self):
+        """Devuelve True una sola vez por cada respuesta incorrecta."""
+        if not self.intento_incorrecto_pendiente:
+            return False
+
+        self.intento_incorrecto_pendiente = False
+        return True
 
     def responder(self):
         if self.seleccion is None:
@@ -650,6 +669,7 @@ class PantallaPractica:
             self.resultado = "Correcto!"
         else:
             self.resultado = "Incorrecto!"
+            self.intento_incorrecto_pendiente = True
 
     def obtener_boton_en_posicion(self, pos):
         if self.rect_cerrar.collidepoint(pos):
@@ -682,8 +702,10 @@ class PantallaPractica:
             return
 
         if boton == "responder":
-            if self.respondido:
+            if self.respondido and self.respuesta_final:
                 self.cerrar()
+            elif self.respondido:
+                self.reintentar()
             else:
                 self.responder()
 
@@ -708,8 +730,10 @@ class PantallaPractica:
                     return True
 
             if evento.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE):
-                if self.respondido:
+                if self.respondido and self.respuesta_final:
                     self.cerrar()
+                elif self.respondido:
+                    self.reintentar()
                 else:
                     self.responder()
                 return True
@@ -1124,7 +1148,12 @@ class PantallaPractica:
 
         self.dibujar_resultado(pantalla)
 
-        texto_boton = "CONTINUAR" if self.respondido else "RESPONDER"
+        if self.respondido and self.respuesta_final:
+            texto_boton = "CONTINUAR"
+        elif self.respondido:
+            texto_boton = "REINTENTAR"
+        else:
+            texto_boton = "RESPONDER"
 
         self.dibujar_boton(
             pantalla,

@@ -3887,14 +3887,24 @@ class JuegoEduCore:
         estaba_visible = practica_visible.visible
         practica_visible.manejar_evento(evento)
 
-        if (
-            estaba_visible
-            and not practica_visible.visible
-            and practica_visible.respondido
-        ):
-            self.finalizar_practica_objeto(
-                practica_visible.respuesta_final
-            )
+        # Cada fallo descuenta una vida inmediatamente, aunque el formulario
+        # siga abierto para mostrar el botón REINTENTAR.
+        if practica_visible.consumir_intento_incorrecto():
+            self.restar_vida_por_respuesta_incorrecta()
+
+            if self.game_over:
+                practica_visible.cerrar()
+
+        # Solo una respuesta correcta completa y elimina la práctica.
+        # Cerrar con X o cerrar después de fallar no descuenta otra vida.
+        if estaba_visible and not practica_visible.visible:
+            if (
+                practica_visible.respondido
+                and practica_visible.respuesta_final is True
+            ):
+                self.finalizar_practica_objeto(True)
+            else:
+                self.objeto_practica_actual = None
 
         return True
 
