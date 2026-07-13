@@ -104,6 +104,7 @@ RUTA_VIDA_VACIA = UI_DIR / "vidavacia.png"
 RUTA_FUENTE_PIXEL = FUENTES_DIR / "PixelOperator-Bold.ttf"
 RUTA_BURBUJA_DIALOGO = UI_DIR / "BurbujaDialogo.png"
 RUTA_CUADRO_AVISO = UI_DIR / "cuadro_aviso.png"
+RUTA_MONEDA_PRACTICA = UI_DIR / "moneda_practica.png"
 
 RUTA_BOTON_REANUDAR = UI_DIR / "reanudar.png"
 RUTA_BOTON_REANUDAR_CLICK = UI_DIR / "reanudar_click.png"
@@ -215,9 +216,9 @@ _CAPAS_FONDO_CONFIG = (
 
 _FRAMES_CERDO = tuple(f"jugador_caminar{i}.png" for i in range(1, 5))
 _FRAMES_GATO_CAMINAR = tuple(
-    f"gato_caminar{i}.png" for i in range(2, 7)
+    f"gato_caminar{i}.png" for i in range(2, 6)
 )
-_FRAMES_GATO_SALTAR = ("gato_caminar5.png", "gato_caminar6.png",)
+_FRAMES_GATO_SALTAR = ("gato_caminar7.png", "gato_caminar8.png",)
 _FRAMES_PATO = tuple(f"Pato_Caminar{i}.png" for i in range(1, 6))
 
 
@@ -252,6 +253,7 @@ PERSONAJES_CONFIG = {
         ("Banano",),
         _FRAMES_GATO_CAMINAR,
         _FRAMES_GATO_SALTAR,
+        escala=4.3
     ),
     "banano": _crear_config_personaje(
         ("Banano",),
@@ -1250,8 +1252,9 @@ class ObjetoPractica:
         self.completado = False
         self.tiempo_animacion = 0
 
-        self.ancho = round(48 * ESCALA_JUEGO)
-        self.alto = round(48 * ESCALA_JUEGO)
+        # Tamaño visual de la moneda PNG.
+        self.ancho = round(35 * ESCALA_JUEGO)
+        self.alto = round(35 * ESCALA_JUEGO)
 
         self.rect = pygame.Rect(
             int(x),
@@ -1263,43 +1266,33 @@ class ObjetoPractica:
         self.imagen = self.crear_imagen()
 
     def crear_imagen(self):
-        superficie = pygame.Surface((self.ancho, self.alto), pygame.SRCALPHA)
-
-        borde = (15, 27, 45)
-        dorado = (255, 195, 45)
-        dorado_claro = (255, 235, 105)
-        naranja = (235, 120, 25)
-        blanco = (255, 255, 255)
-
-        centro = (self.ancho // 2, self.alto // 2)
-        radio = min(self.ancho, self.alto) // 2 - 4
-
-        pygame.draw.circle(superficie, borde, centro, radio)
-        pygame.draw.circle(superficie, dorado, centro, radio - 5)
-        pygame.draw.circle(superficie, dorado_claro, (centro[0] - 7, centro[1] - 7), radio // 3)
-
-        signo = cargar_fuente_pixel(max(16, round(22 * ESCALA_JUEGO))).render("!", False, borde)
-        superficie.blit(
-            signo,
-            (
-                centro[0] - signo.get_width() // 2,
-                centro[1] - signo.get_height() // 2 - 1
+        """Carga la imagen PNG utilizada por todas las prácticas."""
+        if not RUTA_MONEDA_PRACTICA.exists():
+            raise FileNotFoundError(
+                "No se encontró la imagen de la moneda de práctica. "
+                f"Colócala en: {RUTA_MONEDA_PRACTICA}"
             )
+
+        imagen = pygame.image.load(
+            str(RUTA_MONEDA_PRACTICA)
+        ).convert_alpha()
+
+        # Elimina espacio transparente sobrante del archivo.
+        imagen = recortar_transparencia_png(
+            imagen,
+            margen=0,
         )
 
-        pygame.draw.polygon(
-            superficie,
-            naranja,
-            [
-                (centro[0] - radio // 2, self.alto - 8),
-                (centro[0], self.alto - 1),
-                (centro[0] + radio // 2, self.alto - 8)
-            ]
+        # Mantiene el aspecto pixel art al ajustar el tamaño.
+        imagen = pygame.transform.scale(
+            imagen,
+            (
+                self.ancho,
+                self.alto,
+            ),
         )
 
-        pygame.draw.line(superficie, blanco, (centro[0] - 12, 11), (centro[0] + 4, 6), 3)
-
-        return superficie
+        return imagen
 
     def actualizar(self, dt):
         self.tiempo_animacion += dt
@@ -2557,9 +2550,39 @@ class JuegoEduCore:
             ),
         )
 
+    def obtener_practica_activa(self):
+        """Devuelve únicamente el primer ejercicio que todavía no se completó."""
+        for objeto in self.objetos_practica:
+            if not objeto.completado:
+                return objeto
+
+        return None
+
+    def obtener_zona_interaccion_practica(self):
+        """Devuelve la zona de la moneda que está cerca del jugador."""
+        objeto = self.objeto_en_contacto
+
+        if objeto is None or objeto.completado:
+            return None
+
+        return objeto.rect.inflate(
+            round(80 * ESCALA_JUEGO),
+            round(45 * ESCALA_JUEGO),
+        )
+
+    def abrir_practica_en_contacto(self):
+        """Abre con ENTER la práctica de la moneda cercana."""
+        objeto = self.objeto_en_contacto
+
+        if objeto is None or objeto.completado:
+            return
+
+        self.abrir_practica_objeto(objeto)
+
     def registrar_interacciones(self):
         self.interacciones = []
 
+        # Interacción del profesor.
         self.interacciones.append(
             Interaccion(
                 nombre="leccion_npc",
@@ -2567,6 +2590,19 @@ class JuegoEduCore:
                 mensaje="Presiona ENTER para iniciar la leccion",
                 accion=self.iniciar_dialogo_npc,
                 requiere_suelo=True,
+                activa=True,
+                usar_una_vez=False,
+            )
+        )
+
+        # Interacción de las monedas de verdadero/falso y completar código.
+        self.interacciones.append(
+            Interaccion(
+                nombre="practica_moneda",
+                obtener_rect=self.obtener_zona_interaccion_practica,
+                mensaje="Presiona ENTER para hacer el ejercicio",
+                accion=self.abrir_practica_en_contacto,
+                requiere_suelo=False,
                 activa=True,
                 usar_una_vez=False,
             )
@@ -2764,7 +2800,14 @@ class JuegoEduCore:
         ]
 
     def abrir_practica_objeto(self, objeto):
-        if objeto is None or objeto.completado or self.game_over:
+        practica_activa = self.obtener_practica_activa()
+
+        if (
+            objeto is None
+            or objeto.completado
+            or self.game_over
+            or objeto is not practica_activa
+        ):
             return
 
         self.objeto_practica_actual = objeto
@@ -2827,6 +2870,7 @@ class JuegoEduCore:
         self.restar_vida_por_respuesta_incorrecta()
 
     def revisar_colision_objeto_practica(self):
+        """Detecta solamente la primera práctica pendiente."""
         if (
             self.game_over
             or self.en_dialogo
@@ -2835,32 +2879,27 @@ class JuegoEduCore:
             or self.transicion_iris.activa()
             or not self.leccion_npc_leida
         ):
+            self.objeto_en_contacto = None
             return
 
-        jugador_rect_mundo = self.jugador.obtener_rect_mundo(self.camara_x)
-        hay_contacto = False
+        objeto = self.obtener_practica_activa()
 
-        for objeto in self.objetos_practica:
-            if objeto.completado:
-                continue
+        if objeto is None:
+            self.objeto_en_contacto = None
+            return
 
-            # Se amplia un poco la zona para que el formulario aparezca
-            # al acercarse y no sea necesario tocar exactamente la moneda.
-            zona_interaccion = objeto.rect.inflate(
-                round(80 * ESCALA_JUEGO),
-                round(45 * ESCALA_JUEGO),
-            )
+        jugador_rect_mundo = self.jugador.obtener_rect_mundo(
+            self.camara_x
+        )
 
-            if jugador_rect_mundo.colliderect(zona_interaccion):
-                hay_contacto = True
+        zona_interaccion = objeto.rect.inflate(
+            round(80 * ESCALA_JUEGO),
+            round(45 * ESCALA_JUEGO),
+        )
 
-                if self.objeto_en_contacto is not objeto:
-                    self.objeto_en_contacto = objeto
-                    self.abrir_practica_objeto(objeto)
-
-                break
-
-        if not hay_contacto:
+        if jugador_rect_mundo.colliderect(zona_interaccion):
+            self.objeto_en_contacto = objeto
+        else:
             self.objeto_en_contacto = None
 
 
@@ -2990,8 +3029,10 @@ class JuegoEduCore:
             self.jugador.actualizar_animacion(0)
             return
 
-        for objeto in self.objetos_practica:
-            objeto.actualizar(dt)
+        objeto_activo = self.obtener_practica_activa()
+
+        if objeto_activo is not None:
+            objeto_activo.actualizar(dt)
 
         # Mientras la transicion de entrada esta activa, se pausa el
         # movimiento, las colisiones y las interacciones del jugador.
@@ -3028,12 +3069,13 @@ class JuegoEduCore:
         if self.npc:
             self.npc.actualizar(PISO_COLISION_Y + CONFIGURACION_NPC, dt)
 
-        self.actualizar_interaccion_actual()
-
         if self.caja_dialogo:
             self.caja_dialogo.actualizar(dt)
 
+        # Primero se detecta la moneda cercana y después se decide qué
+        # aviso de interacción debe mostrarse.
         self.revisar_colision_objeto_practica()
+        self.actualizar_interaccion_actual()
 
         if self.mensaje_aprendido_visible:
             self.tiempo_mensaje_aprendido -= dt
@@ -3076,14 +3118,13 @@ class JuegoEduCore:
                 2
             )
 
-        for objeto in self.objetos_practica:
-            if objeto.completado:
-                continue
+        objeto_activo = self.obtener_practica_activa()
 
+        if objeto_activo is not None:
             pygame.draw.rect(
                 pantalla,
                 (255, 230, 0),
-                objeto.obtener_rect_pantalla(self.camara_x),
+                objeto_activo.obtener_rect_pantalla(self.camara_x),
                 2,
             )
 
@@ -3803,12 +3844,13 @@ class JuegoEduCore:
             if rect.right >= -margen and rect.left <= ANCHO + margen:
                 obstaculo.dibujar(surface, camara_px)
 
-        for objeto in self.objetos_practica:
-            if objeto.completado:
-                continue
-            rect = objeto.obtener_rect_pantalla(camara_px)
+        objeto_activo = self.obtener_practica_activa()
+
+        if objeto_activo is not None:
+            rect = objeto_activo.obtener_rect_pantalla(camara_px)
+
             if rect.right >= -margen and rect.left <= ANCHO + margen:
-                objeto.dibujar(surface, camara_px)
+                objeto_activo.dibujar(surface, camara_px)
 
         if self.npc:
             npc_x = round(self.npc.rect.x - camara_px)
@@ -3902,13 +3944,18 @@ class JuegoEduCore:
 
         if evento.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
             if not self.transicion_iris.activa():
+                # ENTER abre la lección o el ejercicio según el aviso visible.
                 self.usar_interaccion_actual()
+            return False
 
+        # ESPACIO se conserva únicamente para avanzar el diálogo.
         if evento.key == pygame.K_SPACE and self.en_dialogo:
             dialogo_cerrado = self.caja_dialogo.avanzar()
 
             if dialogo_cerrado:
                 self.cerrar_dialogo_npc()
+
+            return False
 
         return False
 

@@ -49,6 +49,12 @@ background-color: transparent;
     <property name="cursor">
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+background-color: transparent;
+border: none;
+}</string>
+    </property>
     <property name="text">
      <string/>
     </property>
@@ -97,8 +103,8 @@ background-color: transparent;
    <widget class="QLineEdit" name="txt_idjugador">
     <property name="geometry">
      <rect>
-      <x>360</x>
-      <y>430</y>
+      <x>420</x>
+      <y>400</y>
       <width>561</width>
       <height>61</height>
      </rect>
@@ -121,8 +127,8 @@ QLineEdit:focus {
    <widget class="QLineEdit" name="txt_nombreusuario">
     <property name="geometry">
      <rect>
-      <x>360</x>
-      <y>540</y>
+      <x>420</x>
+      <y>500</y>
       <width>561</width>
       <height>61</height>
      </rect>
@@ -145,8 +151,8 @@ QLineEdit:focus {
    <widget class="QLineEdit" name="txt_correo">
     <property name="geometry">
      <rect>
-      <x>360</x>
-      <y>660</y>
+      <x>420</x>
+      <y>600</y>
       <width>561</width>
       <height>61</height>
      </rect>
@@ -169,8 +175,8 @@ QLineEdit:focus {
    <widget class="QLineEdit" name="txt_contrasena">
     <property name="geometry">
      <rect>
-      <x>360</x>
-      <y>770</y>
+      <x>420</x>
+      <y>710</y>
       <width>561</width>
       <height>71</height>
      </rect>
@@ -193,8 +199,8 @@ QLineEdit:focus {
    <widget class="QLineEdit" name="txt_personaje">
     <property name="geometry">
      <rect>
-      <x>1020</x>
-      <y>430</y>
+      <x>1040</x>
+      <y>400</y>
       <width>581</width>
       <height>61</height>
      </rect>
@@ -217,8 +223,8 @@ QLineEdit:focus {
    <widget class="QLineEdit" name="txt_vidas">
     <property name="geometry">
      <rect>
-      <x>1020</x>
-      <y>550</y>
+      <x>1040</x>
+      <y>500</y>
       <width>581</width>
       <height>61</height>
      </rect>
@@ -241,8 +247,8 @@ QLineEdit:focus {
    <widget class="QLineEdit" name="txt_fecharegistro">
     <property name="geometry">
      <rect>
-      <x>1030</x>
-      <y>660</y>
+      <x>1040</x>
+      <y>610</y>
       <width>571</width>
       <height>61</height>
      </rect>
@@ -265,14 +271,17 @@ QLineEdit:focus {
    <widget class="QComboBox" name="cmb_estado">
     <property name="geometry">
      <rect>
-      <x>1030</x>
-      <y>775</y>
+      <x>1040</x>
+      <y>720</y>
       <width>581</width>
       <height>51</height>
      </rect>
     </property>
     <property name="cursor">
      <cursorShape>PointingHandCursor</cursorShape>
+    </property>
+    <property name="styleSheet">
+     <string notr="true"/>
     </property>
    </widget>
   </widget>

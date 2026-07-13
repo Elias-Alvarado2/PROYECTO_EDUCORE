@@ -39,8 +39,8 @@ background-color: transparent;
      <rect>
       <x>70</x>
       <y>60</y>
-      <width>191</width>
-      <height>61</height>
+      <width>201</width>
+      <height>71</height>
      </rect>
     </property>
     <property name="cursor">
@@ -61,8 +61,8 @@ border: none;
     </property>
     <property name="iconSize">
      <size>
-      <width>230</width>
-      <height>230</height>
+      <width>245</width>
+      <height>245</height>
      </size>
     </property>
    </widget>
@@ -126,7 +126,7 @@ border: none;
     <property name="geometry">
      <rect>
       <x>570</x>
-      <y>400</y>
+      <y>450</y>
       <width>981</width>
       <height>31</height>
      </rect>
@@ -149,8 +149,8 @@ QLineEdit:focus {
    <widget class="QLineEdit" name="txt_nombreusuario">
     <property name="geometry">
      <rect>
-      <x>620</x>
-      <y>450</y>
+      <x>630</x>
+      <y>510</y>
       <width>931</width>
       <height>31</height>
      </rect>
@@ -174,7 +174,7 @@ QLineEdit:focus {
     <property name="geometry">
      <rect>
       <x>520</x>
-      <y>510</y>
+      <y>570</y>
       <width>1031</width>
       <height>31</height>
      </rect>
@@ -198,7 +198,7 @@ QLineEdit:focus {
     <property name="geometry">
      <rect>
       <x>560</x>
-      <y>570</y>
+      <y>640</y>
       <width>991</width>
       <height>31</height>
      </rect>
@@ -222,7 +222,7 @@ QLineEdit:focus {
     <property name="geometry">
      <rect>
       <x>510</x>
-      <y>630</y>
+      <y>700</y>
       <width>1041</width>
       <height>31</height>
      </rect>
@@ -246,7 +246,7 @@ QLineEdit:focus {
     <property name="geometry">
      <rect>
       <x>630</x>
-      <y>680</y>
+      <y>760</y>
       <width>921</width>
       <height>31</height>
      </rect>
@@ -270,7 +270,7 @@ QLineEdit:focus {
     <property name="geometry">
      <rect>
       <x>520</x>
-      <y>740</y>
+      <y>830</y>
       <width>1031</width>
       <height>31</height>
      </rect>

@@ -3,6 +3,7 @@ from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
 
 from Transicion import FormTransicion, FormAnterior
+from AjusteResponsive import BotonesResponsivos
 
 
 class FondoImagen(QtWidgets.QLabel):
@@ -45,7 +46,27 @@ class NivelesPython(QtWidgets.QWidget):
 
         self.resize(1920, 1080)
 
+        self.setMinimumSize(0, 0)
+        self.setMaximumSize(16777215, 16777215)
+
         self.fondo = FondoImagen(self, ruta_imagen)
+
+        self.botones_responsivos = BotonesResponsivos(
+            ventana=self,
+            botones=[
+                self.btnVolver,
+                self.btnNivel1,
+                self.btnNivel2,
+                self.btnNivel3,
+                self.btnNivel4,
+                self.btnNivel5,
+                self.btnComenzar,
+            ],
+            ancho_base=1920,
+            alto_base=1080,
+            escalar_iconos=True,
+            escalar_fuentes=False,
+        )
 
         self.conectar_eventos()
 

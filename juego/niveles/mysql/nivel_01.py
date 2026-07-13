@@ -40,6 +40,7 @@ class NivelMySQL01(JuegoBase):
             "hitbox_reducir_ancho": 20,
             "hitbox_reducir_alto": 70,
         },
+        
     )
 
     PRACTICAS = (

@@ -4,6 +4,7 @@ from PyQt6 import QtWidgets, uic, QtGui
 
 from ConexionBD import ConexionBD
 from Transicion import FormTransicion, FormAnterior
+from AjusteResponsive import ElementosResponsivos
 
 
 class FondoImagen(QtWidgets.QLabel):
@@ -46,7 +47,33 @@ class EliminarUsuario(QtWidgets.QWidget):
 
         self.resize(1920, 1080)
 
+        self.setMinimumSize(0, 0)
+        self.setMaximumSize(16777215, 16777215)
+
         self.fondo = FondoImagen(self, ruta_imagen)
+
+        self.elementos_responsivos = ElementosResponsivos(
+            ventana=self.Eliminar_Usuario,
+            elementos=[
+                # Botones
+                self.btn_cancelar,
+                self.btn_eliminarusuario,
+                self.btn_volver,
+
+                # Campos
+                self.txt_idjugador,
+                self.txt_nombreusuario,
+                self.txt_correo,
+                self.txt_personaje,
+                self.txt_vidas,
+                self.txt_fecharegistro,
+                self.txt_estado,
+            ],
+            ancho_base=1920,
+            alto_base=1080,
+            escalar_iconos=True,
+            escalar_fuentes=False,
+        )
 
         self.db = ConexionBD()
         self.jugador_actual = None
@@ -56,8 +83,21 @@ class EliminarUsuario(QtWidgets.QWidget):
 
     def resizeEvent(self, event):
         if hasattr(self, "fondo"):
-            self.fondo.actualizar_tamano(self.width(), self.height())
+            self.fondo.actualizar_tamano(
+                self.width(),
+                self.height()
+            )
             self.fondo.lower()
+
+        if hasattr(self, "Eliminar_Usuario"):
+            self.Eliminar_Usuario.setGeometry(
+                0,
+                0,
+                self.width(),
+                self.height()
+            )
+
+            self.Eliminar_Usuario.raise_()
 
         super().resizeEvent(event)
 
