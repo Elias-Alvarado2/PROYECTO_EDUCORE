@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui
-
+from quitar_barra import quitar
 from Transicion import FormTransicion, FormAnterior
 
 class FondoImagen(QtWidgets.QLabel):
@@ -24,7 +24,7 @@ class FondoImagen(QtWidgets.QLabel):
 class NivelesMySQL(QtWidgets.QWidget):
     def __init__(self, jugador=None, ventana_anterior=None):
         super().__init__()
-
+        quitar(self)
         self.jugador = jugador
         self.ventana_anterior = ventana_anterior
 

@@ -209,6 +209,7 @@ class PantallaPracticaCodigo:
         self.respondido = False
         self.respuesta_final: bool | None = None
         self.resultado = ""
+        self.intento_incorrecto_pendiente = False
 
         self.pregunta = ""
         self.configuracion: dict = {}
@@ -342,6 +343,7 @@ class PantallaPracticaCodigo:
         self.respondido = False
         self.respuesta_final = None
         self.resultado = ""
+        self.intento_incorrecto_pendiente = False
         self.pregunta = str(pregunta)
         self.configuracion = dict(configuracion or {})
         self.token_arrastrado = None
@@ -360,6 +362,20 @@ class PantallaPracticaCodigo:
         self.boton_presionado = None
         self.token_arrastrado = None
         self._reiniciar_rebotes()
+
+    def reintentar(self) -> None:
+        """Limpia los espacios para que el jugador rellene el código otra vez."""
+        pregunta = self.pregunta
+        configuracion = self.configuracion
+        self.iniciar(pregunta, configuracion)
+
+    def consumir_intento_incorrecto(self) -> bool:
+        """Devuelve True una sola vez por cada respuesta incorrecta."""
+        if not self.intento_incorrecto_pendiente:
+            return False
+
+        self.intento_incorrecto_pendiente = False
+        return True
 
     def _crear_tokens(self) -> None:
         for indice, opcion in enumerate(self.configuracion.get("opciones", [])):
@@ -518,7 +534,10 @@ class PantallaPracticaCodigo:
 
     def verificar(self) -> None:
         if self.respondido:
-            self.cerrar()
+            if self.respuesta_final:
+                self.cerrar()
+            else:
+                self.reintentar()
             return
 
         if any(hueco.token_id is None for hueco in self.huecos.values()):
@@ -535,6 +554,9 @@ class PantallaPracticaCodigo:
         self.respondido = True
         self.respuesta_final = correcto
         self.resultado = "Correcto!" if correcto else "Incorrecto!"
+
+        if not correcto:
+            self.intento_incorrecto_pendiente = True
 
     def manejar_evento(self, evento: pygame.event.Event) -> bool:
         if not self.visible:
@@ -798,10 +820,12 @@ class PantallaPracticaCodigo:
             imagen,
             rect_animado,
         )
-        if self.respondido:
-            texto_boton="CONTINUAR"
+        if self.respondido and self.respuesta_final:
+            texto_boton = "CONTINUAR"
+        elif self.respondido:
+            texto_boton = "REINTENTAR"
         else:
-            texto_boton="RESPONDER"
+            texto_boton = "RESPONDER"
         texto=self.fuente_boton.render(
             texto_boton,
             False,

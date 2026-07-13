@@ -55,7 +55,7 @@ class JuegoBase(motor.JuegoEduCore):
     # Coordenadas sin ESCALA_JUEGO.
     # JuegoBase aplica la escala automáticamente.
     PISOS = (
-        (0, LONGITUD_NIVEL),
+        (0, LONGITUD_NIVEL + 500),
     )
 
     OBSTACULOS = (
@@ -71,18 +71,8 @@ class JuegoBase(motor.JuegoEduCore):
         },
     )
 
-    PRACTICAS = (
-        {
-            "x": 1260,
-            "y": None,
-            "pregunta": (
-                "En Python, una variable sirve para guardar datos "
-                "que puedes usar después en el programa."
-            ),
-            "respuesta_correcta": True,
-            "nombre": "moneda_variable",
-        },
-    )
+    # Si un nivel no declara PRACTICAS, no aparece ninguna.
+    PRACTICAS = ()
 
     # ========================================================
     # INICIALIZACIÓN
@@ -225,6 +215,9 @@ class JuegoBase(motor.JuegoEduCore):
         self.objeto_practica_actual = None
         self.objeto_en_contacto = None
         self.objetos_practica = []
+
+        # Carga únicamente las prácticas declaradas en el nivel actual.
+        self.cargar_practicas_desde_nivel()
 
     # ========================================================
     # CREACIÓN DE OBSTÁCULOS
@@ -375,8 +368,8 @@ class JuegoBase(motor.JuegoEduCore):
     # OBJETOS DE PRÁCTICA
     # ========================================================
 
-    def crear_objeto_practica_prueba(self):
-        """Crea las prácticas definidas dentro del archivo del nivel."""
+    def cargar_practicas_desde_nivel(self):
+        """Carga únicamente las prácticas definidas por el nivel actual."""
         objetos = []
         tamano_objeto = round(
             48 * motor.ESCALA_JUEGO
@@ -428,3 +421,12 @@ class JuegoBase(motor.JuegoEduCore):
             )
 
         self.objetos_practica = objetos
+
+
+    def crear_objeto_practica_prueba(self):
+        """Compatibilidad con código antiguo.
+
+        No crea una práctica de prueba. Solo vuelve a cargar las prácticas
+        declaradas en PRACTICAS por el nivel actual.
+        """
+        self.cargar_practicas_desde_nivel()

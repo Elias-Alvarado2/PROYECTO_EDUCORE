@@ -171,7 +171,7 @@ MARGEN_COLISION_VERTICAL = round(20 * ESCALA_JUEGO)
 
 VIDAS_MAXIMAS = 5
 
-TIPOS_OBSTACULOS_SOLIDOS = frozenset({"piedra", "tronco", "caja"})
+TIPOS_OBSTACULOS_SOLIDOS = frozenset({"piedra", "tronco", "caja", "fragmento"})
 TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser"})
 
 ALIAS_PERSONAJES = {
@@ -1179,8 +1179,21 @@ class Obstaculo:
         if not ruta_imagen.exists():
             raise FileNotFoundError(f"No se encontro la imagen del obstaculo: {ruta_imagen}")
 
-        self.imagen = pygame.image.load(str(ruta_imagen)).convert_alpha()
-        self.imagen = pygame.transform.scale(self.imagen, (ancho, alto))
+        self.imagen = pygame.image.load(
+            str(ruta_imagen)
+        ).convert_alpha()
+
+        # Recorta el espacio transparente alrededor del obstáculo
+        self.imagen = recortar_transparencia_png(
+            self.imagen,
+            margen=0,
+        )
+
+        # Escala solamente la parte visible del PNG
+        self.imagen = pygame.transform.scale(
+            self.imagen,
+            (int(ancho), int(alto)),
+        )
 
         if hitbox_ancho is None:
             hitbox_ancho = ancho
@@ -1346,7 +1359,7 @@ class Jugador:
         self.velocidad_animacion_salto = 10
 
         self.velocidad_y = 0
-        self.fuerza_salto = -14
+        self.fuerza_salto = -15
         self.gravedad = 0.975
         self.velocidad_caida_maxima = 22.5
 
@@ -2405,6 +2418,90 @@ class JuegoEduCore:
         self.objeto_practica_actual = None
         self.objeto_en_contacto = None
         self.objetos_practica = []
+        self.cargar_practicas_desde_nivel()
+
+    def cargar_practicas_desde_nivel(self):
+        """Crea únicamente las prácticas declaradas en PRACTICAS del nivel.
+
+        Si la clase del nivel no tiene PRACTICAS, o la colección está vacía,
+        no se crea ninguna moneda automáticamente.
+        """
+        configuraciones = getattr(self, "PRACTICAS", ()) or ()
+
+        self.objetos_practica = []
+
+        for indice, configuracion in enumerate(configuraciones, start=1):
+            if not isinstance(configuracion, dict):
+                print(
+                    f"[PRACTICAS] Se ignoró la práctica {indice}: "
+                    "la configuración debe ser un diccionario."
+                )
+                continue
+
+            x_config = configuracion.get("x")
+            if x_config is None:
+                print(
+                    f"[PRACTICAS] Se ignoró la práctica {indice}: "
+                    "falta la posición x."
+                )
+                continue
+
+            # Los niveles utilizan medidas pequeñas, igual que OBSTACULOS.
+            x = round(float(x_config) * ESCALA_JUEGO)
+
+            y_config = configuracion.get("y")
+            if y_config is None:
+                alto_moneda = round(35 * ESCALA_JUEGO)
+                y = (
+                    PISO_COLISION_Y
+                    - alto_moneda
+                    - round(18 * ESCALA_JUEGO)
+                )
+            else:
+                y = round(float(y_config) * ESCALA_JUEGO)
+
+            tipo = str(
+                configuracion.get("tipo", "verdadero_falso")
+            ).strip().lower()
+
+            pregunta = str(configuracion.get("pregunta", ""))
+            nombre = str(
+                configuracion.get(
+                    "nombre",
+                    f"practica_{indice}",
+                )
+            )
+
+            respuesta_correcta = bool(
+                configuracion.get("respuesta_correcta", True)
+            )
+
+            configuracion_codigo = {}
+
+            if tipo == "codigo":
+                configuracion_codigo = {
+                    "respuestas": dict(
+                        configuracion.get("respuestas", {}) or {}
+                    ),
+                    "codigo": list(
+                        configuracion.get("codigo", []) or []
+                    ),
+                    "opciones": list(
+                        configuracion.get("opciones", []) or []
+                    ),
+                }
+
+            self.objetos_practica.append(
+                ObjetoPractica(
+                    x=x,
+                    y=y,
+                    pregunta=pregunta,
+                    respuesta_correcta=respuesta_correcta,
+                    nombre=nombre,
+                    tipo=tipo,
+                    configuracion_codigo=configuracion_codigo,
+                )
+            )
 
     def hay_practica_visible(self):
         return bool(
@@ -2538,7 +2635,13 @@ class JuegoEduCore:
         )
 
     def obtener_practica_activa(self):
-        """Devuelve únicamente el primer ejercicio que todavía no se completó."""
+        """Devuelve la primera práctica pendiente después de leer la lección."""
+
+        # Antes de terminar el diálogo del NPC no se muestra ninguna moneda
+        # ni se permite acceder a una práctica.
+        if not getattr(self, "leccion_npc_leida", False):
+            return None
+
         for objeto in self.objetos_practica:
             if not objeto.completado:
                 return objeto
@@ -2760,31 +2863,8 @@ class JuegoEduCore:
         self.en_dialogo = False
         self.leccion_npc_leida = True
 
-        # La moneda aparece únicamente después de terminar todas las
-        # páginas de la lección. No se muestra ningún cuadro adicional.
-        if not self.objetos_practica:
-            self.crear_objeto_practica_prueba()
-
-    def crear_objeto_practica_prueba(self):
-        """Crea una sola moneda de prueba para el nivel base."""
-        tamano_objeto = round(48 * ESCALA_JUEGO)
-        x_moneda = round(1260 * ESCALA_JUEGO)
-        y_moneda = PISO_COLISION_Y - tamano_objeto - round(18 * ESCALA_JUEGO)
-
-        pregunta = (
-            "En Python, una variable sirve para guardar datos "
-            "que puedes usar despues en el programa."
-        )
-
-        self.objetos_practica = [
-            ObjetoPractica(
-                x=x_moneda,
-                y=y_moneda,
-                pregunta=pregunta,
-                respuesta_correcta=True,
-                nombre="moneda_variable",
-            )
-        ]
+        # No se crea ninguna práctica automáticamente.
+        # Solamente aparecerán las prácticas configuradas desde el nivel.
 
     def abrir_practica_objeto(self, objeto):
         practica_activa = self.obtener_practica_activa()
@@ -2891,66 +2971,108 @@ class JuegoEduCore:
 
 
     def revisar_colision_piso(self, y_anterior):
+        """Corrige la caída sobre el suelo y recupera penetraciones accidentales.
+
+        Las plataformas del nivel representan el piso. Si otra colisión empuja
+        al jugador parcialmente o completamente dentro de una plataforma, se
+        vuelve a colocar sobre su borde superior durante el mismo fotograma.
+        """
         self.jugador.en_suelo = False
 
-        jugador_rect_mundo = self.jugador.obtener_rect_mundo(self.camara_x)
+        jugador_rect_mundo = self.jugador.obtener_rect_mundo(
+            self.camara_x
+        )
         hitbox_local = self.jugador.obtener_hitbox_local()
 
         bottom_anterior = y_anterior + hitbox_local.bottom
-        viene_cayendo = self.jugador.velocidad_y >= 0
 
-        if not viene_cayendo:
+        # Mientras sube no debe aterrizar. Si golpeó el techo de un obstáculo,
+        # revisar_colision_obstaculos deja la velocidad en 0 y esta función sí
+        # podrá recuperar al personaje si quedó dentro del suelo.
+        if self.jugador.velocidad_y < 0:
             return
 
         pisos_posibles = []
 
+        # El piso principal permite recuperación por penetración. Esto evita
+        # que el personaje siga cayendo cuando un obstáculo lo empuja debajo
+        # de la superficie.
         for plataforma in self.plataformas:
             rect = plataforma.obtener_rect_mundo()
 
-            esta_sobre_x = (
+            coincide_horizontalmente = (
                 jugador_rect_mundo.right > rect.left
                 and jugador_rect_mundo.left < rect.right
             )
 
-            cruzo_el_piso = (
-                bottom_anterior <= rect.top + MARGEN_COLISION_VERTICAL
+            cruzo_desde_arriba = (
+                bottom_anterior <= rect.top + 1
                 and jugador_rect_mundo.bottom >= rect.top
             )
 
-            if esta_sobre_x and cruzo_el_piso:
+            penetro_el_piso = jugador_rect_mundo.colliderect(rect)
+
+            if (
+                coincide_horizontalmente
+                and (cruzo_desde_arriba or penetro_el_piso)
+            ):
                 pisos_posibles.append(rect)
 
+        # Los obstáculos sólidos solo cuentan como piso cuando el personaje
+        # realmente cruza su borde superior desde arriba. No se usa
+        # colliderect aquí porque un roce lateral no debe subir al jugador.
         for obstaculo in self.obstaculos:
             if not obstaculo.es_solido():
                 continue
 
             rect = obstaculo.rect
 
-            esta_sobre_x = (
+            coincide_horizontalmente = (
                 jugador_rect_mundo.right > rect.left
                 and jugador_rect_mundo.left < rect.right
             )
 
-            cruzo_el_piso = (
-                bottom_anterior <= rect.top + MARGEN_COLISION_VERTICAL
+            cruzo_desde_arriba = (
+                bottom_anterior <= rect.top + 1
                 and jugador_rect_mundo.bottom >= rect.top
             )
 
-            if esta_sobre_x and cruzo_el_piso:
+            if coincide_horizontalmente and cruzo_desde_arriba:
                 pisos_posibles.append(rect)
 
         if pisos_posibles:
             piso = min(pisos_posibles, key=lambda r: r.top)
             self.jugador.colocar_sobre_piso(piso.top)
 
-    def revisar_colision_obstaculos(self, y_anterior, x_mundo_anterior):
-        jugador_rect_mundo = self.jugador.obtener_rect_mundo(self.camara_x)
+    def revisar_colision_obstaculos(
+        self,
+        y_anterior,
+        x_mundo_anterior,
+    ):
+        """Resuelve obstáculos usando la posición del fotograma anterior.
+
+        Distingue correctamente entre caer encima, golpear desde abajo y
+        chocar lateralmente. Así un roce lateral no se interpreta como golpe
+        de techo ni empuja al personaje dentro del suelo.
+        """
         hitbox_local = self.jugador.obtener_hitbox_local()
+
+        rect_anterior = pygame.Rect(
+            round(x_mundo_anterior + hitbox_local.x),
+            round(y_anterior + hitbox_local.y),
+            hitbox_local.width,
+            hitbox_local.height,
+        )
 
         bloqueo_horizontal = False
 
         for obstaculo in self.obstaculos:
-            if not jugador_rect_mundo.colliderect(obstaculo.rect):
+            jugador_rect_mundo = self.jugador.obtener_rect_mundo(
+                self.camara_x
+            )
+            rect = obstaculo.rect
+
+            if not jugador_rect_mundo.colliderect(rect):
                 continue
 
             if obstaculo.es_danio():
@@ -2960,46 +3082,54 @@ class JuegoEduCore:
             if not obstaculo.es_solido():
                 continue
 
-            rect_x_anterior = pygame.Rect(
-                int(x_mundo_anterior + hitbox_local.x),
-                jugador_rect_mundo.y,
-                jugador_rect_mundo.width,
-                jugador_rect_mundo.height,
+            coincide_horizontalmente = (
+                jugador_rect_mundo.right > rect.left
+                and jugador_rect_mundo.left < rect.right
             )
 
-            bottom_anterior = y_anterior + hitbox_local.bottom
-
-            viene_subiendo = self.jugador.velocidad_y < 0
-            viene_cayendo = self.jugador.velocidad_y >= 0
-
+            # Solo aterriza si en el fotograma anterior estaba arriba y ahora
+            # cruzó la superficie del obstáculo mientras venía cayendo.
             cayo_encima = (
-                viene_cayendo
-                and bottom_anterior <= obstaculo.rect.top + MARGEN_COLISION_VERTICAL
-                and jugador_rect_mundo.bottom >= obstaculo.rect.top
-                and jugador_rect_mundo.right > obstaculo.rect.left
-                and jugador_rect_mundo.left < obstaculo.rect.right
+                self.jugador.velocidad_y >= 0
+                and rect_anterior.bottom <= rect.top + 1
+                and jugador_rect_mundo.bottom >= rect.top
+                and coincide_horizontalmente
             )
 
             if cayo_encima:
-                self.jugador.colocar_sobre_piso(obstaculo.rect.top)
+                self.jugador.colocar_sobre_piso(rect.top)
                 continue
 
+            # Solo es golpe de techo si antes estaba completamente debajo del
+            # obstáculo y durante este fotograma cruzó su borde inferior.
             toco_techo = (
-                viene_subiendo
-                and jugador_rect_mundo.top <= obstaculo.rect.bottom
-                and jugador_rect_mundo.bottom > obstaculo.rect.bottom
+                self.jugador.velocidad_y < 0
+                and rect_anterior.top >= rect.bottom - 1
+                and jugador_rect_mundo.top <= rect.bottom
+                and coincide_horizontalmente
             )
 
             if toco_techo:
-                y_sprite = obstaculo.rect.bottom - hitbox_local.top
-                self.jugador.y = y_sprite
+                self.jugador.y = (
+                    rect.bottom - hitbox_local.top
+                )
                 self.jugador.velocidad_y = 0
                 self.jugador.en_suelo = False
                 continue
 
-            choque_lateral = not rect_x_anterior.colliderect(obstaculo.rect)
+            # El movimiento horizontal del nivel se representa desplazando la
+            # cámara. Se bloquea únicamente cuando la hitbox cruzó uno de los
+            # laterales desde fuera.
+            cruzo_lado_izquierdo = (
+                rect_anterior.right <= rect.left
+                and jugador_rect_mundo.right > rect.left
+            )
+            cruzo_lado_derecho = (
+                rect_anterior.left >= rect.right
+                and jugador_rect_mundo.left < rect.right
+            )
 
-            if choque_lateral:
+            if cruzo_lado_izquierdo or cruzo_lado_derecho:
                 bloqueo_horizontal = True
 
         return bloqueo_horizontal
@@ -3048,10 +3178,18 @@ class JuegoEduCore:
 
         if not self.game_over:
             self.jugador.aplicar_gravedad()
-            self.revisar_colision_piso(y_anterior)
 
-            if self.revisar_colision_obstaculos(y_anterior, x_mundo_anterior):
+            # Primero se resuelven los obstáculos. Si alguno bloqueó el
+            # movimiento lateral, se restaura la cámara del fotograma anterior.
+            if self.revisar_colision_obstaculos(
+                y_anterior,
+                x_mundo_anterior,
+            ):
                 self.camara_x = camara_anterior
+
+            # El piso se revisa al final para recuperar al personaje si una
+            # colisión vertical lo dejó dentro de la superficie.
+            self.revisar_colision_piso(y_anterior)
 
         if self.npc:
             self.npc.actualizar(PISO_COLISION_Y + CONFIGURACION_NPC, dt)
@@ -3887,14 +4025,24 @@ class JuegoEduCore:
         estaba_visible = practica_visible.visible
         practica_visible.manejar_evento(evento)
 
-        if (
-            estaba_visible
-            and not practica_visible.visible
-            and practica_visible.respondido
-        ):
-            self.finalizar_practica_objeto(
-                practica_visible.respuesta_final
-            )
+        # Cada fallo descuenta una vida inmediatamente, aunque el formulario
+        # siga abierto para mostrar el botón REINTENTAR.
+        if practica_visible.consumir_intento_incorrecto():
+            self.restar_vida_por_respuesta_incorrecta()
+
+            if self.game_over:
+                practica_visible.cerrar()
+
+        # Solo una respuesta correcta completa y elimina la práctica.
+        # Cerrar con X o cerrar después de fallar no descuenta otra vida.
+        if estaba_visible and not practica_visible.visible:
+            if (
+                practica_visible.respondido
+                and practica_visible.respuesta_final is True
+            ):
+                self.finalizar_practica_objeto(True)
+            else:
+                self.objeto_practica_actual = None
 
         return True
 
