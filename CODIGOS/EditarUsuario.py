@@ -1,12 +1,11 @@
 import sys
 from pathlib import Path
-
 from PyQt6 import QtWidgets, uic, QtGui, QtCore
 from Alertas import Alertas
 from ConexionBD import ConexionBD
 from Transicion import FormTransicion, FormAnterior
 from AjusteResponsive import ElementosResponsivos
-
+from quitar_barra import quitar
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
@@ -40,6 +39,7 @@ class FondoImagen(QtWidgets.QLabel):
 class EditarUsuario(QtWidgets.QWidget):
     def __init__(self, ventana_anterior=None):
         super().__init__()
+        quitar(self)
 
         self.ventana_anterior = ventana_anterior
 
@@ -416,7 +416,7 @@ class EditarUsuario(QtWidgets.QWidget):
             f"Nombre: {datos['nombre']}\n"
             f"Correo: {datos['correo']}",
             tipo="error",
-            texto_confirmar="SÍ, ELIMINAR",
+            texto_confirmar="SÍ, ACTUALIZAR",
             texto_cancelar="CANCELAR"
         )
 

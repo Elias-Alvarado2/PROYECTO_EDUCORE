@@ -5,7 +5,7 @@ from PyQt6 import QtWidgets, uic, QtGui, QtCore
 from Alertas import Alertas
 from Transicion import FormTransicion, FormAnterior
 from AjusteResponsive import BotonesResponsivos
-
+from quitar_barra import quitar
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
@@ -41,13 +41,9 @@ class FondoImagen(QtWidgets.QLabel):
 
 
 class Lecciones(QtWidgets.QWidget):
-    def __init__(
-        self,
-        jugador=None,
-        ventana_anterior=None
-    ):
+    def __init__(self,jugador=None,ventana_anterior=None):
         super().__init__()
-
+        quitar(self)
         self.jugador = jugador
         self.ventana_anterior = ventana_anterior
 

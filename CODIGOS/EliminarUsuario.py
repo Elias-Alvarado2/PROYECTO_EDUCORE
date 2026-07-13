@@ -5,7 +5,7 @@ from Alertas import Alertas
 from ConexionBD import ConexionBD
 from Transicion import FormTransicion, FormAnterior
 from AjusteResponsive import ElementosResponsivos
-
+from quitar_barra import quitar
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
@@ -27,7 +27,7 @@ class FondoImagen(QtWidgets.QLabel):
 class EliminarUsuario(QtWidgets.QWidget):
     def __init__(self, ventana_anterior=None):
         super().__init__()
-
+        quitar(self)
         self.ventana_anterior = ventana_anterior
         self.ventana_gestion_usuarios = None
 

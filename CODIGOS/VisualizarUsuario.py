@@ -25,12 +25,10 @@ class FondoImagen(QtWidgets.QLabel):
 
 
 class VisualizarUsuario(QtWidgets.QWidget):
-    def quitar(self):
-        pass
-
     def __init__(self, ventana_anterior=None):
         super().__init__()
-
+        quitar(self)
+        
         self.ventana_anterior = ventana_anterior
         self.ventana_gestion_usuarios = None
 

@@ -2,6 +2,7 @@ from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui, QtCore
 from Alertas import Alertas
 from AjusteResponsive import BotonesResponsivos
+from quitar_barra import quitar
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
         super().__init__(ventana)
@@ -38,7 +39,7 @@ class FondoImagen(QtWidgets.QLabel):
 class MenuUsuario(QtWidgets.QWidget):
     def __init__(self, jugador=None):
         super().__init__()
-
+        quitar(self)
         self.jugador = jugador
 
         self.ventana_lecciones = None
