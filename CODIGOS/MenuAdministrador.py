@@ -120,7 +120,6 @@ class MenuAdministrador(QtWidgets.QWidget):
         self.conectar_eventos()
 
     def conectar_eventos(self):
-
         if hasattr(self, "btnGestionUsuarios"):
             self.btnGestionUsuarios.clicked.connect(self.abrir_gestionar_usuarios)
         else:

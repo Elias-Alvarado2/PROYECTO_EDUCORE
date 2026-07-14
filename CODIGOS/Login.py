@@ -7,7 +7,7 @@ from Registro import RegistroWindow
 from pantalla_carga import PantallaCarga
 
 
-PERSONAJE_ADMIN_PREDETERMINADO = "cerdo"
+PERSONAJE_ADMIN_PREDETERMINADO = "pato"
 
 
 class FondoImagen(QtWidgets.QLabel):
@@ -95,7 +95,7 @@ class LoginWindow(QtWidgets.QDialog):
             Alertas.mostrar(
                 self,
                 "Campos vacíos",
-                "Debes ingresar tu usuario/correo y contraseña.",
+                "Debes ingresar tu usuario y contraseña.",
                 "advertencia"
             )
             return

@@ -52,6 +52,12 @@ class EditarUsuario(QtWidgets.QWidget):
         ruta_imagen = (PROYECTO_DIR/ "assets"/ "DISEÑOS"/ "Editar_Usuarios.png"
         )
 
+        ruta_botones = (
+                PROYECTO_DIR
+                / "EXPO-DISEÑOS"
+                / "Botones"
+        )
+
         if not ruta_ui.exists():
             raise FileNotFoundError(
                 f"No se encontró el archivo UI:\n{ruta_ui}"
@@ -62,8 +68,25 @@ class EditarUsuario(QtWidgets.QWidget):
                 f"No se encontró la imagen:\n{ruta_imagen}"
             )
 
+        if not ruta_botones.exists():
+            raise FileNotFoundError(
+                f"No se encontró la carpeta de botones:\n{ruta_botones}"
+            )
+
         # Cargar el formulario de Designer.
         uic.loadUi(str(ruta_ui), self)
+
+        # Corrige las rutas ../Botones/ de los StyleSheet.
+        self.corregir_rutas_stylesheet(ruta_botones)
+
+        ruta_fuente = (
+                PROYECTO_DIR
+                / "assets"
+                / "FUENTES"
+                / "PixelOperator.ttf"
+        )
+
+        self.cargar_fuente_personalizada(ruta_fuente)
 
         # Resolución original del diseño.
         self.resize(1920, 1080)
@@ -121,18 +144,62 @@ class EditarUsuario(QtWidgets.QWidget):
             self.buscar_usuario_automatico
         )
 
+        self.configurar_botones()
         self.configurar_campos()
         self.conectar_eventos()
 
+    def corregir_rutas_stylesheet(self, ruta_botones):
+        """
+        Conserva los StyleSheet creados en Qt Designer,
+        cambiando ../Botones/ por la ruta absoluta.
+        """
+
+        ruta_absoluta = ruta_botones.resolve().as_posix()
+
+        controles = [
+            self,
+            *self.findChildren(QtWidgets.QWidget),
+        ]
+
+        for control in controles:
+            estilo_original = control.styleSheet()
+
+            if not estilo_original:
+                continue
+
+            estilo_corregido = estilo_original
+
+            # url("../Botones/...")
+            estilo_corregido = estilo_corregido.replace(
+                'url("../Botones/',
+                f'url("{ruta_absoluta}/'
+            )
+
+            # url('../Botones/...')
+            estilo_corregido = estilo_corregido.replace(
+                "url('../Botones/",
+                f"url('{ruta_absoluta}/"
+            )
+
+            # url(../Botones/...)
+            estilo_corregido = estilo_corregido.replace(
+                "url(../Botones/",
+                f"url({ruta_absoluta}/"
+            )
+
+            if estilo_corregido != estilo_original:
+                control.setStyleSheet(estilo_corregido)
+
     def resizeEvent(self, event):
-        # Solo el fondo se controla aquí.
-        # Los demás elementos los controla ElementosResponsivos.
         if hasattr(self, "fondo"):
             self.fondo.actualizar_tamano(
                 self.width(),
                 self.height()
             )
             self.fondo.lower()
+
+        if hasattr(self, "elementos_responsivos"):
+            self.elementos_responsivos.ajustar()
 
         super().resizeEvent(event)
 
@@ -153,6 +220,10 @@ class EditarUsuario(QtWidgets.QWidget):
             "Inactivo"
         ])
 
+        # No mostrar ninguna opción al abrir la ventana.
+        self.cmb_estado.setCurrentIndex(-1)
+        self.cmb_estado.setEnabled(False)
+
     def conectar_eventos(self):
         self.txt_idjugador.textChanged.connect(
             self.iniciar_busqueda_automatica
@@ -171,6 +242,10 @@ class EditarUsuario(QtWidgets.QWidget):
         )
 
     def iniciar_busqueda_automatica(self):
+        # Oculta el estado anterior mientras busca el nuevo ID.
+        self.cmb_estado.setCurrentIndex(-1)
+        self.cmb_estado.setEnabled(False)
+
         self.timer_busqueda_id.start(500)
 
     def buscar_usuario_automatico(self):
@@ -255,7 +330,7 @@ class EditarUsuario(QtWidgets.QWidget):
                 str(e),
                 "error"
             )
-            
+
     def mostrar_datos_usuario(self, jugador):
         self.txt_nombreusuario.setText(
             str(jugador["nombre"])
@@ -281,18 +356,20 @@ class EditarUsuario(QtWidgets.QWidget):
             str(jugador["fecha_registro"])
         )
 
-        estado = str(jugador["estado"])
+        estado = str(jugador["estado"]).strip()
 
         index_estado = self.cmb_estado.findText(
-            estado
+            estado,
+            QtCore.Qt.MatchFlag.MatchFixedString
         )
 
         if index_estado >= 0:
-            self.cmb_estado.setCurrentIndex(
-                index_estado
-            )
+            self.cmb_estado.setCurrentIndex(index_estado)
         else:
-            self.cmb_estado.setCurrentIndex(0)
+            self.cmb_estado.setCurrentIndex(-1)
+
+        # Habilitar únicamente cuando el usuario existe.
+        self.cmb_estado.setEnabled(True)
 
     def limpiar_datos_usuario(self):
         self.txt_nombreusuario.clear()
@@ -302,8 +379,9 @@ class EditarUsuario(QtWidgets.QWidget):
         self.txt_vidas.clear()
         self.txt_fecharegistro.clear()
 
-        if self.cmb_estado.count() > 0:
-            self.cmb_estado.setCurrentIndex(0)
+        # No mostrar Activo ni Inactivo.
+        self.cmb_estado.setCurrentIndex(-1)
+        self.cmb_estado.setEnabled(False)
 
     def validar_campos(self):
         id_jugador = self.txt_idjugador.text().strip()
@@ -516,6 +594,85 @@ class EditarUsuario(QtWidgets.QWidget):
                 f"\n\nDetalles:\n{e}",
                 "error"
             )
+
+    def cargar_fuente_personalizada(self, ruta_fuente):
+        if not ruta_fuente.exists():
+            print(f"No se encontró la fuente:\n{ruta_fuente}")
+            return
+
+        id_fuente = QtGui.QFontDatabase.addApplicationFont(
+            str(ruta_fuente)
+        )
+
+        if id_fuente == -1:
+            print("No se pudo cargar la fuente PixelOperator.")
+            return
+
+        familias = QtGui.QFontDatabase.applicationFontFamilies(
+            id_fuente
+        )
+
+        if not familias:
+            print("La fuente no contiene una familia válida.")
+            return
+
+        nombre_fuente = familias[0]
+
+        # Fuente para el campo donde se escribe el ID.
+        fuente_id = QtGui.QFont(
+            nombre_fuente,
+            22
+        )
+        fuente_id.setBold(False)
+
+        # Fuente para los datos del jugador.
+        fuente_datos = QtGui.QFont(
+            nombre_fuente,
+            20
+        )
+        fuente_datos.setBold(False)
+
+        # Fuente para el ComboBox.
+        fuente_combo = QtGui.QFont(
+            nombre_fuente,
+            20
+        )
+        fuente_combo.setBold(False)
+
+        self.txt_idjugador.setFont(fuente_id)
+
+        campos_datos = [
+            self.txt_nombreusuario,
+            self.txt_correo,
+            self.txt_contrasena,
+            self.txt_personaje,
+            self.txt_vidas,
+            self.txt_fecharegistro,
+        ]
+
+        for campo in campos_datos:
+            campo.setFont(fuente_datos)
+
+        self.cmb_estado.setFont(fuente_combo)
+
+        # También cambia la fuente de las opciones desplegables.
+        self.cmb_estado.view().setFont(fuente_combo)
+
+    def configurar_botones(self):
+        botones = [
+            self.btn_confirmarcambios,
+            self.btn_volver,
+        ]
+
+        for boton in botones:
+            boton.setCursor(
+                QtGui.QCursor(
+                    QtCore.Qt.CursorShape.PointingHandCursor
+                )
+            )
+
+            # No usar setStyleSheet aquí.
+            # Se mantiene la imagen configurada en Designer.
 
 
 if __name__ == "__main__":

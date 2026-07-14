@@ -273,7 +273,7 @@ QLineEdit:focus {
      <rect>
       <x>1040</x>
       <y>720</y>
-      <width>581</width>
+      <width>507</width>
       <height>51</height>
      </rect>
     </property>
@@ -281,7 +281,26 @@ QLineEdit:focus {
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="styleSheet">
-     <string notr="true"/>
+     <string notr="true">QComboBox {
+    background-color: transparent;
+    color: #0A3268;
+    border: none;
+    padding-left: 5px;
+}
+
+QComboBox::drop-down {
+    background-color: transparent;
+    border: none;
+    width: 30px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: white;
+    color: #0A3268;
+    border: none;
+    selection-background-color: #0A3268;
+    selection-color: white;
+}</string>
     </property>
    </widget>
   </widget>

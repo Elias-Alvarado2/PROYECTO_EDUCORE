@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1042</width>
+    <width>1020</width>
     <height>720</height>
    </rect>
   </property>
@@ -18,7 +18,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1041</width>
+     <width>1020</width>
      <height>720</height>
     </rect>
    </property>
@@ -43,10 +43,10 @@ background-color: transparent;
    <widget class="QPushButton" name="btn_Iniciar">
     <property name="geometry">
      <rect>
-      <x>600</x>
-      <y>610</y>
-      <width>351</width>
-      <height>51</height>
+      <x>585</x>
+      <y>613</y>
+      <width>346</width>
+      <height>48</height>
      </rect>
     </property>
     <property name="cursor">
@@ -67,10 +67,10 @@ border: none;
    <widget class="QPushButton" name="btnRegistrarUsuario">
     <property name="geometry">
      <rect>
-      <x>600</x>
-      <y>530</y>
-      <width>351</width>
-      <height>51</height>
+      <x>585</x>
+      <y>535</y>
+      <width>346</width>
+      <height>48</height>
      </rect>
     </property>
     <property name="cursor">
@@ -91,10 +91,10 @@ border: none;
    <widget class="QLineEdit" name="txtContrasena">
     <property name="geometry">
      <rect>
-      <x>590</x>
-      <y>470</y>
-      <width>321</width>
-      <height>51</height>
+      <x>571</x>
+      <y>475</y>
+      <width>330</width>
+      <height>42</height>
      </rect>
     </property>
     <property name="font">
@@ -126,10 +126,10 @@ QLineEdit:focus {
    <widget class="QLineEdit" name="txtUsuario">
     <property name="geometry">
      <rect>
-      <x>590</x>
-      <y>300</y>
-      <width>321</width>
-      <height>61</height>
+      <x>571</x>
+      <y>307</y>
+      <width>330</width>
+      <height>42</height>
      </rect>
     </property>
     <property name="font">
@@ -158,10 +158,10 @@ QLineEdit:focus {
    <widget class="QLineEdit" name="txtCorreo">
     <property name="geometry">
      <rect>
-      <x>590</x>
-      <y>380</y>
-      <width>321</width>
-      <height>61</height>
+      <x>571</x>
+      <y>391</y>
+      <width>330</width>
+      <height>42</height>
      </rect>
     </property>
     <property name="font">
@@ -190,8 +190,8 @@ QLineEdit:focus {
    <widget class="QPushButton" name="btnMostrarContrasena">
     <property name="geometry">
      <rect>
-      <x>920</x>
-      <y>480</y>
+      <x>906</x>
+      <y>483</y>
       <width>31</width>
       <height>26</height>
      </rect>

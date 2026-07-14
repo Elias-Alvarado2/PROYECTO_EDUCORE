@@ -14,7 +14,7 @@ class Alertas(QtWidgets.QDialog):
         },
         "advertencia": {
             "icono": "!",
-            "color": "#F28C18"
+            "color": "#E98616"
         },
         "error": {
             "icono": "×",
@@ -36,10 +36,6 @@ class Alertas(QtWidgets.QDialog):
 
         self.confirmacion = confirmacion
 
-        # =====================================================
-        # CONFIGURACIÓN DE LA VENTANA
-        # =====================================================
-
         self.setModal(True)
         self.setFixedSize(520, 320)
 
@@ -60,10 +56,6 @@ class Alertas(QtWidgets.QDialog):
         icono = configuracion["icono"]
         color = configuracion["color"]
 
-        # =====================================================
-        # LAYOUT PRINCIPAL
-        # =====================================================
-
         layout_principal = QtWidgets.QVBoxLayout(self)
         layout_principal.setContentsMargins(12, 12, 12, 12)
 
@@ -83,10 +75,6 @@ class Alertas(QtWidgets.QDialog):
         layout_contenedor = QtWidgets.QVBoxLayout(self.contenedor)
         layout_contenedor.setContentsMargins(0, 0, 0, 22)
         layout_contenedor.setSpacing(0)
-
-        # =====================================================
-        # ENCABEZADO
-        # =====================================================
 
         encabezado = QtWidgets.QFrame()
         encabezado.setObjectName("encabezado")
@@ -116,7 +104,7 @@ class Alertas(QtWidgets.QDialog):
         # =====================================================
         # CUERPO DE LA ALERTA
         # =====================================================
-
+        
         cuerpo = QtWidgets.QWidget()
 
         layout_cuerpo = QtWidgets.QHBoxLayout(cuerpo)
@@ -126,6 +114,8 @@ class Alertas(QtWidgets.QDialog):
         lbl_icono = QtWidgets.QLabel(icono)
         lbl_icono.setObjectName("icono")
         lbl_icono.setFixedSize(64, 64)
+        lbl_icono.setContentsMargins(0, 0, 0, 0)
+
         lbl_icono.setAlignment(
             QtCore.Qt.AlignmentFlag.AlignCenter
         )
@@ -133,25 +123,31 @@ class Alertas(QtWidgets.QDialog):
         lbl_mensaje = QtWidgets.QLabel(mensaje)
         lbl_mensaje.setObjectName("mensaje")
         lbl_mensaje.setWordWrap(True)
+
         lbl_mensaje.setTextInteractionFlags(
             QtCore.Qt.TextInteractionFlag.TextSelectableByMouse
         )
+
         lbl_mensaje.setAlignment(
             QtCore.Qt.AlignmentFlag.AlignLeft
             | QtCore.Qt.AlignmentFlag.AlignVCenter
         )
 
+        # Círculo centrado verticalmente con el mensaje
         layout_cuerpo.addWidget(
             lbl_icono,
-            alignment=QtCore.Qt.AlignmentFlag.AlignTop
+            0,
+            QtCore.Qt.AlignmentFlag.AlignVCenter
         )
-        layout_cuerpo.addWidget(lbl_mensaje, 1)
+
+        # Mensaje centrado verticalmente con el círculo
+        layout_cuerpo.addWidget(
+            lbl_mensaje,
+            1,
+            QtCore.Qt.AlignmentFlag.AlignVCenter
+        )
 
         layout_contenedor.addWidget(cuerpo, 1)
-
-        # =====================================================
-        # BOTONES
-        # =====================================================
 
         layout_botones = QtWidgets.QHBoxLayout()
         layout_botones.setContentsMargins(32, 0, 32, 0)
