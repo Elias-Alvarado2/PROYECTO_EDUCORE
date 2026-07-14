@@ -49,6 +49,15 @@ class VisualizarUsuario(QtWidgets.QWidget):
 
         uic.loadUi(str(ruta_ui), self)
 
+        ruta_fuente = (
+                PROYECTO_DIR
+                / "assets"
+                / "FUENTES"
+                / "PixelOperator.ttf"
+        )
+
+        self.cargar_fuente_personalizada(ruta_fuente)
+
         self.resize(1920, 1080)
 
         self.setMinimumSize(0, 0)
@@ -171,8 +180,6 @@ class VisualizarUsuario(QtWidgets.QWidget):
                 QLabel {
                     background: transparent;
                     color: #082B5F;
-                    font-size: 14px;
-                    font-weight: bold;
                 }
             """)
 
@@ -229,7 +236,6 @@ class VisualizarUsuario(QtWidgets.QWidget):
                 background: transparent;
                 border: none;
                 color: #082B5F;
-                font-size: 12px;
                 gridline-color: transparent;
                 selection-background-color: #0B73D9;
                 selection-color: white;
@@ -315,6 +321,70 @@ class VisualizarUsuario(QtWidgets.QWidget):
 
         QtCore.QTimer.singleShot(0, self.posicionar_elementos)
         QtCore.QTimer.singleShot(100, self.posicionar_elementos)
+
+    def cargar_fuente_personalizada(self, ruta_fuente):
+        if not ruta_fuente.exists():
+            print(f"No se encontró la fuente:\n{ruta_fuente}")
+            return
+
+        id_fuente = QtGui.QFontDatabase.addApplicationFont(
+            str(ruta_fuente)
+        )
+
+        if id_fuente == -1:
+            print("No se pudo cargar la fuente PixelOperator.")
+            return
+
+        familias = QtGui.QFontDatabase.applicationFontFamilies(
+            id_fuente
+        )
+
+        if not familias:
+            print("No se encontró una familia válida en la fuente.")
+            return
+
+        nombre_fuente = familias[0]
+
+        # Guardamos las fuentes para utilizarlas en el formulario.
+        self.fuente_tabla = QtGui.QFont(
+            nombre_fuente,
+            15
+        )
+        self.fuente_tabla.setBold(False)
+
+        self.fuente_total = QtGui.QFont(
+            nombre_fuente,
+            18
+        )
+        self.fuente_total.setBold(False)
+
+        self.fuente_boton = QtGui.QFont(
+            nombre_fuente,
+            16
+        )
+        self.fuente_boton.setBold(False)
+
+        # Fuente de todos los datos mostrados en la tabla.
+        self.dgv_visualizarusuarios.setFont(
+            self.fuente_tabla
+        )
+
+        # Fuente del total de usuarios.
+        if hasattr(self, "lbl_totalusuarios"):
+            self.lbl_totalusuarios.setFont(
+                self.fuente_total
+            )
+
+        # Opcional: fuente del botón para volver.
+        if hasattr(self, "btn_volver"):
+            self.btn_volver.setFont(
+                self.fuente_boton
+            )
+
+        if hasattr(self, "btn_Volver"):
+            self.btn_Volver.setFont(
+                self.fuente_boton
+            )
 
 
 if __name__ == "__main__":

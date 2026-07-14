@@ -65,6 +65,15 @@ class EditarUsuario(QtWidgets.QWidget):
         # Cargar el formulario de Designer.
         uic.loadUi(str(ruta_ui), self)
 
+        ruta_fuente = (
+                PROYECTO_DIR
+                / "assets"
+                / "FUENTES"
+                / "PixelOperator.ttf"
+        )
+
+        self.cargar_fuente_personalizada(ruta_fuente)
+
         # Resolución original del diseño.
         self.resize(1920, 1080)
 
@@ -516,6 +525,69 @@ class EditarUsuario(QtWidgets.QWidget):
                 f"\n\nDetalles:\n{e}",
                 "error"
             )
+
+    def cargar_fuente_personalizada(self, ruta_fuente):
+        if not ruta_fuente.exists():
+            print(f"No se encontró la fuente:\n{ruta_fuente}")
+            return
+
+        id_fuente = QtGui.QFontDatabase.addApplicationFont(
+            str(ruta_fuente)
+        )
+
+        if id_fuente == -1:
+            print("No se pudo cargar la fuente PixelOperator.")
+            return
+
+        familias = QtGui.QFontDatabase.applicationFontFamilies(
+            id_fuente
+        )
+
+        if not familias:
+            print("La fuente no contiene una familia válida.")
+            return
+
+        nombre_fuente = familias[0]
+
+        # Fuente para el campo donde se escribe el ID.
+        fuente_id = QtGui.QFont(
+            nombre_fuente,
+            22
+        )
+        fuente_id.setBold(False)
+
+        # Fuente para los datos del jugador.
+        fuente_datos = QtGui.QFont(
+            nombre_fuente,
+            20
+        )
+        fuente_datos.setBold(False)
+
+        # Fuente para el ComboBox.
+        fuente_combo = QtGui.QFont(
+            nombre_fuente,
+            20
+        )
+        fuente_combo.setBold(False)
+
+        self.txt_idjugador.setFont(fuente_id)
+
+        campos_datos = [
+            self.txt_nombreusuario,
+            self.txt_correo,
+            self.txt_contrasena,
+            self.txt_personaje,
+            self.txt_vidas,
+            self.txt_fecharegistro,
+        ]
+
+        for campo in campos_datos:
+            campo.setFont(fuente_datos)
+
+        self.cmb_estado.setFont(fuente_combo)
+
+        # También cambia la fuente de las opciones desplegables.
+        self.cmb_estado.view().setFont(fuente_combo)
 
 
 if __name__ == "__main__":
