@@ -1,8 +1,12 @@
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui, QtCore
+
 from Alertas import Alertas
 from AjusteResponsive import BotonesResponsivos
+from Transicion import FormTransicion
 from quitar_barra import quitar
+
+
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
         super().__init__(ventana)
@@ -24,7 +28,6 @@ class FondoImagen(QtWidgets.QLabel):
 
         self.setPixmap(self.pixmap_original)
 
-        # Mantiene el fondo detrás del frame y los botones.
         self.lower()
 
     def actualizar_tamano(self, ancho, alto):
@@ -39,7 +42,9 @@ class FondoImagen(QtWidgets.QLabel):
 class MenuUsuario(QtWidgets.QWidget):
     def __init__(self, jugador=None):
         super().__init__()
+
         quitar(self)
+
         self.jugador = jugador
 
         self.ventana_lecciones = None
@@ -62,8 +67,6 @@ class MenuUsuario(QtWidgets.QWidget):
             / "Menu-Usuario.png"
         )
 
-        # Carpeta utilizada en los StyleSheet como:
-        # ../Botones/...
         ruta_botones = (
             PROYECTO_DIR
             / "EXPO-DISEÑOS"
@@ -86,25 +89,20 @@ class MenuUsuario(QtWidgets.QWidget):
                 f"\n{ruta_botones}"
             )
 
-        # Carga el archivo creado en Qt Designer.
         uic.loadUi(
             str(ruta_ui),
             self
         )
 
-        # Conserva los StyleSheet de Designer,
-        # pero convierte sus rutas relativas en absolutas.
         self.corregir_rutas_stylesheet(
             ruta_botones
         )
 
-        # Resolución original del formulario.
         self.resize(
             1920,
             1080
         )
 
-        # Permite adaptar la ventana a otras resoluciones.
         self.setMinimumSize(
             0,
             0
@@ -115,13 +113,11 @@ class MenuUsuario(QtWidgets.QWidget):
             16777215
         )
 
-        # Fondo adaptable.
         self.fondo = FondoImagen(
             self,
             ruta_imagen
         )
 
-        # Ajusta la posición y el tamaño de los botones.
         self.botones_responsivos = BotonesResponsivos(
             ventana=self,
             botones=[
@@ -140,18 +136,12 @@ class MenuUsuario(QtWidgets.QWidget):
         self.conectar_eventos()
 
     def corregir_rutas_stylesheet(self, ruta_botones):
-        """
-        Mantiene los StyleSheet creados en Qt Designer,
-        pero reemplaza ../Botones/ por su ruta absoluta.
-        """
-
         ruta_absoluta = (
             ruta_botones
             .resolve()
             .as_posix()
         )
 
-        # Revisa la ventana, el frame y todos los controles.
         controles = [
             self,
             *self.findChildren(
@@ -167,19 +157,16 @@ class MenuUsuario(QtWidgets.QWidget):
 
             estilo_corregido = estilo_original
 
-            # Ruta con comillas dobles.
             estilo_corregido = estilo_corregido.replace(
                 'url("../Botones/',
                 f'url("{ruta_absoluta}/'
             )
 
-            # Ruta con comillas simples.
             estilo_corregido = estilo_corregido.replace(
                 "url('../Botones/",
                 f"url('{ruta_absoluta}/"
             )
 
-            # Ruta sin comillas.
             estilo_corregido = estilo_corregido.replace(
                 "url(../Botones/",
                 f"url({ruta_absoluta}/"
@@ -205,9 +192,6 @@ class MenuUsuario(QtWidgets.QWidget):
                 )
             )
 
-            # No se usa setStyleSheet aquí.
-            # Se conserva el diseño hecho en Qt Designer.
-
     def conectar_eventos(self):
         self.btnJugar.clicked.connect(
             self.abrir_lecciones
@@ -217,16 +201,6 @@ class MenuUsuario(QtWidgets.QWidget):
             self.cerrar_sesion
         )
 
-        # Cuando tengas las ventanas correspondientes:
-        #
-        # self.btnAjustes.clicked.connect(
-        #     self.abrir_ajustes
-        # )
-        #
-        # self.btnPerfil.clicked.connect(
-        #     self.abrir_perfil
-        # )
-
     def abrir_lecciones(self):
         try:
             from Lecciones import Lecciones
@@ -234,20 +208,30 @@ class MenuUsuario(QtWidgets.QWidget):
             try:
                 self.ventana_lecciones = Lecciones(
                     jugador=self.jugador,
-                    ventana_anterior=self
+                    ventana_anterior=self,
+                    tipo_usuario="jugador"
                 )
 
             except TypeError:
                 try:
                     self.ventana_lecciones = Lecciones(
-                        self.jugador
+                        self.jugador,
+                        self
                     )
 
                 except TypeError:
-                    self.ventana_lecciones = Lecciones()
+                    try:
+                        self.ventana_lecciones = Lecciones(
+                            self.jugador
+                        )
 
-            self.ventana_lecciones.showMaximized()
-            self.close()
+                    except TypeError:
+                        self.ventana_lecciones = Lecciones()
+
+            FormTransicion(
+                self,
+                self.ventana_lecciones
+            )
 
         except Exception as e:
             Alertas.mostrar(
@@ -263,7 +247,7 @@ class MenuUsuario(QtWidgets.QWidget):
             "Cerrar sesión",
             "¿Seguro que deseas cerrar sesión?",
             tipo="error",
-            texto_confirmar="SÍ, ELIMINAR",
+            texto_confirmar="SÍ, CERRAR",
             texto_cancelar="CANCELAR"
         )
 
@@ -275,14 +259,11 @@ class MenuUsuario(QtWidgets.QWidget):
 
             app = QtWidgets.QApplication.instance()
 
-            # Limpia el historial de ventanas al cerrar sesión.
             if hasattr(app, "historial_forms"):
                 app.historial_forms.clear()
 
             self.ventana_login = LoginWindow()
 
-            # Conserva una referencia para evitar que
-            # Python elimine la ventana.
             app.ventana_login = self.ventana_login
 
             self.ventana_login.resize(
@@ -302,7 +283,6 @@ class MenuUsuario(QtWidgets.QWidget):
             )
 
     def resizeEvent(self, event):
-        # Ajusta el fondo al tamaño de la ventana.
         if hasattr(self, "fondo"):
             self.fondo.actualizar_tamano(
                 self.width(),
@@ -311,7 +291,6 @@ class MenuUsuario(QtWidgets.QWidget):
 
             self.fondo.lower()
 
-        # El frame MenuJugador contiene los botones.
         if hasattr(self, "MenuJugador"):
             self.MenuJugador.setGeometry(
                 0,
@@ -322,7 +301,6 @@ class MenuUsuario(QtWidgets.QWidget):
 
             self.MenuJugador.raise_()
 
-        # Ajusta nuevamente los botones.
         if hasattr(self, "botones_responsivos"):
             self.botones_responsivos.ajustar()
 
