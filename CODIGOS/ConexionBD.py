@@ -101,6 +101,52 @@ class ConexionBD:
                 )
             )
 
+            jugador = cursor.fetchone()
+
+            if jugador is None:
+                return None
+
+            # Inicia el contador cuando las vidas son menores que cinco.
+            cursor.execute(
+                """
+                UPDATE jugador
+                SET fecha_recuperacion_vidas = NOW()
+                WHERE id_jugador = %s
+                  AND vidas < 5
+                  AND fecha_recuperacion_vidas IS NULL
+                """,
+                (jugador["id_jugador"],),
+            )
+
+            # Cuando ya transcurrió una hora, restaura todas las vidas.
+            cursor.execute(
+                """
+                UPDATE jugador
+                SET vidas = 5,
+                    fecha_recuperacion_vidas = NULL
+                WHERE id_jugador = %s
+                  AND vidas < 5
+                  AND fecha_recuperacion_vidas IS NOT NULL
+                  AND NOW() >= DATE_ADD(
+                      fecha_recuperacion_vidas,
+                      INTERVAL 1 HOUR
+                  )
+                """,
+                (jugador["id_jugador"],),
+            )
+
+            conexion.commit()
+
+            # Vuelve a leer el registro para devolver las vidas actualizadas.
+            cursor.execute(
+                consulta,
+                (
+                    usuario_ingresado,
+                    usuario_ingresado,
+                    contrasena_ingresada
+                )
+            )
+
             return cursor.fetchone()
 
         except Error as e:
@@ -332,6 +378,75 @@ class ConexionBD:
 
         except Error as e:
             raise Exception(f"Error al buscar el jugador:\n{e}")
+
+        finally:
+            if cursor:
+                cursor.close()
+            if conexion:
+                conexion.close()
+
+    def verificar_recuperacion_vidas(self, id_jugador):
+        """
+        Restaura las cinco vidas cuando pasó una hora desde que
+        comenzó el contador de recuperación.
+        """
+        conexion = None
+        cursor = None
+
+        try:
+            conexion = self.conectar()
+            cursor = conexion.cursor(dictionary=True)
+
+            cursor.execute(
+                """
+                UPDATE jugador
+                SET fecha_recuperacion_vidas = NOW()
+                WHERE id_jugador = %s
+                  AND vidas < 5
+                  AND fecha_recuperacion_vidas IS NULL
+                """,
+                (id_jugador,),
+            )
+
+            cursor.execute(
+                """
+                UPDATE jugador
+                SET vidas = 5,
+                    fecha_recuperacion_vidas = NULL
+                WHERE id_jugador = %s
+                  AND vidas < 5
+                  AND fecha_recuperacion_vidas IS NOT NULL
+                  AND NOW() >= DATE_ADD(
+                      fecha_recuperacion_vidas,
+                      INTERVAL 1 HOUR
+                  )
+                """,
+                (id_jugador,),
+            )
+
+            conexion.commit()
+
+            cursor.execute(
+                """
+                SELECT vidas, fecha_recuperacion_vidas
+                FROM jugador
+                WHERE id_jugador = %s
+                LIMIT 1
+                """,
+                (id_jugador,),
+            )
+
+            jugador = cursor.fetchone()
+
+            if jugador is None:
+                return None
+
+            return int(jugador.get("vidas") or 0)
+
+        except Error as e:
+            raise Exception(
+                f"Error al verificar la recuperación de vidas:\n{e}"
+            )
 
         finally:
             if cursor:

@@ -172,6 +172,13 @@ MARGEN_COLISION_VERTICAL = round(20 * ESCALA_JUEGO)
 
 VIDAS_MAXIMAS = 5
 
+# Las vidas se restauran completamente una hora después de perder la
+# primera vida. El motor consulta MySQL cada 30 segundos mientras el nivel
+# está abierto. El tiempo real se calcula en MySQL, por lo que también
+# continúa avanzando aunque el juego esté cerrado.
+INTERVALO_RECUPERACION_VIDAS_MINUTOS = 60
+INTERVALO_COMPROBACION_VIDAS_MS = 30_000
+
 TIPOS_OBSTACULOS_SOLIDOS = frozenset({"piedra", "tronco", "caja", "fragmento"})
 TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser"})
 
@@ -719,15 +726,105 @@ class ConexionEduCore:
             cursor.close()
 
     def obtener_jugador(self, id_jugador):
+        # Antes de cargar al jugador se comprueba si ya transcurrió la hora.
+        # Esto también hace que la recuperación funcione después de cerrar
+        # y volver a abrir el programa.
+        self.recuperar_vidas_si_corresponde(id_jugador)
+
         return self.seleccionar_uno(
             """
-            SELECT id_jugador, nombre, correo, personaje, vidas, estado
+            SELECT id_jugador, nombre, correo, personaje, vidas,
+                   fecha_recuperacion_vidas, estado
             FROM jugador
             WHERE id_jugador = %s AND estado = 'Activo'
             LIMIT 1
             """,
             (id_jugador,),
         )
+
+    def recuperar_vidas_si_corresponde(self, id_jugador):
+        """
+        Devuelve las vidas actuales del jugador y restaura las cinco vidas
+        cuando ha pasado una hora desde la primera pérdida.
+
+        Si el jugador ya tenía menos de cinco vidas antes de agregar la nueva
+        columna, el contador se inicia automáticamente al consultar su cuenta.
+        Todas las consultas usan la llave primaria id_jugador, por lo que no
+        activan el modo Safe Updates de MySQL Workbench.
+        """
+        if id_jugador is None:
+            return None
+
+        cursor = self.obtener_cursor()
+
+        if cursor is None:
+            return None
+
+        try:
+            # Compatibilidad con jugadores que ya tenían vidas reducidas antes
+            # de agregar fecha_recuperacion_vidas a la tabla.
+            cursor.execute(
+                """
+                UPDATE jugador
+                SET fecha_recuperacion_vidas = NOW()
+                WHERE id_jugador = %s
+                  AND vidas < %s
+                  AND fecha_recuperacion_vidas IS NULL
+                """,
+                (id_jugador, VIDAS_MAXIMAS),
+            )
+
+            # Si ya pasó una hora, se restauran todas las vidas.
+            cursor.execute(
+                """
+                UPDATE jugador
+                SET vidas = %s,
+                    fecha_recuperacion_vidas = NULL
+                WHERE id_jugador = %s
+                  AND vidas < %s
+                  AND fecha_recuperacion_vidas IS NOT NULL
+                  AND fecha_recuperacion_vidas <= DATE_SUB(
+                      NOW(),
+                      INTERVAL 1 HOUR
+                  )
+                """,
+                (VIDAS_MAXIMAS, id_jugador, VIDAS_MAXIMAS),
+            )
+
+            recuperadas = cursor.rowcount > 0
+
+            cursor.execute(
+                """
+                SELECT vidas, fecha_recuperacion_vidas
+                FROM jugador
+                WHERE id_jugador = %s
+                LIMIT 1
+                """,
+                (id_jugador,),
+            )
+
+            fila = cursor.fetchone()
+            self.conexion.commit()
+
+            if not fila:
+                return None
+
+            return {
+                "vidas": int(fila.get("vidas") or 0),
+                "fecha_recuperacion_vidas": fila.get(
+                    "fecha_recuperacion_vidas"
+                ),
+                "recuperadas": recuperadas,
+            }
+        except MySQLError as error:
+            self._rollback_seguro()
+            self._registrar_error(
+                "Error al verificar recuperación de vidas",
+                error,
+            )
+            return None
+        finally:
+            cursor.close()
 
     def obtener_lenguaje(self, nombre_lenguaje):
         return self.seleccionar_uno(
@@ -858,18 +955,42 @@ class ConexionEduCore:
             return None
 
         try:
+            # Si la hora se cumplió justo antes de recibir daño, primero se
+            # restauran las vidas y después se descuenta la vida actual.
             cursor.execute(
                 """
                 UPDATE jugador
-                SET vidas = GREATEST(vidas - 1, 0)
+                SET vidas = %s,
+                    fecha_recuperacion_vidas = NULL
+                WHERE id_jugador = %s
+                  AND vidas < %s
+                  AND fecha_recuperacion_vidas IS NOT NULL
+                  AND fecha_recuperacion_vidas <= DATE_SUB(
+                      NOW(),
+                      INTERVAL 1 HOUR
+                  )
+                """,
+                (VIDAS_MAXIMAS, id_jugador, VIDAS_MAXIMAS),
+            )
+
+            # El contador comienza con la primera vida perdida. Si ya estaba
+            # corriendo, las pérdidas posteriores no reinician la hora.
+            cursor.execute(
+                """
+                UPDATE jugador
+                SET fecha_recuperacion_vidas = CASE
+                        WHEN vidas >= %s THEN NOW()
+                        ELSE COALESCE(fecha_recuperacion_vidas, NOW())
+                    END,
+                    vidas = GREATEST(vidas - 1, 0)
                 WHERE id_jugador = %s
                 """,
-                (id_jugador,),
+                (VIDAS_MAXIMAS, id_jugador),
             )
 
             cursor.execute(
                 """
-                SELECT vidas
+                SELECT vidas, fecha_recuperacion_vidas
                 FROM jugador
                 WHERE id_jugador = %s
                 LIMIT 1
@@ -2428,6 +2549,9 @@ class JuegoEduCore:
         self.invulnerable_puas_hasta = 0
         self.fuerza_rebote_puas = -9
 
+        # Control de la consulta periódica de recuperación de vidas.
+        self.ultimo_chequeo_recuperacion_vidas = pygame.time.get_ticks()
+
     def _cargar_datos_iniciales(self, nombre_lenguaje):
         self.datos_jugador = None
 
@@ -3000,6 +3124,54 @@ class JuegoEduCore:
                     self.camara_x + separacion,
                 )
 
+    def verificar_recuperacion_vidas(self, forzar=False):
+        """Sincroniza las vidas del jugador con la recuperación de MySQL."""
+        if (
+            self.es_administrador
+            or self.vidas_infinitas
+            or self.id_jugador is None
+            or not self.db.activa
+        ):
+            return False
+
+        ahora = pygame.time.get_ticks()
+
+        if (
+            not forzar
+            and ahora - self.ultimo_chequeo_recuperacion_vidas
+            < INTERVALO_COMPROBACION_VIDAS_MS
+        ):
+            return False
+
+        self.ultimo_chequeo_recuperacion_vidas = ahora
+        resultado = self.db.recuperar_vidas_si_corresponde(
+            self.id_jugador
+        )
+
+        if resultado is None:
+            return False
+
+        vidas_anteriores = self.vidas
+        self.vidas = int(resultado.get("vidas") or 0)
+
+        if self.datos_jugador is not None:
+            self.datos_jugador["vidas"] = self.vidas
+            self.datos_jugador["fecha_recuperacion_vidas"] = resultado.get(
+                "fecha_recuperacion_vidas"
+            )
+
+        recuperadas = bool(resultado.get("recuperadas"))
+
+        if recuperadas or self.vidas > vidas_anteriores:
+            self.game_over = False
+            print(
+                f"[VIDAS] Se restauraron las vidas de "
+                f"{self.nombre_jugador} a {self.vidas}."
+            )
+            return True
+
+        return False
+
     def _restar_vida(self, evento=None, detalle_base=None):
         if self.vidas_infinitas:
             self.vidas = VIDAS_MAXIMAS
@@ -3022,6 +3194,12 @@ class JuegoEduCore:
                 self.vidas = max(self.vidas - 1, 0)
         else:
             self.vidas = max(self.vidas - 1, 0)
+
+        if self.datos_jugador is not None:
+            self.datos_jugador["vidas"] = self.vidas
+
+        # Evita una consulta inmediata después de restar la vida.
+        self.ultimo_chequeo_recuperacion_vidas = pygame.time.get_ticks()
 
         if self.vidas <= 0:
             if not self.game_over:
@@ -3374,6 +3552,10 @@ class JuegoEduCore:
         return bloqueo_horizontal
 
     def actualizar(self, dt):
+        # La consulta se limita a una vez cada 30 segundos. MySQL decide si
+        # ya transcurrió la hora real desde la primera vida perdida.
+        self.verificar_recuperacion_vidas()
+
         if self.en_pausa:
             return
 
