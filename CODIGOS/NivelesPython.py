@@ -2,11 +2,10 @@ import sys
 from pathlib import Path
 
 from PyQt6 import QtGui, QtWidgets, uic
-
 from Transicion import FormAnterior, FormTransicion
 from AjusteResponsive import BotonesResponsivos
 from quitar_barra import quitar
-
+from ValidarVidas import validar_vidas_disponibles
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
@@ -246,13 +245,18 @@ class NivelesPython(QtWidgets.QWidget):
         if self.nivel_en_ejecucion:
             return
 
+        # Obtiene la sesión que fue creada desde el login.
+        sesion = self.obtener_sesion_juego()
+
+        # Usa la validación reutilizable antes de abrir cualquier nivel.
+        if not validar_vidas_disponibles(self, sesion):
+            return
+
         self.nivel_en_ejecucion = True
         error_nivel = None
 
         try:
             from main import abrir_nivel as ejecutar_nivel
-
-            sesion = self.obtener_sesion_juego()
 
             # Conserva el estado visual antes de ocultar la ventana.
             self.menu_estaba_maximizado = self.isMaximized()
