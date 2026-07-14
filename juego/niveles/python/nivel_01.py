@@ -19,13 +19,42 @@ class NivelPython01(JuegoBase):
     AJUSTE_Y_JUGADOR =0
     LONGITUD_NIVEL = 5000
     NPC_X = 720
-    AJUSTE_Y_NPC = -8
+    AJUSTE_Y_NPC = -8  
     AJUSTE_Y_SPRITE_MONTANAS = 2
     AJUSTE_Y_SPRITE_SUELO = 0
     AJUSTE_Y_SPRITE_PLANTAS = 0
     PISOS = (
         (0, LONGITUD_NIVEL),
     )
+    NPCS = (
+    {
+        "nombre": "pinguino_1",
+        "x": 720,
+        "ajuste_y": -8,
+        "orden_leccion": 1,
+        "requiere_anterior": False,
+        "repetible": True,
+        "practica": 1,
+    },
+    {
+        "nombre": "pinguino_2",
+        "x": 1900,
+        "ajuste_y": -60,
+        "orden_leccion": 2,
+        "requiere_anterior": True,
+        "repetible": True,
+        "practica": 2,
+    },
+    {
+        "nombre": "pinguino_3",
+        "x": 3300,
+        "ajuste_y": -8,
+        "orden_leccion": 3,
+        "requiere_anterior": True,
+        "repetible": True,
+        "practica": 0,
+    },
+)
 
     OBSTACULOS = (
         # ----------------------------------------------------
@@ -34,7 +63,7 @@ class NivelPython01(JuegoBase):
         {
             "tipo": "cactus",
             "imagen": "python/cactus_obstaculo.png",
-            "x": 700,
+            "x": 2000,
             "ancho": 65,
             "alto": 55,
             "ajuste_y": 0,
@@ -97,67 +126,84 @@ class NivelPython01(JuegoBase):
             "hitbox_offset_x": 4,
             "hitbox_offset_y": 4,
         },
+# ========================================================
+# PÚAS
+# ========================================================
+{
+    "tipo": "puas",
+    "imagen": "python/puas_obstaculo.png",
+    "x": 2300,
 
-        # ----------------------------------------------------
-        # PIEDRA
-        # ----------------------------------------------------
-        {
-            "tipo": "piedra",
-            "imagen": "python/piedra_obstaculo.png",
-            "x": 1750,
-            "ancho": 75,
-            "alto": 45,
-            "ajuste_y": 0,
-            "hitbox_offset_x": 8,
-            "hitbox_offset_y": 6,
-        },
+    "ancho": 100,
+    "alto": 60,
 
-        # ----------------------------------------------------
-        # PÚAS
-        # ----------------------------------------------------
-        {
-            "tipo": "puas",
-            "imagen": "python/puas_obstaculo.png",
-            "x": 2050,
-            "ancho": 85,
-            "alto": 38,
-            "ajuste_y": 0,
-            "hitbox_offset_x": 7,
-            "hitbox_offset_y": 8,
-        },
+    "ajuste_y": 8,
 
-        # ----------------------------------------------------
-        # RUEDA
-        # ----------------------------------------------------
-        {
-            "tipo": "rueda",
-            "imagen": "python/rueda_obstaculo.png",
-            "x": 2350,
-            "ancho": 65,
-            "alto": 45,
-            "ajuste_y": 0,
-            "hitbox_offset_x": 7,
-            "hitbox_offset_y": 6,
-        },
+    "hitbox_offset_x": 8,
+    "hitbox_offset_y": 20,
+    "hitbox_reducir_ancho": 16,
+    "hitbox_reducir_alto": 24,
+},
 
-        # ----------------------------------------------------
-        # TRONCO
-        # ----------------------------------------------------
-        {
-            "tipo": "tronco",
-            "imagen": "python/tronco.png",
-            "x": 2650,
-            "ancho": 105,
-            "alto": 60,
-            "ajuste_y": 0,
-            "hitbox_offset_x": 10,
-            "hitbox_offset_y": 8,
-        },
+# ========================================================
+# PRIMER FRAGMENTO: DESPUÉS DE LAS PÚAS
+# ========================================================
+{
+    # Debe decir "fragmento", no "arena".
+    # Así el motor lo reconoce como sólido.
+    "tipo": "fragmento",
+
+    "imagen": "python/obstaculo_fragmento2.png",
+
+    # Aparece después de las púas de x=2300.
+    "x": 2550,
+
+    "ancho": 130,
+    "alto": 45,
+
+    # Plataforma más baja.
+    "ajuste_y": -85,
+
+    # La hitbox comienza casi desde el borde izquierdo.
+    "hitbox_offset_x": 4,
+
+    # La parte superior de la hitbox coincide con la imagen.
+    "hitbox_offset_y": 0,
+
+    # Reduce ligeramente los lados.
+    "hitbox_reducir_ancho": 8,
+
+    # No reduce la altura de la hitbox.
+    "hitbox_reducir_alto": 0,
+},
+
+# ========================================================
+# SEGUNDO FRAGMENTO: MÁS ADELANTE Y MÁS ALTO
+# ========================================================
+{
+    "tipo": "fragmento",
+
+    "imagen": "python/obstaculo_fragmento2.png",
+
+    # Más adelante que el primer fragmento.
+    "x": 2820,
+
+    "ancho": 130,
+    "alto": 45,
+
+    # Número más negativo = más arriba.
+    "ajuste_y": -160,
+
+    "hitbox_offset_x": 4,
+    "hitbox_offset_y": 0,
+    "hitbox_reducir_ancho": 8,
+    "hitbox_reducir_alto": 0,
+},
     )
     PRACTICAS = (
         {
-            "x": 2000,
-            "y": None,
+            "x": 1374,
+            "y": 395,
             "pregunta": 'En Python, una variable sirve para almacenar un dato que puede utilizarse después.',
             "respuesta_correcta": True,
             "nombre": "practica_python_01",
