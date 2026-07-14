@@ -95,7 +95,7 @@ class LoginWindow(QtWidgets.QDialog):
             Alertas.mostrar(
                 self,
                 "Campos vacíos",
-                "Debes ingresar tu usuario/correo y contraseña.",
+                "Debes ingresar tu usuario y contraseña.",
                 "advertencia"
             )
             return

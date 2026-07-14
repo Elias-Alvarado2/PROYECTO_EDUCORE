@@ -144,6 +144,32 @@ QTableView::item:selected:hover {
      <string/>
     </property>
    </widget>
+   <widget class="QPushButton" name="btn_anterior">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>920</y>
+      <width>81</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>ANTERIOR</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btn_siguiente">
+    <property name="geometry">
+     <rect>
+      <x>1770</x>
+      <y>930</y>
+      <width>81</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>SIGUIENTE</string>
+    </property>
+   </widget>
   </widget>
  </widget>
  <resources/>
