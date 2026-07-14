@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1042</width>
+    <width>1020</width>
     <height>720</height>
    </rect>
   </property>
@@ -18,7 +18,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1041</width>
+     <width>1020</width>
      <height>720</height>
     </rect>
    </property>
@@ -43,9 +43,9 @@ background-color: transparent;
    <widget class="QPushButton" name="btn_Iniciar">
     <property name="geometry">
      <rect>
-      <x>596</x>
+      <x>585</x>
       <y>613</y>
-      <width>354</width>
+      <width>346</width>
       <height>48</height>
      </rect>
     </property>
@@ -67,9 +67,9 @@ border: none;
    <widget class="QPushButton" name="btnRegistrarUsuario">
     <property name="geometry">
      <rect>
-      <x>596</x>
+      <x>585</x>
       <y>535</y>
-      <width>354</width>
+      <width>346</width>
       <height>48</height>
      </rect>
     </property>
@@ -91,9 +91,9 @@ border: none;
    <widget class="QLineEdit" name="txtContrasena">
     <property name="geometry">
      <rect>
-      <x>583</x>
+      <x>571</x>
       <y>475</y>
-      <width>340</width>
+      <width>330</width>
       <height>42</height>
      </rect>
     </property>
@@ -126,9 +126,9 @@ QLineEdit:focus {
    <widget class="QLineEdit" name="txtUsuario">
     <property name="geometry">
      <rect>
-      <x>583</x>
+      <x>571</x>
       <y>307</y>
-      <width>340</width>
+      <width>330</width>
       <height>42</height>
      </rect>
     </property>
@@ -158,9 +158,9 @@ QLineEdit:focus {
    <widget class="QLineEdit" name="txtCorreo">
     <property name="geometry">
      <rect>
-      <x>583</x>
+      <x>571</x>
       <y>391</y>
-      <width>340</width>
+      <width>330</width>
       <height>42</height>
      </rect>
     </property>
@@ -190,7 +190,7 @@ QLineEdit:focus {
    <widget class="QPushButton" name="btnMostrarContrasena">
     <property name="geometry">
      <rect>
-      <x>925</x>
+      <x>906</x>
       <y>483</y>
       <width>31</width>
       <height>26</height>

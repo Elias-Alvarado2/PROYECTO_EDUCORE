@@ -1,9 +1,24 @@
 import sys
 from pathlib import Path
-from PyQt6 import QtWidgets, uic
+from PyQt6 import QtWidgets, uic, QtGui
 from Alertas import Alertas
 from ConexionBD import ConexionBD
 
+class FondoImagen(QtWidgets.QLabel):
+    def __init__(self, ventana, ruta_imagen):
+        super().__init__(ventana)
+
+        self.ruta_imagen = ruta_imagen
+        self.pixmap_original = QtGui.QPixmap(str(self.ruta_imagen))
+
+        self.setScaledContents(True)
+        self.setGeometry(0, 0, ventana.width(), ventana.height())
+        self.setPixmap(self.pixmap_original)
+
+        self.lower()
+
+    def actualizar_tamano(self, ancho, alto):
+        self.setGeometry(0, 0, ancho, alto)
 
 class RegistroWindow(QtWidgets.QDialog):
     def __init__(self):
