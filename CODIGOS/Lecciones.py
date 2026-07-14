@@ -404,6 +404,9 @@ class Lecciones(QtWidgets.QWidget):
 
         # Cuando los datos vienen en forma de diccionario.
         if isinstance(self.jugador, dict):
+            if str(self.jugador.get("rol", "")).lower() == "administrador":
+                return True
+
             if "id_admin" in self.jugador:
                 return True
 

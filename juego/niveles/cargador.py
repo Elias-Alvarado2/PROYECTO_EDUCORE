@@ -17,11 +17,13 @@ def cargar_clase_nivel(lenguaje: str, numero_nivel: int):
 def crear_nivel(
     lenguaje: str,
     numero_nivel: int,
-    id_jugador: int = 1,
+    id_jugador: int | None = 1,
+    sesion: dict | None = None,
     actualizar_progreso_carga=None,
 ):
     clase_nivel = cargar_clase_nivel(lenguaje, numero_nivel)
     return clase_nivel(
         id_jugador=id_jugador,
+        sesion=sesion,
         actualizar_progreso_carga=actualizar_progreso_carga,
     )

@@ -173,120 +173,41 @@ class NivelesPython(QtWidgets.QWidget):
         )
 
     # ========================================================
-    # OBTENER ID DEL JUGADOR
+    # OBTENER SESIÓN DEL JUEGO
     # ========================================================
 
-    def obtener_id_jugador(self):
-        """
-        Obtiene el ID aunque jugador se reciba como:
-        entero, texto numérico, diccionario, lista, tupla
-        u objeto con el atributo id_jugador.
-        """
+    def obtener_sesion_juego(self):
+        """Devuelve la sesión creada y validada desde Login.py."""
+        if isinstance(self.jugador, dict):
+            sesion = dict(self.jugador)
 
-        def buscar_id(valor, objetos_revisados):
-            if valor is None:
-                return None
+            if (
+                str(sesion.get("rol", "")).lower() == "administrador"
+                or sesion.get("id_admin") is not None
+            ):
+                sesion["rol"] = "administrador"
+                sesion["id_jugador"] = None
+                sesion["personaje"] = sesion.get("personaje") or "cerdo"
+                sesion["vidas_infinitas"] = True
+                return sesion
 
-            identificador_objeto = id(valor)
+            if sesion.get("id_jugador") is not None:
+                sesion["rol"] = "jugador"
+                sesion["vidas_infinitas"] = False
+                return sesion
 
-            if identificador_objeto in objetos_revisados:
-                return None
+        # Compatibilidad con llamadas antiguas que enviaban solo el ID.
+        if isinstance(self.jugador, int) and not isinstance(self.jugador, bool):
+            return {
+                "rol": "jugador",
+                "id_jugador": self.jugador,
+                "id_admin": None,
+                "vidas_infinitas": False,
+            }
 
-            objetos_revisados.add(
-                identificador_objeto
-            )
-
-            # En Python, bool hereda de int. Se descarta para evitar
-            # interpretar True como jugador 1 o False como jugador 0.
-            if isinstance(valor, bool):
-                return None
-
-            if isinstance(valor, int):
-                return valor
-
-            if isinstance(valor, str):
-                valor_limpio = valor.strip()
-
-                if valor_limpio.isdigit():
-                    return int(valor_limpio)
-
-                return None
-
-            if isinstance(valor, dict):
-                claves_posibles = (
-                    "id_jugador",
-                    "id",
-                    "jugador_id",
-                )
-
-                for clave in claves_posibles:
-                    if clave in valor:
-                        resultado = buscar_id(
-                            valor[clave],
-                            objetos_revisados,
-                        )
-
-                        if resultado is not None:
-                            return resultado
-
-                if "jugador" in valor:
-                    return buscar_id(
-                        valor["jugador"],
-                        objetos_revisados,
-                    )
-
-                return None
-
-            if isinstance(valor, (list, tuple)):
-                for elemento in valor:
-                    resultado = buscar_id(
-                        elemento,
-                        objetos_revisados,
-                    )
-
-                    if resultado is not None:
-                        return resultado
-
-                return None
-
-            atributos_id = (
-                "id_jugador",
-                "id",
-                "jugador_id",
-            )
-
-            for atributo in atributos_id:
-                if hasattr(valor, atributo):
-                    resultado = buscar_id(
-                        getattr(valor, atributo),
-                        objetos_revisados,
-                    )
-
-                    if resultado is not None:
-                        return resultado
-
-            # Permite recibir una ventana que contiene self.jugador.
-            if hasattr(valor, "jugador"):
-                return buscar_id(
-                    getattr(valor, "jugador"),
-                    objetos_revisados,
-                )
-
-            return None
-
-        id_jugador = buscar_id(
-            self.jugador,
-            set(),
+        raise ValueError(
+            "No se recibió una sesión válida desde el login."
         )
-
-        if id_jugador is None:
-            raise ValueError(
-                "No se pudo obtener el id_jugador de la sesión.\n"
-                "Verifica que el formulario anterior envíe "
-                "jugador=self.jugador."
-            )
-
-        return id_jugador
 
     # ========================================================
     # MÉTODOS DE CADA NIVEL
@@ -331,7 +252,7 @@ class NivelesPython(QtWidgets.QWidget):
         try:
             from main import abrir_nivel as ejecutar_nivel
 
-            id_jugador = self.obtener_id_jugador()
+            sesion = self.obtener_sesion_juego()
 
             # Conserva el estado visual antes de ocultar la ventana.
             self.menu_estaba_maximizado = self.isMaximized()
@@ -343,7 +264,7 @@ class NivelesPython(QtWidgets.QWidget):
             QtWidgets.QApplication.processEvents()
 
             ejecutar_nivel(
-                id_jugador=id_jugador,
+                sesion=sesion,
                 lenguaje=self.LENGUAJE,
                 numero_nivel=numero_nivel,
                 usar_pantalla_carga=True,
