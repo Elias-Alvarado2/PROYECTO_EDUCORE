@@ -172,8 +172,17 @@ MARGEN_COLISION_VERTICAL = round(20 * ESCALA_JUEGO)
 
 VIDAS_MAXIMAS = 5
 
+
+
 TIPOS_OBSTACULOS_SOLIDOS = frozenset({"caja", "fragmento", "arena"})
 TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser", "cactus"})
+
+# Las vidas se restauran completamente una hora después de perder la
+# primera vida. El motor consulta MySQL cada 30 segundos mientras el nivel
+# está abierto. El tiempo real se calcula en MySQL, por lo que también
+# continúa avanzando aunque el juego esté cerrado.
+INTERVALO_RECUPERACION_VIDAS_MINUTOS = 60
+INTERVALO_COMPROBACION_VIDAS_MS = 30_000
 
 ALIAS_PERSONAJES = {
     "cerdo": "cerdo",
@@ -288,8 +297,8 @@ CONFIG_PERSONAJE_MENU_PAUSA = {
     },
 
     "gato": {
-        "max_ancho": 290,
-        "max_alto": 330,
+        "max_ancho": 250,
+        "max_alto": 290,
         "mover_x": 0,
         "mover_y": -100,
         "sombra_x": -70,
@@ -719,15 +728,105 @@ class ConexionEduCore:
             cursor.close()
 
     def obtener_jugador(self, id_jugador):
+        # Antes de cargar al jugador se comprueba si ya transcurrió la hora.
+        # Esto también hace que la recuperación funcione después de cerrar
+        # y volver a abrir el programa.
+        self.recuperar_vidas_si_corresponde(id_jugador)
+
         return self.seleccionar_uno(
             """
-            SELECT id_jugador, nombre, correo, personaje, vidas, estado
+            SELECT id_jugador, nombre, correo, personaje, vidas,
+                   fecha_recuperacion_vidas, estado
             FROM jugador
             WHERE id_jugador = %s AND estado = 'Activo'
             LIMIT 1
             """,
             (id_jugador,),
         )
+
+    def recuperar_vidas_si_corresponde(self, id_jugador):
+        """
+        Devuelve las vidas actuales del jugador y restaura las cinco vidas
+        cuando ha pasado una hora desde la primera pérdida.
+
+        Si el jugador ya tenía menos de cinco vidas antes de agregar la nueva
+        columna, el contador se inicia automáticamente al consultar su cuenta.
+        Todas las consultas usan la llave primaria id_jugador, por lo que no
+        activan el modo Safe Updates de MySQL Workbench.
+        """
+        if id_jugador is None:
+            return None
+
+        cursor = self.obtener_cursor()
+
+        if cursor is None:
+            return None
+
+        try:
+            # Compatibilidad con jugadores que ya tenían vidas reducidas antes
+            # de agregar fecha_recuperacion_vidas a la tabla.
+            cursor.execute(
+                """
+                UPDATE jugador
+                SET fecha_recuperacion_vidas = NOW()
+                WHERE id_jugador = %s
+                  AND vidas < %s
+                  AND fecha_recuperacion_vidas IS NULL
+                """,
+                (id_jugador, VIDAS_MAXIMAS),
+            )
+
+            # Si ya pasó una hora, se restauran todas las vidas.
+            cursor.execute(
+                """
+                UPDATE jugador
+                SET vidas = %s,
+                    fecha_recuperacion_vidas = NULL
+                WHERE id_jugador = %s
+                  AND vidas < %s
+                  AND fecha_recuperacion_vidas IS NOT NULL
+                  AND fecha_recuperacion_vidas <= DATE_SUB(
+                      NOW(),
+                      INTERVAL 1 HOUR
+                  )
+                """,
+                (VIDAS_MAXIMAS, id_jugador, VIDAS_MAXIMAS),
+            )
+
+            recuperadas = cursor.rowcount > 0
+
+            cursor.execute(
+                """
+                SELECT vidas, fecha_recuperacion_vidas
+                FROM jugador
+                WHERE id_jugador = %s
+                LIMIT 1
+                """,
+                (id_jugador,),
+            )
+
+            fila = cursor.fetchone()
+            self.conexion.commit()
+
+            if not fila:
+                return None
+
+            return {
+                "vidas": int(fila.get("vidas") or 0),
+                "fecha_recuperacion_vidas": fila.get(
+                    "fecha_recuperacion_vidas"
+                ),
+                "recuperadas": recuperadas,
+            }
+        except MySQLError as error:
+            self._rollback_seguro()
+            self._registrar_error(
+                "Error al verificar recuperación de vidas",
+                error,
+            )
+            return None
+        finally:
+            cursor.close()
 
     def obtener_lenguaje(self, nombre_lenguaje):
         return self.seleccionar_uno(
@@ -822,6 +921,28 @@ class ConexionEduCore:
             (id_lenguaje,),
         )
 
+    def obtener_leccion_por_orden(self, id_lenguaje, orden_leccion):
+        """
+        Busca una lección exacta del lenguaje actual y del orden indicado.
+
+        No devuelve otra lección como reemplazo cuando el orden no existe.
+        """
+        if id_lenguaje is None or orden_leccion is None:
+            return None
+
+        return self.seleccionar_uno(
+            """
+            SELECT id_leccion, id_lenguaje, titulo, contenido_teoria,
+                   codigo_ejemplo, orden, puntos, estado
+            FROM leccion
+            WHERE id_lenguaje = %s
+              AND orden = %s
+              AND estado = 'Activa'
+            LIMIT 1
+            """,
+            (id_lenguaje, orden_leccion),
+        )
+
     def contar_lecciones(self, id_lenguaje):
         fila = self.seleccionar_uno(
             """
@@ -858,18 +979,42 @@ class ConexionEduCore:
             return None
 
         try:
+            # Si la hora se cumplió justo antes de recibir daño, primero se
+            # restauran las vidas y después se descuenta la vida actual.
             cursor.execute(
                 """
                 UPDATE jugador
-                SET vidas = GREATEST(vidas - 1, 0)
+                SET vidas = %s,
+                    fecha_recuperacion_vidas = NULL
+                WHERE id_jugador = %s
+                  AND vidas < %s
+                  AND fecha_recuperacion_vidas IS NOT NULL
+                  AND fecha_recuperacion_vidas <= DATE_SUB(
+                      NOW(),
+                      INTERVAL 1 HOUR
+                  )
+                """,
+                (VIDAS_MAXIMAS, id_jugador, VIDAS_MAXIMAS),
+            )
+
+            # El contador comienza con la primera vida perdida. Si ya estaba
+            # corriendo, las pérdidas posteriores no reinician la hora.
+            cursor.execute(
+                """
+                UPDATE jugador
+                SET fecha_recuperacion_vidas = CASE
+                        WHEN vidas >= %s THEN NOW()
+                        ELSE COALESCE(fecha_recuperacion_vidas, NOW())
+                    END,
+                    vidas = GREATEST(vidas - 1, 0)
                 WHERE id_jugador = %s
                 """,
-                (id_jugador,),
+                (VIDAS_MAXIMAS, id_jugador),
             )
 
             cursor.execute(
                 """
-                SELECT vidas
+                SELECT vidas, fecha_recuperacion_vidas
                 FROM jugador
                 WHERE id_jugador = %s
                 LIMIT 1
@@ -1313,6 +1458,10 @@ class ObjetoPractica:
         self.tipo = str(tipo or "verdadero_falso").lower()
         self.configuracion_codigo = dict(configuracion_codigo or {})
         self.completado = False
+
+        # Cada moneda se habilita únicamente cuando termina
+        # el diálogo del pingüino que la tiene asignada.
+        self.desbloqueada = False
         self.tiempo_animacion = 0
 
         # Tamaño visual de la moneda PNG.
@@ -2411,6 +2560,12 @@ class JuegoEduCore:
         self.mostrar_hitboxes = MOSTRAR_HITBOXES
         self.salto_presionado_anterior = False
         self.en_dialogo = False
+
+        # Se crean antes de registrar las interacciones.
+        self.npcs = []
+        self.npc = None
+        self.npc_activo = None
+
         self.en_pausa = False
         self.boton_pausa_rects = {}
         self.musica_silenciada = False
@@ -2427,6 +2582,9 @@ class JuegoEduCore:
         self.tiempo_invulnerabilidad_puas = 1200  # milisegundos
         self.invulnerable_puas_hasta = 0
         self.fuerza_rebote_puas = -9
+
+        # Control de la consulta periódica de recuperación de vidas.
+        self.ultimo_chequeo_recuperacion_vidas = pygame.time.get_ticks()
 
     def _cargar_datos_iniciales(self, nombre_lenguaje):
         self.datos_jugador = None
@@ -2520,11 +2678,12 @@ class JuegoEduCore:
         ]
         self.jugador.colocar_sobre_piso(PISO_COLISION_Y)
 
-        self.npc = NPC(
-            x_mundo=round(720 * ESCALA_JUEGO),
-            suelo_y=PISO_Y + CONFIGURACION_NPC,
-            escala=3.6,
-        )
+        # Crea todos los pingüinos configurados por el nivel.
+        self.cargar_npcs_desde_nivel()
+
+        # Compatibilidad con código antiguo.
+        self.npc = self.npcs[0] if self.npcs else None
+
         self.caja_dialogo = CajaDialogo()
         self.caja_dialogo.redimensionar(ANCHO, ALTO)
 
@@ -2534,6 +2693,185 @@ class JuegoEduCore:
         self.objeto_en_contacto = None
         self.objetos_practica = []
         self.cargar_practicas_desde_nivel()
+
+    def cargar_npcs_desde_nivel(self):
+        """
+        Crea los pingüinos declarados en NPCS dentro del archivo del nivel.
+
+        Cada pingüino obtiene su contenido de MySQL usando:
+        lenguaje actual + orden_leccion.
+        """
+        configuraciones = getattr(self, "NPCS", ()) or ()
+
+        if not configuraciones:
+            configuraciones = (
+                {
+                    "nombre": "pinguino_principal",
+                    "x": 720,
+                    "ajuste_y": CONFIGURACION_NPC,
+                    "escala": 3.6,
+                    "orden_leccion": (
+                        self.orden_leccion_solicitado
+                        if self.orden_leccion_solicitado is not None
+                        else 1
+                    ),
+                    "requiere_anterior": False,
+                    "repetible": True,
+                    "practica": 1,
+                },
+            )
+
+        configuraciones_validas = [
+            configuracion
+            for configuracion in configuraciones
+            if isinstance(configuracion, dict)
+        ]
+
+        self.npcs = []
+
+        for indice_config, configuracion in enumerate(
+            configuraciones_validas,
+            start=1,
+        ):
+            x_config = configuracion.get("x")
+
+            if x_config is None:
+                print(
+                    f"[NPCS] Se ignoró el pingüino {indice_config}: "
+                    "falta la posición x."
+                )
+                continue
+
+            orden_leccion = configuracion.get(
+                "orden_leccion",
+                (
+                    self.orden_leccion_solicitado
+                    if self.orden_leccion_solicitado is not None
+                    else indice_config
+                ),
+            )
+
+            try:
+                orden_leccion = int(orden_leccion)
+                x_mundo = round(float(x_config) * ESCALA_JUEGO)
+
+                # Las coordenadas declaradas en los archivos de nivel están
+                # sin escalar, igual que obstáculos, pisos y NPC_X.
+                ajuste_y = round(
+                    float(
+                        configuracion.get(
+                            "ajuste_y",
+                            CONFIGURACION_NPC,
+                        )
+                    )
+                    * ESCALA_JUEGO
+                )
+                escala = float(configuracion.get("escala", 3.6))
+            except (TypeError, ValueError) as error:
+                print(
+                    f"[NPCS] Se ignoró el pingüino {indice_config}: "
+                    f"configuración inválida ({error})."
+                )
+                continue
+
+            obtener_piso_nivel = getattr(
+                self,
+                "obtener_piso_colision_nivel",
+                None,
+            )
+
+            if callable(obtener_piso_nivel):
+                piso_base_npc = int(obtener_piso_nivel())
+            else:
+                piso_base_npc = PISO_COLISION_Y
+
+            npc = NPC(
+                x_mundo=x_mundo,
+                suelo_y=piso_base_npc + ajuste_y,
+                escala=escala,
+            )
+
+            npc.indice_npc = len(self.npcs)
+            npc.nombre = str(
+                configuracion.get(
+                    "nombre",
+                    f"pinguino_{indice_config}",
+                )
+            )
+            npc.orden_leccion = orden_leccion
+            npc.ajuste_y = ajuste_y
+            npc.requiere_anterior = bool(
+                configuracion.get(
+                    "requiere_anterior",
+                    indice_config > 1,
+                )
+            )
+            npc.repetible = bool(
+                configuracion.get("repetible", True)
+            )
+            try:
+                npc.numero_practica = max(
+                    0,
+                    int(configuracion.get("practica", 0) or 0),
+                )
+            except (TypeError, ValueError):
+                npc.numero_practica = 0
+                print(
+                    f"[NPCS] {npc.nombre}: el valor de 'practica' "
+                    "no es válido. No desbloqueará ninguna moneda."
+                )
+
+            if self.id_lenguaje and self.db.activa:
+                npc.leccion = self.db.obtener_leccion_por_orden(
+                    self.id_lenguaje,
+                    orden_leccion,
+                )
+            else:
+                npc.leccion = None
+
+            if npc.leccion:
+                npc.paginas_dialogo = construir_paginas_leccion(
+                    npc.leccion,
+                    self.nombre_lenguaje,
+                )
+            else:
+                npc.paginas_dialogo = [
+                    f"Lección de {self.nombre_lenguaje}",
+                    (
+                        "No se encontró una lección activa con "
+                        f"orden {orden_leccion} para este lenguaje."
+                    ),
+                    (
+                        "Revisa id_lenguaje, orden y estado = 'Activa' "
+                        "en la tabla leccion."
+                    ),
+                ]
+
+            npc.dialogo_terminado = False
+            self.npcs.append(npc)
+
+        if not self.npcs:
+            print("[NPCS] No se creó ningún pingüino válido.")
+
+    def obtener_zona_interaccion_npc(self, npc):
+        if npc is None:
+            return None
+
+        indice = getattr(npc, "indice_npc", 0)
+
+        if getattr(npc, "requiere_anterior", False) and indice > 0:
+            npc_anterior = self.npcs[indice - 1]
+
+            if not getattr(npc_anterior, "dialogo_terminado", False):
+                return None
+
+        if (
+            not getattr(npc, "repetible", True)
+            and getattr(npc, "dialogo_terminado", False)
+        ):
+            return None
+
+        return npc.zona_dialogo
 
     def cargar_practicas_desde_nivel(self):
         """Crea únicamente las prácticas declaradas en PRACTICAS del nivel.
@@ -2606,17 +2944,23 @@ class JuegoEduCore:
                     ),
                 }
 
-            self.objetos_practica.append(
-                ObjetoPractica(
-                    x=x,
-                    y=y,
-                    pregunta=pregunta,
-                    respuesta_correcta=respuesta_correcta,
-                    nombre=nombre,
-                    tipo=tipo,
-                    configuracion_codigo=configuracion_codigo,
-                )
+            objeto = ObjetoPractica(
+                x=x,
+                y=y,
+                pregunta=pregunta,
+                respuesta_correcta=respuesta_correcta,
+                nombre=nombre,
+                tipo=tipo,
+                configuracion_codigo=configuracion_codigo,
             )
+
+            # Normalmente queda False. Puede configurarse True en PRACTICAS
+            # solamente si una moneda debe estar visible desde el inicio.
+            objeto.desbloqueada = bool(
+                configuracion.get("desbloqueada", False)
+            )
+
+            self.objetos_practica.append(objeto)
 
     def hay_practica_visible(self):
         return bool(
@@ -2751,15 +3095,9 @@ class JuegoEduCore:
         )
 
     def obtener_practica_activa(self):
-        """Devuelve la primera práctica pendiente después de leer la lección."""
-
-        # Antes de terminar el diálogo del NPC no se muestra ninguna moneda
-        # ni se permite acceder a una práctica.
-        if not getattr(self, "leccion_npc_leida", False):
-            return None
-
+        """Devuelve la primera práctica desbloqueada que siga pendiente."""
         for objeto in self.objetos_practica:
-            if not objeto.completado:
+            if objeto.desbloqueada and not objeto.completado:
                 return objeto
 
         return None
@@ -2788,20 +3126,28 @@ class JuegoEduCore:
     def registrar_interacciones(self):
         self.interacciones = []
 
-        # Interacción del profesor.
-        self.interacciones.append(
-            Interaccion(
-                nombre="leccion_npc",
-                obtener_rect=lambda: self.npc.zona_dialogo if self.npc else None,
-                mensaje="Presiona ENTER para iniciar la leccion",
-                accion=self.iniciar_dialogo_npc,
-                requiere_suelo=True,
-                activa=True,
-                usar_una_vez=False,
+        for npc in getattr(self, "npcs", []):
+            self.interacciones.append(
+                Interaccion(
+                    nombre=f"leccion_npc_{npc.indice_npc + 1}",
+                    obtener_rect=(
+                        lambda npc=npc:
+                        self.obtener_zona_interaccion_npc(npc)
+                    ),
+                    mensaje=(
+                        "Presiona ENTER para iniciar la lección "
+                        f"{npc.orden_leccion}"
+                    ),
+                    accion=(
+                        lambda npc=npc:
+                        self.iniciar_dialogo_npc(npc)
+                    ),
+                    requiere_suelo=True,
+                    activa=True,
+                    usar_una_vez=False,
+                )
             )
-        )
 
-        # Interacción de las monedas de verdadero/falso y completar código.
         self.interacciones.append(
             Interaccion(
                 nombre="practica_moneda",
@@ -2946,7 +3292,7 @@ class JuegoEduCore:
 
         self.tiempo_game_over += dt
 
-        if self.tiempo_game_over < 3.0:
+        if self.tiempo_game_over < 0.5:
             return
 
         if not self.sonido_muerte_reproducido:
@@ -3000,6 +3346,54 @@ class JuegoEduCore:
                     self.camara_x + separacion,
                 )
 
+    def verificar_recuperacion_vidas(self, forzar=False):
+        """Sincroniza las vidas del jugador con la recuperación de MySQL."""
+        if (
+            self.es_administrador
+            or self.vidas_infinitas
+            or self.id_jugador is None
+            or not self.db.activa
+        ):
+            return False
+
+        ahora = pygame.time.get_ticks()
+
+        if (
+            not forzar
+            and ahora - self.ultimo_chequeo_recuperacion_vidas
+            < INTERVALO_COMPROBACION_VIDAS_MS
+        ):
+            return False
+
+        self.ultimo_chequeo_recuperacion_vidas = ahora
+        resultado = self.db.recuperar_vidas_si_corresponde(
+            self.id_jugador
+        )
+
+        if resultado is None:
+            return False
+
+        vidas_anteriores = self.vidas
+        self.vidas = int(resultado.get("vidas") or 0)
+
+        if self.datos_jugador is not None:
+            self.datos_jugador["vidas"] = self.vidas
+            self.datos_jugador["fecha_recuperacion_vidas"] = resultado.get(
+                "fecha_recuperacion_vidas"
+            )
+
+        recuperadas = bool(resultado.get("recuperadas"))
+
+        if recuperadas or self.vidas > vidas_anteriores:
+            self.game_over = False
+            print(
+                f"[VIDAS] Se restauraron las vidas de "
+                f"{self.nombre_jugador} a {self.vidas}."
+            )
+            return True
+
+        return False
+
     def _restar_vida(self, evento=None, detalle_base=None):
         if self.vidas_infinitas:
             self.vidas = VIDAS_MAXIMAS
@@ -3022,6 +3416,12 @@ class JuegoEduCore:
                 self.vidas = max(self.vidas - 1, 0)
         else:
             self.vidas = max(self.vidas - 1, 0)
+
+        if self.datos_jugador is not None:
+            self.datos_jugador["vidas"] = self.vidas
+
+        # Evita una consulta inmediata después de restar la vida.
+        self.ultimo_chequeo_recuperacion_vidas = pygame.time.get_ticks()
 
         if self.vidas <= 0:
             if not self.game_over:
@@ -3076,19 +3476,53 @@ class JuegoEduCore:
 
         self.salto_presionado_anterior = salto_actual
 
-    def iniciar_dialogo_npc(self):
+    def iniciar_dialogo_npc(self, npc=None):
+        if npc is None:
+            npc = self.npc
+
+        if npc is None:
+            return
+
+        self.npc_activo = npc
         self.en_dialogo = True
         self.interaccion_actual = None
 
         if not self.caja_dialogo.visible:
-            self.caja_dialogo.iniciar(self.dialogo_leccion)
+            self.caja_dialogo.iniciar(npc.paginas_dialogo)
 
     def cerrar_dialogo_npc(self):
         self.en_dialogo = False
-        self.leccion_npc_leida = True
 
-        # No se crea ninguna práctica automáticamente.
-        # Solamente aparecerán las prácticas configuradas desde el nivel.
+        npc = self.npc_activo
+
+        if npc is not None:
+            npc.dialogo_terminado = True
+
+            numero_practica = int(
+                getattr(npc, "numero_practica", 0) or 0
+            )
+            indice_practica = numero_practica - 1
+
+            if (
+                numero_practica > 0
+                and 0 <= indice_practica < len(self.objetos_practica)
+            ):
+                practica = self.objetos_practica[indice_practica]
+                practica.desbloqueada = True
+                self.leccion_npc_leida = True
+
+                print(
+                    f"[PRACTICAS] {npc.nombre} desbloqueó "
+                    f"la práctica {numero_practica}: {practica.nombre}"
+                )
+            elif numero_practica > 0:
+                print(
+                    f"[PRACTICAS] {npc.nombre} intenta desbloquear "
+                    f"la práctica {numero_practica}, pero solo existen "
+                    f"{len(self.objetos_practica)} prácticas."
+                )
+
+        self.npc_activo = None
 
     def abrir_practica_objeto(self, objeto):
         practica_activa = self.obtener_practica_activa()
@@ -3169,7 +3603,6 @@ class JuegoEduCore:
             or self.en_pausa
             or self.hay_practica_visible()
             or self.transicion_iris.activa()
-            or not self.leccion_npc_leida
         ):
             self.objeto_en_contacto = None
             return
@@ -3374,6 +3807,10 @@ class JuegoEduCore:
         return bloqueo_horizontal
 
     def actualizar(self, dt):
+        # La consulta se limita a una vez cada 30 segundos. MySQL decide si
+        # ya transcurrió la hora real desde la primera vida perdida.
+        self.verificar_recuperacion_vidas()
+
         if self.en_pausa:
             return
 
@@ -3435,8 +3872,22 @@ class JuegoEduCore:
             # colisión vertical lo dejó dentro de la superficie.
             self.revisar_colision_piso(y_anterior)
 
-        if self.npc:
-            self.npc.actualizar(PISO_COLISION_Y + CONFIGURACION_NPC, dt)
+        obtener_piso_nivel = getattr(
+            self,
+            "obtener_piso_colision_nivel",
+            None,
+        )
+
+        if callable(obtener_piso_nivel):
+            piso_base_npc = int(obtener_piso_nivel())
+        else:
+            piso_base_npc = PISO_COLISION_Y
+
+        for npc in self.npcs:
+            npc.actualizar(
+                piso_base_npc + npc.ajuste_y,
+                dt,
+            )
 
         if self.caja_dialogo:
             self.caja_dialogo.actualizar(dt)
@@ -3497,15 +3948,20 @@ class JuegoEduCore:
                 2,
             )
 
-        if self.npc:
+        for npc in self.npcs:
             zona_npc = pygame.Rect(
-                int(self.npc.zona_dialogo.x - self.camara_x),
-                int(self.npc.zona_dialogo.y),
-                int(self.npc.zona_dialogo.width),
-                int(self.npc.zona_dialogo.height),
+                int(npc.zona_dialogo.x - self.camara_x),
+                int(npc.zona_dialogo.y),
+                int(npc.zona_dialogo.width),
+                int(npc.zona_dialogo.height),
             )
 
-            pygame.draw.rect(pantalla, (180, 0, 255), zona_npc, 2)
+            pygame.draw.rect(
+                pantalla,
+                (180, 0, 255),
+                zona_npc,
+                2,
+            )
 
     def dibujar_fps(self):
         if not MOSTRAR_FPS:
@@ -4213,13 +4669,14 @@ class JuegoEduCore:
             if rect.right >= -margen and rect.left <= ANCHO + margen:
                 objeto_activo.dibujar(surface, camara_px)
 
-        if self.npc:
-            npc_x = round(self.npc.rect.x - camara_px)
+        for npc in self.npcs:
+            npc_x = round(npc.rect.x - camara_px)
+
             if (
-                npc_x + self.npc.rect.width >= -margen
+                npc_x + npc.rect.width >= -margen
                 and npc_x <= ANCHO + margen
             ):
-                self.npc.dibujar(surface, camara_px)
+                npc.dibujar(surface, camara_px)
 
         self.jugador.dibujar(surface)
         self.dibujar_panel_jugador()

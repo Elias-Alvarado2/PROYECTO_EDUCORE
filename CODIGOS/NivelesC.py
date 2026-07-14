@@ -1,11 +1,11 @@
 import sys
 from pathlib import Path
 
-from PyQt6 import QtWidgets, uic, QtGui
-from quitar_barra import quitar
-from Transicion import FormTransicion, FormAnterior
+from PyQt6 import QtGui, QtWidgets, uic
+from Transicion import FormAnterior, FormTransicion
 from AjusteResponsive import BotonesResponsivos
-
+from quitar_barra import quitar
+from ValidarVidas import validar_vidas_disponibles
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
@@ -17,17 +17,13 @@ class FondoImagen(QtWidgets.QLabel):
         )
 
         self.setScaledContents(True)
-
         self.setGeometry(
             0,
             0,
             ventana.width(),
-            ventana.height()
+            ventana.height(),
         )
-
         self.setPixmap(self.pixmap_original)
-
-        # Coloca el fondo detrás del frame y los botones.
         self.lower()
 
     def actualizar_tamano(self, ancho, alto):
@@ -35,29 +31,44 @@ class FondoImagen(QtWidgets.QLabel):
             0,
             0,
             ancho,
-            alto
+            alto,
         )
 
 
 class NivelesC(QtWidgets.QWidget):
-    def __init__(self,jugador=None,ventana_anterior=None):
+    # Este valor indica qué lenguaje debe abrir el cargador.
+    LENGUAJE = "c#"
+
+    def __init__(
+        self,
+        jugador=None,
+        ventana_anterior=None,
+    ):
         super().__init__()
+
         quitar(self)
+
         self.jugador = jugador
         self.ventana_anterior = ventana_anterior
 
-        BASE_DIR = Path(__file__).resolve().parent
-        PROYECTO_DIR = BASE_DIR.parent
+        # Evita abrir dos veces un nivel por doble clic.
+        self.nivel_en_ejecucion = False
+
+        # Guarda cómo estaba la ventana antes de entrar a Pygame.
+        self.menu_estaba_maximizado = True
+
+        base_dir = Path(__file__).resolve().parent
+        proyecto_dir = base_dir.parent
 
         ruta_ui = (
-            PROYECTO_DIR
+            proyecto_dir
             / "EXPO-DISEÑOS"
             / "DESIGNER"
             / "NivelesC.ui"
         )
 
         ruta_imagen = (
-            PROYECTO_DIR
+            proyecto_dir
             / "assets"
             / "DISEÑOS"
             / "Niveles-C.png"
@@ -73,26 +84,40 @@ class NivelesC(QtWidgets.QWidget):
                 f"No se encontró la imagen:\n{ruta_imagen}"
             )
 
-        # Carga la interfaz de Qt Designer.
-        uic.loadUi(str(ruta_ui), self)
+        uic.loadUi(
+            str(ruta_ui),
+            self,
+        )
 
-        # Resolución original utilizada en Designer.
-        self.resize(1920, 1080)
+        self.resize(
+            1920,
+            1080,
+        )
 
-        # Permite reducir o aumentar libremente la ventana.
-        self.setMinimumSize(0, 0)
+        self.setMinimumSize(
+            0,
+            0,
+        )
+
         self.setMaximumSize(
             16777215,
-            16777215
+            16777215,
         )
 
-        # Fondo de pantalla.
         self.fondo = FondoImagen(
             self,
-            ruta_imagen
+            ruta_imagen,
         )
 
-        # Ajusta automáticamente los botones.
+        self.botones_niveles = [
+            self.btnNivel1,
+            self.btnNivel2,
+            self.btnNivel3,
+            self.btnNivel4,
+            self.btnNivel5,
+            self.btnComenzar,
+        ]
+
         self.botones_responsivos = BotonesResponsivos(
             ventana=self,
             botones=[
@@ -112,12 +137,201 @@ class NivelesC(QtWidgets.QWidget):
 
         self.conectar_eventos()
 
+    # ========================================================
+    # CONEXIÓN DE BOTONES
+    # ========================================================
+
     def conectar_eventos(self):
         self.btnVolver.clicked.connect(
             self.volver_form_anterior
         )
 
+        self.btnNivel1.clicked.connect(
+            self.abrir_nivel_1
+        )
+
+        self.btnNivel2.clicked.connect(
+            self.abrir_nivel_2
+        )
+
+        self.btnNivel3.clicked.connect(
+            self.abrir_nivel_3
+        )
+
+        self.btnNivel4.clicked.connect(
+            self.abrir_nivel_4
+        )
+
+        self.btnNivel5.clicked.connect(
+            self.abrir_nivel_5
+        )
+
+        # La prueba final se envía al cargador como nivel 6.
+        self.btnComenzar.clicked.connect(
+            self.abrir_prueba_final
+        )
+
+    # ========================================================
+    # OBTENER SESIÓN DEL JUEGO
+    # ========================================================
+
+    def obtener_sesion_juego(self):
+        """Devuelve la sesión creada y validada desde Login.py."""
+        if isinstance(self.jugador, dict):
+            sesion = dict(self.jugador)
+
+            if (
+                str(sesion.get("rol", "")).lower() == "administrador"
+                or sesion.get("id_admin") is not None
+            ):
+                sesion["rol"] = "administrador"
+                sesion["id_jugador"] = None
+                sesion["personaje"] = sesion.get("personaje") or "cerdo"
+                sesion["vidas_infinitas"] = True
+                return sesion
+
+            if sesion.get("id_jugador") is not None:
+                sesion["rol"] = "jugador"
+                sesion["vidas_infinitas"] = False
+                return sesion
+
+        # Compatibilidad con llamadas antiguas que enviaban solo el ID.
+        if isinstance(self.jugador, int) and not isinstance(self.jugador, bool):
+            return {
+                "rol": "jugador",
+                "id_jugador": self.jugador,
+                "id_admin": None,
+                "vidas_infinitas": False,
+            }
+
+        raise ValueError(
+            "No se recibió una sesión válida desde el login."
+        )
+
+    # ========================================================
+    # MÉTODOS DE CADA NIVEL
+    # ========================================================
+
+    def abrir_nivel_1(self):
+        self.abrir_nivel_c(1)
+
+    def abrir_nivel_2(self):
+        self.abrir_nivel_c(2)
+
+    def abrir_nivel_3(self):
+        self.abrir_nivel_c(3)
+
+    def abrir_nivel_4(self):
+        self.abrir_nivel_c(4)
+
+    def abrir_nivel_5(self):
+        self.abrir_nivel_c(5)
+
+    def abrir_prueba_final(self):
+        self.abrir_nivel_c(6)
+
+    # ========================================================
+    # ABRIR PYGAME
+    # ========================================================
+
+    def abrir_nivel_c(self, numero_nivel):
+        """
+        Oculta este formulario mientras se ejecuta Pygame.
+
+        Cuando el jugador pulsa SALIR en Pygame, juego.ejecutar()
+        termina y el control regresa a este método. Finalmente se
+        vuelve a mostrar exactamente este mismo menú de C#.
+        """
+        if self.nivel_en_ejecucion:
+            return
+
+        # Obtiene la sesión que fue creada desde el login.
+        sesion = self.obtener_sesion_juego()
+
+        # Usa la validación reutilizable antes de abrir cualquier nivel.
+        if not validar_vidas_disponibles(self, sesion):
+            return
+
+        self.nivel_en_ejecucion = True
+        error_nivel = None
+
+        try:
+            from main import abrir_nivel as ejecutar_nivel
+
+            # Conserva el estado visual antes de ocultar la ventana.
+            self.menu_estaba_maximizado = self.isMaximized()
+
+            self.cambiar_estado_botones(False)
+
+            # Se oculta, pero no se cierra ni se destruye.
+            self.hide()
+            QtWidgets.QApplication.processEvents()
+
+            ejecutar_nivel(
+                sesion=sesion,
+                lenguaje=self.LENGUAJE,
+                numero_nivel=numero_nivel,
+                usar_pantalla_carga=True,
+            )
+
+        except Exception as error:
+            error_nivel = error
+
+        finally:
+            self.nivel_en_ejecucion = False
+            self.cambiar_estado_botones(True)
+            self.mostrar_menu_niveles()
+
+        if error_nivel is not None:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error al abrir el nivel",
+                (
+                    f"No se pudo abrir el nivel "
+                    f"{numero_nivel} de C#."
+                    f"\n\nDetalles:\n{error_nivel}"
+                ),
+            )
+
+    def cambiar_estado_botones(self, habilitados):
+        self.btnVolver.setEnabled(
+            habilitados
+        )
+
+        for boton in self.botones_niveles:
+            boton.setEnabled(
+                habilitados
+            )
+
+    def mostrar_menu_niveles(self):
+        """
+        Vuelve a mostrar este mismo menú cuando Pygame termina.
+        """
+        if self.menu_estaba_maximizado:
+            self.showMaximized()
+        else:
+            self.show()
+
+        self.raise_()
+        self.activateWindow()
+
+        if hasattr(self, "fondo"):
+            self.fondo.actualizar_tamano(
+                self.width(),
+                self.height(),
+            )
+            self.fondo.lower()
+
+        QtWidgets.QApplication.processEvents()
+
+    # ========================================================
+    # VOLVER AL FORMULARIO ANTERIOR
+    # ========================================================
+
     def volver_form_anterior(self):
+        if self.nivel_en_ejecucion:
+            return
+
         try:
             app = QtWidgets.QApplication.instance()
 
@@ -132,7 +346,7 @@ class NivelesC(QtWidgets.QWidget):
                 FormTransicion(
                     self,
                     self.ventana_anterior,
-                    guardar_actual=False
+                    guardar_actual=False,
                 )
                 return
 
@@ -140,51 +354,56 @@ class NivelesC(QtWidgets.QWidget):
 
             try:
                 ventana_lecciones = Lecciones(
+                    jugador=self.jugador,
+                    ventana_anterior=self,
+                )
+            except TypeError:
+                ventana_lecciones = Lecciones(
                     self.jugador
                 )
-
-            except TypeError:
-                ventana_lecciones = Lecciones()
 
             FormTransicion(
                 self,
                 ventana_lecciones,
-                guardar_actual=False
+                guardar_actual=False,
             )
 
-        except Exception as e:
+        except Exception as error:
             QtWidgets.QMessageBox.critical(
                 self,
                 "Error al regresar",
-                "No se pudo regresar al formulario anterior."
-                f"\n\nDetalles:\n{e}"
+                (
+                    "No se pudo regresar al formulario anterior."
+                    f"\n\nDetalles:\n{error}"
+                ),
             )
 
+    # ========================================================
+    # AJUSTE RESPONSIVO
+    # ========================================================
+
     def resizeEvent(self, event):
-        # Ajusta el fondo a toda la ventana.
         if hasattr(self, "fondo"):
             self.fondo.actualizar_tamano(
                 self.width(),
-                self.height()
+                self.height(),
             )
-
             self.fondo.lower()
 
-        # El QFrame del Designer también debe ocupar
-        # todo el espacio disponible.
+        # Mantiene el frame principal del diseño ocupando toda la ventana.
         if hasattr(self, "NivelesC"):
             self.NivelesC.setGeometry(
                 0,
                 0,
                 self.width(),
-                self.height()
+                self.height(),
             )
-
             self.NivelesC.raise_()
 
-        # Fuerza el ajuste después de cambiar el tamaño del frame.
+        # Recalcula los botones después de cambiar el tamaño del frame.
         if hasattr(self, "botones_responsivos"):
             self.botones_responsivos.ajustar()
+
 
         super().resizeEvent(event)
 
@@ -192,7 +411,11 @@ class NivelesC(QtWidgets.QWidget):
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
 
-    ventana = NivelesC()
+    # ID 2 utilizado solamente para probar este archivo.
+    ventana = NivelesC(
+        jugador=2
+    )
+
     ventana.showMaximized()
 
     sys.exit(app.exec())

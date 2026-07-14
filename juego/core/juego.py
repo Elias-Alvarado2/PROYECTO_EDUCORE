@@ -52,6 +52,10 @@ class JuegoBase(motor.JuegoEduCore):
     NPC_X = 720
     AJUSTE_Y_NPC = -8
 
+    # Colección de pingüinos del nivel. Los niveles antiguos que no la
+    # reemplacen seguirán usando el NPC predeterminado del motor.
+    NPCS = ()
+
     # Coordenadas sin ESCALA_JUEGO.
     # JuegoBase aplica la escala automáticamente.
     PISOS = (
@@ -186,17 +190,23 @@ class JuegoBase(motor.JuegoEduCore):
         self.colocar_jugador_en_inicio()
 
         # ----------------------------------------------------
-        # NPC
+        # PINGÜINOS DEL NIVEL
         # ----------------------------------------------------
 
-        self.npc = motor.NPC(
-            x_mundo=self.escalar(self.NPC_X),
-            suelo_y=(
-                piso_nivel
-                + self.escalar(self.AJUSTE_Y_NPC)
-            ),
-            escala=3.6,
-        )
+        # JuegoEduCore prepara estas variables antes de llamar a este método,
+        # pero se reinician aquí para que JuegoBase no conserve el sistema
+        # antiguo de un único self.npc.
+        self.npcs = []
+        self.npc = None
+        self.npc_activo = None
+
+        # Lee NPCS desde la clase concreta del nivel y carga para cada
+        # pingüino la lección de MySQL correspondiente a:
+        # LENGUAJE_ACTUAL + orden_leccion.
+        self.cargar_npcs_desde_nivel()
+
+        # Compatibilidad con métodos antiguos que todavía consultan self.npc.
+        self.npc = self.npcs[0] if self.npcs else None
 
         # ----------------------------------------------------
         # DIÁLOGO Y PRÁCTICA

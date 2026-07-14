@@ -19,13 +19,42 @@ class NivelPython01(JuegoBase):
     AJUSTE_Y_JUGADOR =0
     LONGITUD_NIVEL = 5000
     NPC_X = 720
-    AJUSTE_Y_NPC = -8
+    AJUSTE_Y_NPC = -8  
     AJUSTE_Y_SPRITE_MONTANAS = 2
     AJUSTE_Y_SPRITE_SUELO = 0
     AJUSTE_Y_SPRITE_PLANTAS = 0
     PISOS = (
         (0, LONGITUD_NIVEL),
     )
+    NPCS = (
+    {
+        "nombre": "pinguino_1",
+        "x": 720,
+        "ajuste_y": -8,
+        "orden_leccion": 1,
+        "requiere_anterior": False,
+        "repetible": True,
+        "practica": 1,
+    },
+    {
+        "nombre": "pinguino_2",
+        "x": 1900,
+        "ajuste_y": -60,
+        "orden_leccion": 2,
+        "requiere_anterior": True,
+        "repetible": True,
+        "practica": 2,
+    },
+    {
+        "nombre": "pinguino_3",
+        "x": 3300,
+        "ajuste_y": -8,
+        "orden_leccion": 3,
+        "requiere_anterior": True,
+        "repetible": True,
+        "practica": 0,
+    },
+)
 
     OBSTACULOS = (
         # ----------------------------------------------------
