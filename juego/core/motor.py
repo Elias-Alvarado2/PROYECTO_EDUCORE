@@ -174,7 +174,7 @@ VIDAS_MAXIMAS = 5
 
 
 
-TIPOS_OBSTACULOS_SOLIDOS = frozenset({"caja", "fragmento", "arena"})
+TIPOS_OBSTACULOS_SOLIDOS = frozenset({"caja", "fragmento", "arena","tronco","cofre","bloque","piedra"})
 TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser", "cactus"})
 
 # Las vidas se restauran completamente una hora después de perder la
@@ -237,6 +237,9 @@ def _crear_config_personaje(
     frames_caminar,
     frames_saltar=(),
     escala=5.1,
+    hitbox_izquierda=36,
+    hitbox_derecha=36,
+    hitbox_arriba=36,
     hitbox_abajo=18,
 ):
     """Crea configuraciones independientes con la estructura publica original."""
@@ -246,9 +249,9 @@ def _crear_config_personaje(
         "saltar": list(frames_saltar),
         "escala": escala,
         "hitbox": {
-            "izquierda": 36,
-            "derecha": 36,
-            "arriba": 36,
+            "izquierda": hitbox_izquierda,
+            "derecha": hitbox_derecha,
+            "arriba": hitbox_arriba,
             "abajo": hitbox_abajo,
         },
     }
@@ -256,30 +259,75 @@ def _crear_config_personaje(
 
 # Los alias y el orden de busqueda conservan la compatibilidad con MySQL.
 PERSONAJES_CONFIG = {
-    "cerdo": _crear_config_personaje(("Cerdo", "jugador"), _FRAMES_CERDO),
-    "jugador": _crear_config_personaje(("jugador", "Cerdo"), _FRAMES_CERDO),
-    "cerdito": _crear_config_personaje(("Cerdo", "jugador"), _FRAMES_CERDO),
+    "cerdo": _crear_config_personaje(
+        ("Cerdo", "jugador"),
+        _FRAMES_CERDO,
+        escala=5.1,
+
+        hitbox_izquierda=60,
+        hitbox_derecha=60,
+        hitbox_arriba=60,
+        hitbox_abajo=20,
+    ),
+
+    "jugador": _crear_config_personaje(
+        ("jugador", "Cerdo"),
+        _FRAMES_CERDO,
+        escala=5.1,
+
+        hitbox_izquierda=40,
+        hitbox_derecha=40,
+        hitbox_arriba=35,
+        hitbox_abajo=30,
+    ),
+
+    "cerdito": _crear_config_personaje(
+        ("Cerdo", "jugador"),
+        _FRAMES_CERDO,
+        escala=5.1,
+
+        hitbox_izquierda=40,
+        hitbox_derecha=40,
+        hitbox_arriba=35,
+        hitbox_abajo=30,
+    ),
+
     "gato": _crear_config_personaje(
         ("Banano",),
         _FRAMES_GATO_CAMINAR,
         _FRAMES_GATO_SALTAR,
-        escala=4.3
+        escala=4.3,
+
+        hitbox_izquierda=30,
+        hitbox_derecha=30,
+        hitbox_arriba=35,
+        hitbox_abajo=20,
     ),
+
     "banano": _crear_config_personaje(
         ("Banano",),
         _FRAMES_GATO_CAMINAR,
         _FRAMES_GATO_SALTAR,
+        escala=5.1,
+
+        hitbox_izquierda=35,
+        hitbox_derecha=35,
+        hitbox_arriba=40,
+        hitbox_abajo=25,
     ),
+
     "pato": _crear_config_personaje(
         ("Pato", "pato"),
         _FRAMES_PATO,
         escala=5.6,
+
+        hitbox_izquierda=45,
+        hitbox_derecha=45,
+        hitbox_arriba=35,
         hitbox_abajo=30,
     ),
 }
-
-
-# ============================================================
+#============================================================
 # 3.1 CONFIGURACION DEL PERSONAJE EN EL MENU DE PAUSA
 # Solo se configuraron: pato, gato y cerdo.
 # ============================================================

@@ -29,16 +29,18 @@ class NivelMySQL01(JuegoBase):
         (0, LONGITUD_NIVEL),
     )
 
-    OBSTACULOS = (
+    OBSTACULOS =(
         {
-            "tipo": "tronco",
-            "imagen": "python/tronco.png",
+            "tipo":"puas",
+            "imagen":"mysql/pinchos.png",
             "x": 500,
-            "ajuste_y": 40,
-            "hitbox_offset_x": 10,
-            "hitbox_offset_y": 40,
-            "hitbox_reducir_ancho": 20,
-            "hitbox_reducir_alto": 70,
+            "ajuste_y":-5,
+            "ancho": 80,
+            "alto": 50,
+            "hitbox_offset_x": 25,
+            "hitbox_offset_y": 30,
+            "hitbox_reducir_ancho": 45,
+            "hitbox_reducir_alto":25,
         },
         
     )
