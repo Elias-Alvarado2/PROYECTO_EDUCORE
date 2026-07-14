@@ -7,7 +7,7 @@ from Registro import RegistroWindow
 from pantalla_carga import PantallaCarga
 
 
-PERSONAJE_ADMIN_PREDETERMINADO = "cerdo"
+PERSONAJE_ADMIN_PREDETERMINADO = "pato"
 
 
 class FondoImagen(QtWidgets.QLabel):

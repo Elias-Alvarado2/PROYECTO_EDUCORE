@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from PyQt6 import QtWidgets, uic, QtGui
+from PyQt6 import QtWidgets, uic, QtGui, QtCore
 from Alertas import Alertas
 from ConexionBD import ConexionBD
 from Transicion import FormTransicion, FormAnterior
@@ -37,13 +37,28 @@ class EliminarUsuario(QtWidgets.QWidget):
         ruta_ui = PROYECTO_DIR / "EXPO-DISEÑOS" / "DESIGNER" / "Eliminar-Usuario.ui"
         ruta_imagen = PROYECTO_DIR / "assets" / "DISEÑOS" / "Eliminar_Usuario.png"
 
+        ruta_botones = (
+                PROYECTO_DIR
+                / "EXPO-DISEÑOS"
+                / "Botones"
+        )
+
         if not ruta_ui.exists():
             raise FileNotFoundError(f"No se encontró el archivo UI:\n{ruta_ui}")
 
         if not ruta_imagen.exists():
             raise FileNotFoundError(f"No se encontró la imagen:\n{ruta_imagen}")
 
+        if not ruta_botones.exists():
+            raise FileNotFoundError(
+                f"No se encontró la carpeta de botones:\n{ruta_botones}"
+            )
+
         uic.loadUi(str(ruta_ui), self)
+
+        # Conserva los StyleSheet de Designer,
+        # pero convierte ../Botones/ en una ruta absoluta.
+        self.corregir_rutas_stylesheet(ruta_botones)
 
         ruta_fuente = (
                 PROYECTO_DIR
@@ -87,8 +102,56 @@ class EliminarUsuario(QtWidgets.QWidget):
         self.db = ConexionBD()
         self.jugador_actual = None
 
+        self.configurar_botones()
         self.configurar_campos()
         self.conectar_eventos()
+
+    def corregir_rutas_stylesheet(self, ruta_botones):
+        """
+        Conserva los StyleSheet creados en Qt Designer
+        y corrige las rutas relativas de las imágenes.
+        """
+
+        ruta_absoluta = ruta_botones.resolve().as_posix()
+
+        # Revisa la ventana, el frame, los botones
+        # y todos los demás controles.
+        controles = [
+            self,
+            *self.findChildren(QtWidgets.QWidget),
+        ]
+
+        for control in controles:
+            estilo_original = control.styleSheet()
+
+            if not estilo_original:
+                continue
+
+            estilo_corregido = estilo_original
+
+            # Rutas entre comillas dobles:
+            # url("../Botones/...")
+            estilo_corregido = estilo_corregido.replace(
+                'url("../Botones/',
+                f'url("{ruta_absoluta}/'
+            )
+
+            # Rutas entre comillas simples:
+            # url('../Botones/...')
+            estilo_corregido = estilo_corregido.replace(
+                "url('../Botones/",
+                f"url('{ruta_absoluta}/"
+            )
+
+            # Rutas sin comillas:
+            # url(../Botones/...)
+            estilo_corregido = estilo_corregido.replace(
+                "url(../Botones/",
+                f"url({ruta_absoluta}/"
+            )
+
+            if estilo_corregido != estilo_original:
+                control.setStyleSheet(estilo_corregido)
 
     def resizeEvent(self, event):
         if hasattr(self, "fondo"):
@@ -107,6 +170,9 @@ class EliminarUsuario(QtWidgets.QWidget):
             )
 
             self.Eliminar_Usuario.raise_()
+
+        if hasattr(self, "elementos_responsivos"):
+            self.elementos_responsivos.ajustar()
 
         super().resizeEvent(event)
 
@@ -338,6 +404,23 @@ class EliminarUsuario(QtWidgets.QWidget):
 
         for campo in campos_datos:
             campo.setFont(fuente_datos)
+
+    def configurar_botones(self):
+        botones = [
+            self.btn_cancelar,
+            self.btn_eliminarusuario,
+            self.btn_volver,
+        ]
+
+        for boton in botones:
+            boton.setCursor(
+                QtGui.QCursor(
+                    QtCore.Qt.CursorShape.PointingHandCursor
+                )
+            )
+
+            # No usar setStyleSheet aquí.
+            # Se mantiene el diseño creado en Qt Designer.
 
 
 if __name__ == "__main__":
