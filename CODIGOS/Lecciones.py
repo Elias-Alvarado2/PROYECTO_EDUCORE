@@ -142,19 +142,6 @@ class Lecciones(QtWidgets.QWidget):
                 )
             )
 
-            boton.setStyleSheet("""
-                QPushButton {
-                    background-color: transparent;
-                    border: none;
-                }
-
-                QPushButton:hover {
-                    border: 3px solid #0B73D9;
-                    border-radius: 8px;
-                    background-color: rgba(11, 115, 217, 25);
-                }
-            """)
-
         self.btnComenzar.setCursor(
             QtGui.QCursor(
                 QtCore.Qt.CursorShape.PointingHandCursor
@@ -212,21 +199,6 @@ class Lecciones(QtWidgets.QWidget):
         elif lenguaje == "MySQL":
             boton = self.btnMySQL
 
-        if boton is not None:
-            boton.setStyleSheet("""
-                QPushButton {
-                    background-color: rgba(11, 115, 217, 45);
-                    border: 4px solid #0B73D9;
-                    border-radius: 8px;
-                }
-
-                QPushButton:hover {
-                    background-color: rgba(11, 115, 217, 55);
-                    border: 4px solid #0B73D9;
-                    border-radius: 8px;
-                }
-            """)
-
     def limpiar_estilos_lenguajes(self):
         botones_lenguaje = [
             self.btnPython,
@@ -234,20 +206,6 @@ class Lecciones(QtWidgets.QWidget):
             self.btnC,
             self.btnMySQL,
         ]
-
-        for boton in botones_lenguaje:
-            boton.setStyleSheet("""
-                QPushButton {
-                    background-color: transparent;
-                    border: none;
-                }
-
-                QPushButton:hover {
-                    border: 3px solid #0B73D9;
-                    border-radius: 8px;
-                    background-color: rgba(11, 115, 217, 25);
-                }
-            """)
 
     def comenzar_aventura(self):
         if self.lenguaje_seleccionado is None:
