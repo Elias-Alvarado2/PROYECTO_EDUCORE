@@ -162,6 +162,10 @@ class EditarUsuario(QtWidgets.QWidget):
             "Inactivo"
         ])
 
+        # No mostrar ninguna opción al abrir la ventana.
+        self.cmb_estado.setCurrentIndex(-1)
+        self.cmb_estado.setEnabled(False)
+
     def conectar_eventos(self):
         self.txt_idjugador.textChanged.connect(
             self.iniciar_busqueda_automatica
@@ -180,6 +184,10 @@ class EditarUsuario(QtWidgets.QWidget):
         )
 
     def iniciar_busqueda_automatica(self):
+        # Oculta el estado anterior mientras busca el nuevo ID.
+        self.cmb_estado.setCurrentIndex(-1)
+        self.cmb_estado.setEnabled(False)
+
         self.timer_busqueda_id.start(500)
 
     def buscar_usuario_automatico(self):
@@ -264,7 +272,7 @@ class EditarUsuario(QtWidgets.QWidget):
                 str(e),
                 "error"
             )
-            
+
     def mostrar_datos_usuario(self, jugador):
         self.txt_nombreusuario.setText(
             str(jugador["nombre"])
@@ -290,18 +298,20 @@ class EditarUsuario(QtWidgets.QWidget):
             str(jugador["fecha_registro"])
         )
 
-        estado = str(jugador["estado"])
+        estado = str(jugador["estado"]).strip()
 
         index_estado = self.cmb_estado.findText(
-            estado
+            estado,
+            QtCore.Qt.MatchFlag.MatchFixedString
         )
 
         if index_estado >= 0:
-            self.cmb_estado.setCurrentIndex(
-                index_estado
-            )
+            self.cmb_estado.setCurrentIndex(index_estado)
         else:
-            self.cmb_estado.setCurrentIndex(0)
+            self.cmb_estado.setCurrentIndex(-1)
+
+        # Habilitar únicamente cuando el usuario existe.
+        self.cmb_estado.setEnabled(True)
 
     def limpiar_datos_usuario(self):
         self.txt_nombreusuario.clear()
@@ -311,8 +321,9 @@ class EditarUsuario(QtWidgets.QWidget):
         self.txt_vidas.clear()
         self.txt_fecharegistro.clear()
 
-        if self.cmb_estado.count() > 0:
-            self.cmb_estado.setCurrentIndex(0)
+        # No mostrar Activo ni Inactivo.
+        self.cmb_estado.setCurrentIndex(-1)
+        self.cmb_estado.setEnabled(False)
 
     def validar_campos(self):
         id_jugador = self.txt_idjugador.text().strip()

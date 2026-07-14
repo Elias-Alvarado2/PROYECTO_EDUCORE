@@ -273,7 +273,7 @@ QLineEdit:focus {
      <rect>
       <x>1040</x>
       <y>720</y>
-      <width>581</width>
+      <width>507</width>
       <height>51</height>
      </rect>
     </property>
