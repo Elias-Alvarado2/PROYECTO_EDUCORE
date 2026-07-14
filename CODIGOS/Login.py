@@ -7,6 +7,9 @@ from Registro import RegistroWindow
 from pantalla_carga import PantallaCarga
 
 
+PERSONAJE_ADMIN_PREDETERMINADO = "cerdo"
+
+
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
         super().__init__(ventana)
@@ -101,6 +104,12 @@ class LoginWindow(QtWidgets.QDialog):
             admin = self.db.validar_admin(usuario, contrasena)
 
             if admin:
+                sesion_admin = dict(admin)
+                sesion_admin["rol"] = "administrador"
+                sesion_admin["id_jugador"] = None
+                sesion_admin["personaje"] = PERSONAJE_ADMIN_PREDETERMINADO
+                sesion_admin["vidas_infinitas"] = True
+
                 Alertas.mostrar(
                     self,
                     "Bienvenido administrador",
@@ -108,12 +117,17 @@ class LoginWindow(QtWidgets.QDialog):
                     "exito"
                 )
 
-                self.abrir_menu_admin(admin)
+                self.abrir_menu_admin(sesion_admin)
                 return
 
             jugador = self.db.validar_jugador(usuario, contrasena)
 
             if jugador:
+                sesion_jugador = dict(jugador)
+                sesion_jugador["rol"] = "jugador"
+                sesion_jugador["id_admin"] = None
+                sesion_jugador["vidas_infinitas"] = False
+
                 self.db.registrar_historial(
                     jugador["id_jugador"],  
                     "Inicio de sesión",
@@ -127,7 +141,7 @@ class LoginWindow(QtWidgets.QDialog):
                     "exito"
                 )
 
-                self.abrir_menu_usuario(jugador)
+                self.abrir_menu_usuario(sesion_jugador)
                 return
 
             Alertas.mostrar(

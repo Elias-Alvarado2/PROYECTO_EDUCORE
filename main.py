@@ -10,10 +10,11 @@ from juego.sistemas.pantalla_carga import (
 
 
 def abrir_nivel(
-    id_jugador: int,
-    lenguaje: str,
-    numero_nivel: int,
+    id_jugador: int | None = None,
+    lenguaje: str = "python",
+    numero_nivel: int = 1,
     usar_pantalla_carga: bool = True,
+    sesion: dict | None = None,
 ):
     proceso = None
     progreso = None
@@ -35,6 +36,7 @@ def abrir_nivel(
             lenguaje=lenguaje,
             numero_nivel=numero_nivel,
             id_jugador=id_jugador,
+            sesion=sesion,
             actualizar_progreso_carga=callback,
         )
 

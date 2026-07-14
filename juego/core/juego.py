@@ -80,7 +80,8 @@ class JuegoBase(motor.JuegoEduCore):
 
     def __init__(
         self,
-        id_jugador: int = 1,
+        id_jugador: int | None = 1,
+        sesion: dict | None = None,
         actualizar_progreso_carga=None,
     ):
         # El motor original consulta esta constante al actualizar el NPC.
@@ -88,6 +89,7 @@ class JuegoBase(motor.JuegoEduCore):
 
         super().__init__(
             id_jugador=id_jugador,
+            sesion=sesion,
             nombre_lenguaje=self.LENGUAJE_ACTUAL,
             orden_leccion=self.NIVEL_ACTUAL,
             actualizar_progreso_carga=actualizar_progreso_carga,

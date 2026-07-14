@@ -1197,22 +1197,40 @@ class Obstaculo:
         self.tipo = tipo
 
         if not ruta_imagen.exists():
-            raise FileNotFoundError(f"No se encontro la imagen del obstaculo: {ruta_imagen}")
+            raise FileNotFoundError(
+                f"No se encontro la imagen del obstaculo: {ruta_imagen}"
+            )
 
         self.imagen = pygame.image.load(
             str(ruta_imagen)
         ).convert_alpha()
 
-        # Recorta el espacio transparente alrededor del obstáculo
+        # Elimina el espacio transparente exterior sobrante del PNG.
         self.imagen = recortar_transparencia_png(
             self.imagen,
             margen=0,
         )
 
-        # Escala solamente la parte visible del PNG
+        # Escala solamente la parte visible del obstáculo.
         self.imagen = pygame.transform.scale(
             self.imagen,
             (int(ancho), int(alto)),
+        )
+
+        # Máscara que conserva únicamente los píxeles visibles.
+        # Se usa especialmente para que las púas no dañen desde
+        # las zonas transparentes de su PNG.
+        self.mascara = pygame.mask.from_surface(
+            self.imagen,
+            threshold=127,
+        )
+
+        # Rectángulo correspondiente a la posición visual exacta del PNG.
+        self.rect_imagen = pygame.Rect(
+            int(self.x),
+            int(self.y),
+            self.imagen.get_width(),
+            self.imagen.get_height(),
         )
 
         if hitbox_ancho is None:
@@ -1227,6 +1245,31 @@ class Obstaculo:
             hitbox_ancho,
             hitbox_alto,
         )
+
+    def toca_pixeles_visibles(self, jugador_rect_mundo):
+        """Devuelve True solo al tocar un píxel visible del obstáculo."""
+        if not jugador_rect_mundo.colliderect(self.rect_imagen):
+            return False
+
+        ancho_jugador = max(1, int(jugador_rect_mundo.width))
+        alto_jugador = max(1, int(jugador_rect_mundo.height))
+
+        # La hitbox reducida del jugador se convierte en una máscara sólida.
+        mascara_jugador = pygame.mask.Mask(
+            (ancho_jugador, alto_jugador),
+            fill=True,
+        )
+
+        # Posición de la máscara del jugador respecto a la del obstáculo.
+        offset = (
+            int(jugador_rect_mundo.x - self.rect_imagen.x),
+            int(jugador_rect_mundo.y - self.rect_imagen.y),
+        )
+
+        return self.mascara.overlap(
+            mascara_jugador,
+            offset,
+        ) is not None
 
     def obtener_rect_pantalla(self, camara_x):
         return pygame.Rect(
@@ -2250,6 +2293,7 @@ class JuegoEduCore:
     def __init__(
         self,
         id_jugador=1,
+        sesion=None,
         nombre_lenguaje="Python",
         orden_leccion=None,
         actualizar_progreso_carga=None,
@@ -2263,7 +2307,22 @@ class JuegoEduCore:
         self._inicializar_pantalla()
         self._informar_progreso_carga(14)
 
-        self.id_jugador = id_jugador
+        self.sesion = dict(sesion) if isinstance(sesion, dict) else {}
+        self.rol = str(self.sesion.get("rol") or "jugador").strip().lower()
+        self.es_administrador = self.rol == "administrador"
+        self.vidas_infinitas = bool(
+            self.es_administrador
+            or self.sesion.get("vidas_infinitas", False)
+        )
+        self.id_admin = self.sesion.get("id_admin")
+
+        if self.es_administrador:
+            self.id_jugador = None
+        else:
+            self.id_jugador = self.sesion.get("id_jugador")
+            if self.id_jugador is None:
+                self.id_jugador = id_jugador
+
         self.nombre_lenguaje_solicitado = nombre_lenguaje
         self.orden_leccion_solicitado = orden_leccion
 
@@ -2362,15 +2421,34 @@ class JuegoEduCore:
         self.tiempo_mensaje_aprendido = 0
         self.transicion_iris = TransicionIris(duracion=1.0)
 
+        # Daño controlado de las púas.
+        # Después de perder una vida, el jugador dispone de un breve periodo
+        # de invulnerabilidad para no perder todas las vidas en un solo roce.
+        self.tiempo_invulnerabilidad_puas = 1200  # milisegundos
+        self.invulnerable_puas_hasta = 0
+        self.fuerza_rebote_puas = -9
+
     def _cargar_datos_iniciales(self, nombre_lenguaje):
-        self.datos_jugador = (
-            self.db.obtener_jugador(self.id_jugador) if self.db.activa else None
-        )
+        self.datos_jugador = None
+
+        if (
+            not self.es_administrador
+            and self.id_jugador is not None
+            and self.db.activa
+        ):
+            self.datos_jugador = self.db.obtener_jugador(self.id_jugador)
+
         self.datos_lenguaje = (
             self.db.obtener_lenguaje(nombre_lenguaje) if self.db.activa else None
         )
 
-        if self.datos_jugador:
+        if self.es_administrador:
+            self.nombre_jugador = self.sesion.get("nombre") or "Administrador"
+            self.personaje_elegido = (
+                self.sesion.get("personaje") or PERSONAJE_DEFAULT
+            )
+            self.vidas = VIDAS_MAXIMAS
+        elif self.datos_jugador:
             self.nombre_jugador = self.datos_jugador.get("nombre") or "Jugador"
             self.personaje_elegido = (
                 self.datos_jugador.get("personaje") or PERSONAJE_DEFAULT
@@ -2379,7 +2457,7 @@ class JuegoEduCore:
         else:
             self.nombre_jugador = "Jugador local"
             self.personaje_elegido = PERSONAJE_DEFAULT
-            self.vidas = 5
+            self.vidas = VIDAS_MAXIMAS
 
         if self.datos_lenguaje:
             self.id_lenguaje = int(self.datos_lenguaje.get("id_lenguaje"))
@@ -2390,7 +2468,16 @@ class JuegoEduCore:
             self.id_lenguaje = None
             self.nombre_lenguaje = nombre_lenguaje
 
-        if self.id_lenguaje and self.datos_jugador:
+        puede_cargar_leccion = (
+            self.id_lenguaje
+            and self.db.activa
+            and (
+                self.orden_leccion_solicitado is not None
+                or self.datos_jugador is not None
+            )
+        )
+
+        if puede_cargar_leccion:
             self.leccion_actual = self.db.obtener_leccion(
                 self.id_jugador,
                 self.id_lenguaje,
@@ -2876,7 +2963,49 @@ class JuegoEduCore:
         )
         self.cierre_game_over_iniciado = True
 
+    def recibir_dano_puas(self, obstaculo):
+        """Quita una vida al tocar las púas y aplica invulnerabilidad."""
+        if self.vidas_infinitas or self.game_over:
+            return
+
+        ahora = pygame.time.get_ticks()
+
+        if ahora < self.invulnerable_puas_hasta:
+            return
+
+        self.invulnerable_puas_hasta = (
+            ahora + self.tiempo_invulnerabilidad_puas
+        )
+
+        self._restar_vida(
+            evento="Daño por púas",
+            detalle_base="Tocó un obstáculo de púas",
+        )
+
+        # Si todavía quedan vidas, rebota para separarse de las púas.
+        if not self.game_over:
+            self.jugador.velocidad_y = self.fuerza_rebote_puas
+            self.jugador.en_suelo = False
+
+            jugador_rect = self.jugador.obtener_rect_mundo(self.camara_x)
+            separacion = round(18 * ESCALA_JUEGO)
+
+            # En este motor el personaje permanece fijo en pantalla y la
+            # posición horizontal del mundo depende de la cámara.
+            if jugador_rect.centerx <= obstaculo.rect_imagen.centerx:
+                self.camara_x = max(0, self.camara_x - separacion)
+            else:
+                self.camara_x = min(
+                    self.limite_camara_x,
+                    self.camara_x + separacion,
+                )
+
     def _restar_vida(self, evento=None, detalle_base=None):
+        if self.vidas_infinitas:
+            self.vidas = VIDAS_MAXIMAS
+            self.game_over = False
+            return self.vidas
+
         if self.datos_jugador and self.db.activa:
             if evento is None:
                 vidas_bd = self.db.restar_vida(self.id_jugador)
@@ -2997,7 +3126,8 @@ class JuegoEduCore:
             return
 
         if (
-            self.datos_jugador
+            not self.es_administrador
+            and self.datos_jugador
             and self.id_lenguaje
             and self.leccion_actual
             and self.db.activa
@@ -3165,12 +3295,26 @@ class JuegoEduCore:
             jugador_rect_mundo = self.jugador.obtener_rect_mundo(
                 self.camara_x
             )
+
+            # Las púas comprueban únicamente los píxeles visibles del PNG.
+            # Los bordes transparentes y los espacios entre las puntas
+            # no provocan daño.
+            if obstaculo.tipo == "puas":
+                if obstaculo.toca_pixeles_visibles(jugador_rect_mundo):
+                    self.recibir_dano_puas(obstaculo)
+                continue
+
             rect = obstaculo.rect
 
             if not jugador_rect_mundo.colliderect(rect):
                 continue
 
+            # Otros obstáculos de daño, como el láser, conservan su
+            # comportamiento anterior.
             if obstaculo.es_danio():
+                if self.vidas_infinitas:
+                    continue
+
                 self.game_over = True
                 return False
 
@@ -3428,7 +3572,9 @@ class JuegoEduCore:
         pantalla = self.superficie_logica
 
         total_corazones = VIDAS_MAXIMAS
-        vidas_visibles = self.vidas
+        vidas_visibles = (
+            VIDAS_MAXIMAS if self.vidas_infinitas else self.vidas
+        )
 
         tamano_corazon = 180
         separacion_corazones = -100
@@ -3865,7 +4011,7 @@ class JuegoEduCore:
             corazones_pausa_x,
             corazones_pausa_y,
             VIDAS_MAXIMAS,
-            self.vidas,
+            VIDAS_MAXIMAS if self.vidas_infinitas else self.vidas,
             tamano_corazon_pausa,
             separacion_corazones_pausa,
         )
