@@ -1,4 +1,3 @@
-
 # NOTA DE ESTRUCTURA
 # Este archivo conserva el motor funcional del nivel original.
 # Los niveles concretos heredan de JuegoBase en juego/core/juego.py.
@@ -80,6 +79,12 @@ FONDO_CIELO = FONDOS_DIR / FONDO_ACTUAL / f"{FONDO_ACTUAL}_cielo.png"
 FONDO_MONTANAS = FONDOS_DIR / FONDO_ACTUAL / f"{FONDO_ACTUAL}_montanas.png"
 FONDO_ARBOLES = FONDOS_DIR / FONDO_ACTUAL / f"{FONDO_ACTUAL}_plantas.png"
 FONDO_SUELO = FONDOS_DIR / FONDO_ACTUAL / f"{FONDO_ACTUAL}_suelo.png"
+
+# El cactus queda deshabilitado por completo desde el motor.
+# Se ignora aunque algún nivel todavía conserve una configuración antigua
+# o una ruta de imagen que contenga la palabra "cactus".
+MOSTRAR_CAPA_PLANTAS = False
+TIPOS_OBSTACULOS_DESHABILITADOS = frozenset({"cactus"})
 
 PERSONAJES_DIR = ASSETS_DIR / "personajes"
 OBSTACULOS_DIR = ASSETS_DIR / "obstaculos"
@@ -175,7 +180,7 @@ VIDAS_MAXIMAS = 5
 
 
 TIPOS_OBSTACULOS_SOLIDOS = frozenset({"caja", "fragmento", "arena"})
-TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser", "cactus"})
+TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser"})
 
 # Las vidas se restauran completamente una hora después de perder la
 # primera vida. El motor consulta MySQL cada 30 segundos mientras el nivel
@@ -1339,7 +1344,26 @@ class Obstaculo:
         self.y = y
         self.ancho = ancho
         self.alto = alto
-        self.tipo = tipo
+        self.tipo = str(tipo or "").strip().lower()
+
+        # Se comprueba tanto el tipo como el nombre de la ruta. Así se ignora
+        # una configuración antigua aunque el tipo no sea exactamente
+        # "cactus", por ejemplo si todavía apunta a cactus_obstaculo.png.
+        ruta_normalizada = str(ruta_imagen).lower().replace("\\", "/")
+        self.deshabilitado = (
+            self.tipo in TIPOS_OBSTACULOS_DESHABILITADOS
+            or "cactus" in self.tipo
+            or "cactus" in ruta_normalizada
+        )
+
+        if self.deshabilitado:
+            # Objeto vacío y fuera del mapa. No intenta abrir el PNG, no se
+            # dibuja, no colisiona y no causa daño.
+            self.imagen = pygame.Surface((1, 1), pygame.SRCALPHA)
+            self.mascara = pygame.mask.Mask((1, 1), fill=False)
+            self.rect_imagen = pygame.Rect(-100000, -100000, 1, 1)
+            self.rect = pygame.Rect(-100000, -100000, 1, 1)
+            return
 
         if not ruta_imagen.exists():
             raise FileNotFoundError(
@@ -1391,19 +1415,31 @@ class Obstaculo:
             hitbox_alto,
         )
 
-    def toca_pixeles_visibles(self, jugador_rect_mundo):
-        """Devuelve True solo al tocar un píxel visible del obstáculo."""
+    def toca_pixeles_visibles(
+        self,
+        jugador_rect_mundo,
+        mascara_jugador=None,
+    ):
+        """Comprueba una colisión píxel a píxel con el obstáculo.
+
+        El rectángulo se usa únicamente como filtro rápido. La colisión final
+        ocurre solo cuando un píxel visible del personaje toca un píxel
+        visible del obstáculo. De esta forma, el espacio transparente del PNG
+        del cactus no puede quitar vidas antes del contacto real.
+        """
+        if self.deshabilitado:
+            return False
+
         if not jugador_rect_mundo.colliderect(self.rect_imagen):
             return False
 
-        ancho_jugador = max(1, int(jugador_rect_mundo.width))
-        alto_jugador = max(1, int(jugador_rect_mundo.height))
-
-        # La hitbox reducida del jugador se convierte en una máscara sólida.
-        mascara_jugador = pygame.mask.Mask(
-            (ancho_jugador, alto_jugador),
-            fill=True,
-        )
+        if mascara_jugador is None:
+            ancho_jugador = max(1, int(jugador_rect_mundo.width))
+            alto_jugador = max(1, int(jugador_rect_mundo.height))
+            mascara_jugador = pygame.mask.Mask(
+                (ancho_jugador, alto_jugador),
+                fill=True,
+            )
 
         # Posición de la máscara del jugador respecto a la del obstáculo.
         offset = (
@@ -1425,15 +1461,24 @@ class Obstaculo:
         )
 
     def dibujar(self, pantalla, camara_x):
+        if self.deshabilitado:
+            return
+
         pantalla.blit(
             self.imagen,
             (round(self.x - camara_x), round(self.y)),
         )
 
     def es_solido(self):
+        if self.deshabilitado:
+            return False
+
         return self.tipo in TIPOS_OBSTACULOS_SOLIDOS
 
     def es_danio(self):
+        if self.deshabilitado:
+            return False
+
         return self.tipo in TIPOS_OBSTACULOS_DANIO
 
 
@@ -1553,6 +1598,7 @@ class Jugador:
         self.frames_caminar = []
         self.frames_saltar = []
         self._frames_reflejados = {}
+        self._mascaras_sprites = {}
 
         self.cargar_frames()
 
@@ -1716,6 +1762,26 @@ class Jugador:
             sprite.get_width(),
             sprite.get_height(),
         )
+
+    def obtener_rect_sprite_mundo(self, camara_x):
+        rect = self.obtener_rect_sprite_pantalla()
+        rect.x = round(rect.x + camara_x)
+        return rect
+
+    def obtener_mascara_sprite_actual(self):
+        """Devuelve la máscara de los píxeles visibles del frame actual."""
+        sprite = self.obtener_sprite_actual()
+        clave = id(sprite)
+        mascara = self._mascaras_sprites.get(clave)
+
+        if mascara is None:
+            mascara = pygame.mask.from_surface(
+                sprite,
+                threshold=127,
+            )
+            self._mascaras_sprites[clave] = mascara
+
+        return mascara
 
     def obtener_hitbox_local(self):
         return self.hitbox_base.copy()
@@ -2576,12 +2642,17 @@ class JuegoEduCore:
         self.tiempo_mensaje_aprendido = 0
         self.transicion_iris = TransicionIris(duracion=1.0)
 
-        # Daño controlado de las púas.
+        # Daño controlado para púas, cactus y láser.
         # Después de perder una vida, el jugador dispone de un breve periodo
         # de invulnerabilidad para no perder todas las vidas en un solo roce.
-        self.tiempo_invulnerabilidad_puas = 1200  # milisegundos
-        self.invulnerable_puas_hasta = 0
-        self.fuerza_rebote_puas = -9
+        self.tiempo_invulnerabilidad_danio = 1200  # milisegundos
+        self.invulnerable_danio_hasta = 0
+        self.fuerza_rebote_danio = -9
+
+        # Alias conservados para no romper código antiguo de los niveles.
+        self.tiempo_invulnerabilidad_puas = self.tiempo_invulnerabilidad_danio
+        self.invulnerable_puas_hasta = self.invulnerable_danio_hasta
+        self.fuerza_rebote_puas = self.fuerza_rebote_danio
 
         # Control de la consulta periódica de recuperación de vidas.
         self.ultimo_chequeo_recuperacion_vidas = pygame.time.get_ticks()
@@ -3068,17 +3139,22 @@ class JuegoEduCore:
             offset_plantas,
         ) = _CAPAS_FONDO_CONFIG[2]
 
-        self.capas_primer_plano = [
-            CapaParallax(
-                ruta_plantas,
-                factor_plantas,
-                ANCHO,
-                ALTO,
-                color_plantas,
-                limpiar_fondo_falso=limpiar_plantas,
-                offset_y=offset_plantas,
-            )
-        ]
+        if MOSTRAR_CAPA_PLANTAS:
+            self.capas_primer_plano = [
+                CapaParallax(
+                    ruta_plantas,
+                    factor_plantas,
+                    ANCHO,
+                    ALTO,
+                    color_plantas,
+                    limpiar_fondo_falso=limpiar_plantas,
+                    offset_y=offset_plantas,
+                )
+            ]
+        else:
+            # El cactus que estaba integrado en *_plantas.png tampoco se
+            # carga ni se dibuja.
+            self.capas_primer_plano = []
 
         # El suelo también se dibuja a resolución completa para que avance
         # exactamente un píxel cuando la cámara avanza un píxel.
@@ -3260,6 +3336,8 @@ class JuegoEduCore:
 
         self.jugador.velocidad_y = 0
         self.jugador.colocar_sobre_piso(PISO_COLISION_Y)
+        self.invulnerable_danio_hasta = 0
+        self.invulnerable_puas_hasta = 0
 
         if self.vidas > 0:
             self.game_over = False
@@ -3309,42 +3387,62 @@ class JuegoEduCore:
         )
         self.cierre_game_over_iniciado = True
 
-    def recibir_dano_puas(self, obstaculo):
-        """Quita una vida al tocar las púas y aplica invulnerabilidad."""
+    def recibir_dano_obstaculo(self, obstaculo):
+        """Quita exactamente una vida al tocar un obstáculo de daño."""
         if self.vidas_infinitas or self.game_over:
-            return
+            return False
 
         ahora = pygame.time.get_ticks()
 
-        if ahora < self.invulnerable_puas_hasta:
-            return
+        if ahora < self.invulnerable_danio_hasta:
+            return False
 
-        self.invulnerable_puas_hasta = (
-            ahora + self.tiempo_invulnerabilidad_puas
+        self.invulnerable_danio_hasta = (
+            ahora + self.tiempo_invulnerabilidad_danio
+        )
+        # Mantiene sincronizado el alias usado por código antiguo.
+        self.invulnerable_puas_hasta = self.invulnerable_danio_hasta
+
+        nombres = {
+            "puas": ("Daño por púas", "Tocó un obstáculo de púas"),
+            "laser": ("Daño por láser", "Tocó un obstáculo láser"),
+        }
+        evento, detalle = nombres.get(
+            obstaculo.tipo,
+            ("Daño por obstáculo", "Tocó un obstáculo de daño"),
         )
 
         self._restar_vida(
-            evento="Daño por púas",
-            detalle_base="Tocó un obstáculo de púas",
+            evento=evento,
+            detalle_base=detalle,
         )
 
-        # Si todavía quedan vidas, rebota para separarse de las púas.
-        if not self.game_over:
-            self.jugador.velocidad_y = self.fuerza_rebote_puas
-            self.jugador.en_suelo = False
+        # Solo hay game over cuando la última vida llega a cero.
+        if self.game_over:
+            return True
 
-            jugador_rect = self.jugador.obtener_rect_mundo(self.camara_x)
-            separacion = round(18 * ESCALA_JUEGO)
+        # Rebote corto para separar al personaje y evitar contacto continuo.
+        self.jugador.velocidad_y = self.fuerza_rebote_danio
+        self.jugador.en_suelo = False
 
-            # En este motor el personaje permanece fijo en pantalla y la
-            # posición horizontal del mundo depende de la cámara.
-            if jugador_rect.centerx <= obstaculo.rect_imagen.centerx:
-                self.camara_x = max(0, self.camara_x - separacion)
-            else:
-                self.camara_x = min(
-                    self.limite_camara_x,
-                    self.camara_x + separacion,
-                )
+        jugador_rect = self.jugador.obtener_rect_mundo(self.camara_x)
+        separacion = round(18 * ESCALA_JUEGO)
+
+        # En este motor el personaje permanece fijo en pantalla y la
+        # posición horizontal del mundo depende de la cámara.
+        if jugador_rect.centerx <= obstaculo.rect_imagen.centerx:
+            self.camara_x = max(0, self.camara_x - separacion)
+        else:
+            self.camara_x = min(
+                self.limite_camara_x,
+                self.camara_x + separacion,
+            )
+
+        return True
+
+    def recibir_dano_puas(self, obstaculo):
+        """Compatibilidad con llamadas antiguas del motor."""
+        return self.recibir_dano_obstaculo(obstaculo)
 
     def verificar_recuperacion_vidas(self, forzar=False):
         """Sincroniza las vidas del jugador con la recuperación de MySQL."""
@@ -3729,27 +3827,30 @@ class JuegoEduCore:
                 self.camara_x
             )
 
-            # Las púas comprueban únicamente los píxeles visibles del PNG.
-            # Los bordes transparentes y los espacios entre las puntas
-            # no provocan daño.
-            if obstaculo.tipo == "puas":
-                if obstaculo.toca_pixeles_visibles(jugador_rect_mundo):
-                    self.recibir_dano_puas(obstaculo)
+            # Todos los obstáculos de daño usan colisión píxel a píxel.
+            # Esto recorta en la práctica el espacio transparente sobrante
+            # del cactus y evita que dañe antes de que el personaje lo toque.
+            if obstaculo.es_danio():
+                rect_sprite_mundo = self.jugador.obtener_rect_sprite_mundo(
+                    self.camara_x
+                )
+                mascara_jugador = (
+                    self.jugador.obtener_mascara_sprite_actual()
+                )
+
+                if obstaculo.toca_pixeles_visibles(
+                    rect_sprite_mundo,
+                    mascara_jugador,
+                ):
+                    self.recibir_dano_obstaculo(obstaculo)
+
+                # Un obstáculo de daño no se procesa como sólido.
                 continue
 
             rect = obstaculo.rect
 
             if not jugador_rect_mundo.colliderect(rect):
                 continue
-
-            # Otros obstáculos de daño, como el láser, conservan su
-            # comportamiento anterior.
-            if obstaculo.es_danio():
-                if self.vidas_infinitas:
-                    continue
-
-                self.game_over = True
-                return False
 
             if not obstaculo.es_solido():
                 continue
@@ -4861,4 +4962,3 @@ class JuegoEduCore:
         # Regresa a abrir_nivel(), que a su vez devuelve el control
         # al formulario PyQt6 que inició este nivel.
         return motivo_salida
-

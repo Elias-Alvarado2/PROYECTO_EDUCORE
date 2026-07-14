@@ -57,19 +57,7 @@ class NivelPython01(JuegoBase):
 )
 
     OBSTACULOS = (
-        # ----------------------------------------------------
-        # CACTUS
-        # ----------------------------------------------------
-        {
-            "tipo": "cactus",
-            "imagen": "python/cactus_obstaculo.png",
-            "x": 2000,
-            "ancho": 65,
-            "alto": 55,
-            "ajuste_y": 0,
-            "hitbox_offset_x": 8,
-            "hitbox_offset_y": 8,
-        },
+       
 
         # ----------------------------------------------------
         # FRAGMENTOS FLOTANTES
@@ -126,73 +114,111 @@ class NivelPython01(JuegoBase):
             "hitbox_offset_x": 4,
             "hitbox_offset_y": 4,
         },
+# ----------------------------------------------------
+        # PÚAS NUEVAS
+        # ----------------------------------------------------
+        {
+            "tipo": "puas",
+            "imagen": "python/puas_obstaculo.png",
+            "x": 1950,
+            "ancho": 100,
+            "alto": 60,
+            "ajuste_y": 8,
+            "hitbox_offset_x": 8,
+            "hitbox_offset_y": 20,
+            "hitbox_reducir_ancho": 16,
+            "hitbox_reducir_alto": 24,
+        },
+
+        # ----------------------------------------------------
+        # SEGUNDAS PÚAS
+        # ----------------------------------------------------
+        {
+            "tipo": "puas",
+            "imagen": "python/puas_obstaculo.png",
+            "x": 2300,
+            "ancho": 100,
+            "alto": 60,
+            "ajuste_y": 8,
+            "hitbox_offset_x": 8,
+            "hitbox_offset_y": 20,
+            "hitbox_reducir_ancho": 16,
+            "hitbox_reducir_alto": 24,
+        },
+
+        # ----------------------------------------------------
+        # FRAGMENTO 2 BAJO
+        # ----------------------------------------------------
+        {
+            "tipo": "fragmento",
+            "imagen": "python/obstaculo_fragmento2.png",
+            "x": 2520,
+            "ancho": 130,
+            "alto": 45,
+            "ajuste_y": -20,
+            "hitbox_offset_x": 4,
+            "hitbox_offset_y": 0,
+            "hitbox_reducir_ancho": 8,
+            "hitbox_reducir_alto": 0,
+        },
 # ========================================================
-# PÚAS
+# PRIMER FRAGMENTO: CUADRO DE ABAJO
 # ========================================================
 {
-    "tipo": "puas",
-    "imagen": "python/puas_obstaculo.png",
-    "x": 2300,
-
-    "ancho": 100,
-    "alto": 60,
-
-    "ajuste_y": 8,
-
-    "hitbox_offset_x": 8,
-    "hitbox_offset_y": 20,
-    "hitbox_reducir_ancho": 16,
-    "hitbox_reducir_alto": 24,
-},
-
-# ========================================================
-# PRIMER FRAGMENTO: DESPUÉS DE LAS PÚAS
-# ========================================================
-{
-    # Debe decir "fragmento", no "arena".
-    # Así el motor lo reconoce como sólido.
     "tipo": "fragmento",
-
     "imagen": "python/obstaculo_fragmento2.png",
 
-    # Aparece después de las púas de x=2300.
-    "x": 2550,
+    # Más a la derecha
+    "x": 2520,
 
     "ancho": 130,
     "alto": 45,
 
-    # Plataforma más baja.
-    "ajuste_y": -85,
+    # Más abajo, casi a nivel del suelo
+    "ajuste_y": -20,
 
-    # La hitbox comienza casi desde el borde izquierdo.
     "hitbox_offset_x": 4,
-
-    # La parte superior de la hitbox coincide con la imagen.
     "hitbox_offset_y": 0,
-
-    # Reduce ligeramente los lados.
     "hitbox_reducir_ancho": 8,
+    "hitbox_reducir_alto": 0,
+},
+# ========================================================
+# PRIMER FRAGMENTO: CUADRO DE ABAJO
+# ========================================================
+{
+    "tipo": "fragmento",
+    "imagen": "python/obstaculo_fragmento2.png",
 
-    # No reduce la altura de la hitbox.
+    # Más a la derecha
+    "x": 2795,
+
+    "ancho": 130,
+    "alto": 45,
+
+    # Más abajo, casi a nivel del suelo
+    "ajuste_y": -20,
+
+    "hitbox_offset_x": 4,
+    "hitbox_offset_y": 0,
+    "hitbox_reducir_ancho": 8,
     "hitbox_reducir_alto": 0,
 },
 
 # ========================================================
-# SEGUNDO FRAGMENTO: MÁS ADELANTE Y MÁS ALTO
+# SEGUNDO FRAGMENTO: CUADRO DE ARRIBA
 # ========================================================
 {
     "tipo": "fragmento",
-
     "imagen": "python/obstaculo_fragmento2.png",
 
-    # Más adelante que el primer fragmento.
-    "x": 2820,
+    # Más a la derecha que el primero
+    "x": 2655,
 
     "ancho": 130,
     "alto": 45,
 
-    # Número más negativo = más arriba.
-    "ajuste_y": -160,
+    # Más arriba que el primero
+    "ajuste_y": -85,
 
     "hitbox_offset_x": 4,
     "hitbox_offset_y": 0,
