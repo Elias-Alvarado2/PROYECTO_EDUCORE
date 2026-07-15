@@ -1,6 +1,4 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
-
-
 class Alertas(QtWidgets.QDialog):
 
     TIPOS = {
@@ -17,7 +15,7 @@ class Alertas(QtWidgets.QDialog):
             "color": "#E98616"
         },
         "error": {
-            "icono": "×",
+            "icono": "X",
             "color": "#E94B35"
         }
     }
@@ -230,9 +228,14 @@ class Alertas(QtWidgets.QDialog):
                 background-color: {color};
                 border: none;
                 border-radius: 32px;
-                font-family: "Segoe UI";
+
+                font-family: "Arial";
                 font-size: 32px;
                 font-weight: bold;
+
+                padding: 0px;
+                padding-bottom: 3px;
+                margin: 0px;
             }}
 
             QPushButton#btnCerrar {{
@@ -240,9 +243,14 @@ class Alertas(QtWidgets.QDialog):
                 background-color: transparent;
                 border: none;
                 border-radius: 18px;
-                font-family: "Segoe UI";
-                font-size: 27px;
+
+                font-family: "Arial";
+                font-size: 25px;
                 font-weight: bold;
+
+                padding: 0px;
+                padding-bottom: 2px;
+                margin: 0px;
             }}
 
             QPushButton#btnCerrar:hover {{
