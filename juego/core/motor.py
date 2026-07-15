@@ -180,11 +180,11 @@ MARGEN_COLISION_VERTICAL = round(20 * ESCALA_JUEGO)
 
 VIDAS_MAXIMAS = 5
 
-
-
-
 TIPOS_OBSTACULOS_SOLIDOS = frozenset({"caja", "fragmento", "arena","tronco","cofre","bloque","piedra"})
 TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser", "cactus"})
+
+
+
 
 # Las vidas se restauran completamente una hora después de perder la
 # primera vida. El motor consulta MySQL cada 30 segundos mientras el nivel
