@@ -179,13 +179,13 @@ VIDAS_MAXIMAS = 5
 
 
 
-<<<<<<< HEAD
+
 TIPOS_OBSTACULOS_SOLIDOS = frozenset({"caja", "fragmento", "arena"})
 TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser"})
-=======
+
 TIPOS_OBSTACULOS_SOLIDOS = frozenset({"caja", "fragmento", "arena","tronco","cofre","bloque","piedra"})
 TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser", "cactus"})
->>>>>>> faeacea022783240545ccf475e564f4266a60b24
+
 
 # Las vidas se restauran completamente una hora después de perder la
 # primera vida. El motor consulta MySQL cada 30 segundos mientras el nivel

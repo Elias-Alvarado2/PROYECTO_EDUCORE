@@ -120,9 +120,9 @@ class NivelPython01(JuegoBase):
         {
             "tipo": "puas",
             "imagen": "python/puas_obstaculo.png",
-            "x": 1950,
-            "ancho": 100,
-            "alto": 60,
+            "x": 1930,
+            "ancho": 95,
+            "alto": 50,
             "ajuste_y": 8,
             "hitbox_offset_x": 8,
             "hitbox_offset_y": 20,
@@ -136,9 +136,9 @@ class NivelPython01(JuegoBase):
         {
             "tipo": "puas",
             "imagen": "python/puas_obstaculo.png",
-            "x": 2300,
-            "ancho": 100,
-            "alto": 60,
+            "x": 2275,
+            "ancho": 95,
+            "alto": 50,
             "ajuste_y": 8,
             "hitbox_offset_x": 8,
             "hitbox_offset_y": 20,
@@ -225,6 +225,22 @@ class NivelPython01(JuegoBase):
     "hitbox_reducir_ancho": 8,
     "hitbox_reducir_alto": 0,
 },
+
+    # Túmulo colocado después de los fragmentos
+    {
+        "tipo": "piedra",
+        "imagen": "python/obstaculo_tumulo.png",
+        "x": 3300,
+        "ancho": 100,
+        "alto": 25,
+        "ajuste_y": 0,
+
+        # Hitbox para que el jugador pueda pararse encima
+        "hitbox_izquierda": 3,
+        "hitbox_derecha": 3,
+        "hitbox_arriba": 2,
+        "hitbox_abajo": 2,
+    },
     )
     PRACTICAS = (
         {
