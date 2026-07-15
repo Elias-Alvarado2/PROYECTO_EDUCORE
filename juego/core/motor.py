@@ -26,6 +26,9 @@ if str(_PROJECT_ROOT) not in sys.path:
 
 from juego.interfaz.practica import PantallaPractica
 from juego.interfaz.practica_codigo import PantallaPracticaCodigo
+from juego.interfaz.practica_eleccion_multiple import (
+    PantallaPracticaEleccionMultiple,
+)
 
 try:
     import mysql.connector
@@ -179,13 +182,9 @@ VIDAS_MAXIMAS = 5
 
 
 
-<<<<<<< HEAD
-TIPOS_OBSTACULOS_SOLIDOS = frozenset({"caja", "fragmento", "arena"})
-TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser"})
-=======
+
 TIPOS_OBSTACULOS_SOLIDOS = frozenset({"caja", "fragmento", "arena","tronco","cofre","bloque","piedra"})
 TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser", "cactus"})
->>>>>>> faeacea022783240545ccf475e564f4266a60b24
 
 # Las vidas se restauran completamente una hora después de perder la
 # primera vida. El motor consulta MySQL cada 30 segundos mientras el nivel
@@ -1549,12 +1548,14 @@ class ObjetoPractica:
         nombre="objeto",
         tipo="verdadero_falso",
         configuracion_codigo=None,
+        configuracion_eleccion=None,
     ):
         self.nombre = nombre
         self.pregunta = pregunta
         self.respuesta_correcta = respuesta_correcta
-        self.tipo = str(tipo or "verdadero_falso").lower()
+        self.tipo = str(tipo or "verdadero_falso").strip().lower()
         self.configuracion_codigo = dict(configuracion_codigo or {})
+        self.configuracion_eleccion = dict(configuracion_eleccion or {})
         self.completado = False
 
         # Cada moneda se habilita únicamente cuando termina
@@ -2813,6 +2814,7 @@ class JuegoEduCore:
 
         self.practica = PantallaPractica()
         self.practica_codigo = PantallaPracticaCodigo(ANCHO, ALTO)
+        self.practica_eleccion = PantallaPracticaEleccionMultiple()
         self.objeto_practica_actual = None
         self.objeto_en_contacto = None
         self.objetos_practica = []
@@ -3049,11 +3051,15 @@ class JuegoEduCore:
                 )
             )
 
+            # Verdadero/falso conserva un valor booleano. Para elección
+            # múltiple, la respuesta correcta se guarda dentro de su
+            # configuración y puede indicarse con 1, 2 o 3.
             respuesta_correcta = bool(
                 configuracion.get("respuesta_correcta", True)
             )
 
             configuracion_codigo = {}
+            configuracion_eleccion = {}
 
             if tipo == "codigo":
                 configuracion_codigo = {
@@ -3068,6 +3074,27 @@ class JuegoEduCore:
                     ),
                 }
 
+            elif tipo in {"eleccion_multiple", "multiple"}:
+                opciones = list(
+                    configuracion.get("opciones", []) or []
+                )
+
+                if len(opciones) != 3:
+                    print(
+                        f"[PRACTICAS] Se ignoró la práctica {indice}: "
+                        "una elección múltiple debe tener exactamente "
+                        "tres opciones."
+                    )
+                    continue
+
+                configuracion_eleccion = {
+                    "opciones": [str(opcion) for opcion in opciones],
+                    "respuesta_correcta": configuracion.get(
+                        "respuesta_correcta",
+                        1,
+                    ),
+                }
+
             objeto = ObjetoPractica(
                 x=x,
                 y=y,
@@ -3076,6 +3103,7 @@ class JuegoEduCore:
                 nombre=nombre,
                 tipo=tipo,
                 configuracion_codigo=configuracion_codigo,
+                configuracion_eleccion=configuracion_eleccion,
             )
 
             # Normalmente queda False. Puede configurarse True en PRACTICAS
@@ -3093,6 +3121,10 @@ class JuegoEduCore:
                 hasattr(self, "practica_codigo")
                 and self.practica_codigo.visible
             )
+            or (
+                hasattr(self, "practica_eleccion")
+                and self.practica_eleccion.visible
+            )
         )
 
     def obtener_practica_visible(self):
@@ -3101,6 +3133,12 @@ class JuegoEduCore:
             and self.practica_codigo.visible
         ):
             return self.practica_codigo
+
+        if (
+            hasattr(self, "practica_eleccion")
+            and self.practica_eleccion.visible
+        ):
+            return self.practica_eleccion
 
         if hasattr(self, "practica") and self.practica.visible:
             return self.practica
@@ -3113,6 +3151,9 @@ class JuegoEduCore:
 
         if hasattr(self, "practica_codigo"):
             self.practica_codigo.cerrar()
+
+        if hasattr(self, "practica_eleccion"):
+            self.practica_eleccion.cerrar()
 
     def _cargar_assets_interfaz(self):
         rutas_por_atributo = (
@@ -3693,6 +3734,22 @@ class JuegoEduCore:
             self.practica_codigo.iniciar(
                 objeto.pregunta,
                 objeto.configuracion_codigo,
+            )
+        elif objeto.tipo in {"eleccion_multiple", "multiple"}:
+            # Respaldo de seguridad: algunos niveles pueden haberse creado
+            # con una versión anterior del motor que todavía no inicializaba
+            # esta pantalla. Se crea aquí antes de intentar abrirla.
+            if (
+                not hasattr(self, "practica_eleccion")
+                or self.practica_eleccion is None
+            ):
+                self.practica_eleccion = (
+                    PantallaPracticaEleccionMultiple()
+                )
+
+            self.practica_eleccion.iniciar(
+                objeto.pregunta,
+                objeto.configuracion_eleccion,
             )
         else:
             self.practica.iniciar(
@@ -4859,6 +4916,9 @@ class JuegoEduCore:
 
         if hasattr(self, "practica_codigo") and self.practica_codigo:
             self.practica_codigo.dibujar(surface)
+
+        if hasattr(self, "practica_eleccion") and self.practica_eleccion:
+            self.practica_eleccion.dibujar(surface)
 
         self.transicion_iris.dibujar(surface)
         pygame.display.flip()
