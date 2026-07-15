@@ -261,8 +261,29 @@ QProgressBar::chunk {
      <number>0</number>
     </property>
    </widget>
+   <widget class="QLabel" name="lbl_logo">
+    <property name="geometry">
+     <rect>
+      <x>690</x>
+      <y>30</y>
+      <width>531</width>
+      <height>151</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap resource="../recursos.qrc">:/Logo/Logo/logo_confondo.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="../recursos.qrc"/>
+ </resources>
  <connections/>
 </ui>

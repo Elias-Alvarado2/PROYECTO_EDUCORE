@@ -4,6 +4,7 @@ from Alertas import Alertas
 from Transicion import FormTransicion, FormAnterior
 from AjusteResponsive import BotonesResponsivos
 from quitar_barra import quitar
+from LogoReutilizable import LogoReutilizable
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
@@ -60,6 +61,13 @@ class GestionUsuario(QtWidgets.QWidget):
                 / "Gestion-Usuarios.png"
         )
 
+        ruta_logo = (
+                PROYECTO_DIR
+                / "EXPO-DISEÑOS"
+                / "Logo"
+                / "logo_confondo.png"
+        )
+
         ruta_botones = (
                 PROYECTO_DIR
                 / "EXPO-DISEÑOS"
@@ -84,6 +92,7 @@ class GestionUsuario(QtWidgets.QWidget):
         # Carga el diseño de Qt Designer.
         uic.loadUi(str(ruta_ui), self)
 
+
         # Corrige las rutas de las imágenes de los StyleSheet.
         self.corregir_rutas_stylesheet(ruta_botones)
 
@@ -99,6 +108,13 @@ class GestionUsuario(QtWidgets.QWidget):
             self,
             ruta_imagen
         )
+
+        self.logo_reutilizable = LogoReutilizable(
+            self,
+            ruta_logo
+        )
+
+        self.lbl_logo.raise_()
 
         self.botones_responsivos = BotonesResponsivos(
             ventana=self,
@@ -229,6 +245,12 @@ class GestionUsuario(QtWidgets.QWidget):
             )
 
             self.fondo.lower()
+
+        if hasattr(self, "lbl_logo"):
+            self.lbl_logo.raise_()
+
+        if hasattr(self, "logo_reutilizable"):
+            self.logo_reutilizable.actualizar()
 
         # El frame contiene los cuatro botones.
         # También debe ocupar toda la ventana.

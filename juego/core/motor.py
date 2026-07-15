@@ -1984,7 +1984,7 @@ class NPC:
         self.zona_dialogo = pygame.Rect(
             self.rect.x - round(70 * ESCALA_JUEGO),
             self.rect.y,
-            self.rect.width + round(140 * ESCALA_JUEGO),
+            self.rect.width + round(100 * ESCALA_JUEGO),
             self.rect.height,
         )
 
@@ -2935,17 +2935,44 @@ class JuegoEduCore:
             npc.repetible = bool(
                 configuracion.get("repetible", True)
             )
-            try:
-                npc.numero_practica = max(
-                    0,
-                    int(configuracion.get("practica", 0) or 0),
-                )
-            except (TypeError, ValueError):
-                npc.numero_practica = 0
-                print(
-                    f"[NPCS] {npc.nombre}: el valor de 'practica' "
-                    "no es válido. No desbloqueará ninguna moneda."
-                )
+            valores_practica = configuracion.get(
+                "practicas",
+                configuracion.get("practica", ()),
+            )
+
+            if valores_practica is None:
+                valores_practica = ()
+            elif not isinstance(
+                valores_practica,
+                (list, tuple, set),
+            ):
+                valores_practica = (valores_practica,)
+
+            npc.numeros_practica = []
+
+            for valor_practica in valores_practica:
+                try:
+                    numero_practica = int(valor_practica)
+                except (TypeError, ValueError):
+                    print(
+                        f"[NPCS] {npc.nombre}: la práctica "
+                        f"{valor_practica!r} no es válida."
+                    )
+                    continue
+
+                if (
+                    numero_practica > 0
+                    and numero_practica not in npc.numeros_practica
+                ):
+                    npc.numeros_practica.append(numero_practica)
+
+            # Compatibilidad con código antiguo que todavía consulta un
+            # único número de práctica.
+            npc.numero_practica = (
+                npc.numeros_practica[0]
+                if npc.numeros_practica
+                else 0
+            )
 
             if self.id_lenguaje and self.db.activa:
                 npc.leccion = self.db.obtener_leccion_por_orden(
@@ -3690,29 +3717,41 @@ class JuegoEduCore:
         if npc is not None:
             npc.dialogo_terminado = True
 
-            numero_practica = int(
-                getattr(npc, "numero_practica", 0) or 0
+            numeros_practica = getattr(
+                npc,
+                "numeros_practica",
+                None,
             )
-            indice_practica = numero_practica - 1
 
-            if (
-                numero_practica > 0
-                and 0 <= indice_practica < len(self.objetos_practica)
-            ):
-                practica = self.objetos_practica[indice_practica]
-                practica.desbloqueada = True
-                self.leccion_npc_leida = True
+            if numeros_practica is None:
+                numero_practica = int(
+                    getattr(npc, "numero_practica", 0) or 0
+                )
+                numeros_practica = (
+                    (numero_practica,)
+                    if numero_practica > 0
+                    else ()
+                )
 
-                print(
-                    f"[PRACTICAS] {npc.nombre} desbloqueó "
-                    f"la práctica {numero_practica}: {practica.nombre}"
-                )
-            elif numero_practica > 0:
-                print(
-                    f"[PRACTICAS] {npc.nombre} intenta desbloquear "
-                    f"la práctica {numero_practica}, pero solo existen "
-                    f"{len(self.objetos_practica)} prácticas."
-                )
+            for numero_practica in numeros_practica:
+                indice_practica = numero_practica - 1
+
+                if 0 <= indice_practica < len(self.objetos_practica):
+                    practica = self.objetos_practica[indice_practica]
+                    practica.desbloqueada = True
+                    self.leccion_npc_leida = True
+
+                    print(
+                        f"[PRACTICAS] {npc.nombre} desbloqueó "
+                        f"la práctica {numero_practica}: "
+                        f"{practica.nombre}"
+                    )
+                else:
+                    print(
+                        f"[PRACTICAS] {npc.nombre} intenta desbloquear "
+                        f"la práctica {numero_practica}, pero solo existen "
+                        f"{len(self.objetos_practica)} prácticas."
+                    )
 
         self.npc_activo = None
 

@@ -1,11 +1,11 @@
 import sys
 from pathlib import Path
-
 from PyQt6 import QtWidgets, uic, QtGui, QtCore
 from Alertas import Alertas
 from Transicion import FormTransicion, FormAnterior
 from AjusteResponsive import BotonesResponsivos
 from quitar_barra import quitar
+from LogoReutilizable import LogoReutilizable
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
@@ -68,6 +68,13 @@ class Lecciones(QtWidgets.QWidget):
             / "Lecciones.png"
         )
 
+        ruta_logo = (
+                PROYECTO_DIR
+                / "EXPO-DISEÑOS"
+                / "Logo"
+                / "logo_confondo.png"
+        )
+
         if not ruta_ui.exists():
             raise FileNotFoundError(
                 f"No se encontró el archivo UI:\n{ruta_ui}"
@@ -106,6 +113,13 @@ class Lecciones(QtWidgets.QWidget):
             self,
             ruta_imagen
         )
+
+        self.logo_reutilizable = LogoReutilizable(
+            self,
+            ruta_logo
+        )
+
+        self.lbl_logo.raise_()
 
         # Hace responsivos todos los botones.
         self.botones_responsivos = BotonesResponsivos(
@@ -397,6 +411,12 @@ class Lecciones(QtWidgets.QWidget):
             )
 
             self.fondo.lower()
+
+        if hasattr(self, "lbl_logo"):
+            self.lbl_logo.raise_()
+
+        if hasattr(self, "logo_reutilizable"):
+            self.logo_reutilizable.actualizar()
 
         # El frame principal también ocupa toda la ventana.
         if hasattr(self, "Lecciones"):
