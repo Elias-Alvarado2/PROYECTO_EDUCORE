@@ -391,6 +391,9 @@ class JuegoBase(motor.JuegoEduCore):
             self.PRACTICAS,
             start=1,
         ):
+            tipo = str(
+                config.get("tipo", "verdadero_falso")
+            ).strip().lower()
             y_config = config.get("y")
 
             if y_config is None:
@@ -402,35 +405,65 @@ class JuegoBase(motor.JuegoEduCore):
             else:
                 y = self.escalar(y_config)
 
-            objetos.append(
-                motor.ObjetoPractica(
-                    x=self.escalar(config["x"]),
-                    y=y,
-                    pregunta=config["pregunta"],
-                    respuesta_correcta=bool(
-                        config.get("respuesta_correcta", True)
-                    ),
-                    nombre=config.get(
-                        "nombre",
-                        f"practica_{indice}",
-                    ),
-                    tipo=config.get(
-                        "tipo",
-                        "verdadero_falso",
-                    ),
-                    configuracion_codigo={
-                        "respuestas": deepcopy(
-                            config.get("respuestas", {})
-                        ),
-                        "codigo": deepcopy(
-                            config.get("codigo", [])
-                        ),
-                        "opciones": deepcopy(
-                            config.get("opciones", [])
-                        ),
-                    },
-                )
+            respuesta_configurada = config.get(
+                "respuesta_correcta",
+                True,
             )
+            configuracion_codigo = {}
+            configuracion_eleccion = {}
+
+            if tipo == "codigo":
+                configuracion_codigo = {
+                    "respuestas": deepcopy(
+                        config.get("respuestas", {})
+                    ),
+                    "codigo": deepcopy(
+                        config.get("codigo", [])
+                    ),
+                    "opciones": deepcopy(
+                        config.get("opciones", [])
+                    ),
+                }
+            elif tipo in {"eleccion_multiple", "multiple"}:
+                opciones = list(
+                    deepcopy(config.get("opciones", [])) or []
+                )
+
+                if len(opciones) != 3:
+                    print(
+                        f"[PRACTICAS] Se ignoró la práctica {indice}: "
+                        "una elección múltiple debe tener exactamente "
+                        "tres opciones."
+                    )
+                    continue
+
+                configuracion_eleccion = {
+                    "opciones": [str(opcion) for opcion in opciones],
+                    "respuesta_correcta": respuesta_configurada,
+                }
+
+            respuesta_objeto = respuesta_configurada
+
+            if tipo not in {"eleccion_multiple", "multiple"}:
+                respuesta_objeto = bool(respuesta_configurada)
+
+            objeto = motor.ObjetoPractica(
+                x=self.escalar(config["x"]),
+                y=y,
+                pregunta=config["pregunta"],
+                respuesta_correcta=respuesta_objeto,
+                nombre=config.get(
+                    "nombre",
+                    f"practica_{indice}",
+                ),
+                tipo=tipo,
+                configuracion_codigo=configuracion_codigo,
+                configuracion_eleccion=configuracion_eleccion,
+            )
+            objeto.desbloqueada = bool(
+                config.get("desbloqueada", False)
+            )
+            objetos.append(objeto)
 
         self.objetos_practica = objetos
 
