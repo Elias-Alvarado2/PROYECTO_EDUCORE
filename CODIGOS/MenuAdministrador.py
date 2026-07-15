@@ -5,6 +5,7 @@ from Alertas import Alertas
 from quitar_barra import quitar
 from Transicion import FormTransicion
 from AjusteResponsive import BotonesResponsivos
+from LogoReutilizable import LogoReutilizable
 
 
 class FondoImagen(QtWidgets.QLabel):
@@ -59,6 +60,13 @@ class MenuAdministrador(QtWidgets.QWidget):
                 / "Menu-Administrador.png"
         )
 
+        ruta_logo = (
+                PROYECTO_DIR
+                / "EXPO-DISEÑOS"
+                / "Logo"
+                / "logo_confondo.png"
+        )
+
         ruta_botones = (
                 PROYECTO_DIR
                 / "EXPO-DISEÑOS"
@@ -78,6 +86,11 @@ class MenuAdministrador(QtWidgets.QWidget):
         if not ruta_botones.exists():
             raise FileNotFoundError(
                 f"No se encontró la carpeta de botones:\n{ruta_botones}"
+            )
+
+        if not ruta_logo.exists():
+            raise FileNotFoundError(
+                f"No se encontró el logo:\n{ruta_logo}"
             )
 
         uic.loadUi(str(ruta_ui), self)
@@ -100,6 +113,13 @@ class MenuAdministrador(QtWidgets.QWidget):
             self,
             ruta_imagen
         )
+
+        self.logo_reutilizable = LogoReutilizable(
+            self,
+            ruta_logo
+        )
+
+        self.lbl_logo.raise_()
 
         # Hace responsivos todos los botones del menú.
         self.botones_responsivos = BotonesResponsivos(
@@ -244,6 +264,13 @@ class MenuAdministrador(QtWidgets.QWidget):
                 self.height()
             )
             self.MenuAdministrador.raise_()
+
+        # Mantiene el logo encima del fondo y del QFrame.
+        if hasattr(self, "lbl_logo"):
+            self.lbl_logo.raise_()
+
+        if hasattr(self, "logo_reutilizable"):
+            self.logo_reutilizable.actualizar()
 
         # Actualiza los botones después de cambiar
         # el tamaño del QFrame.

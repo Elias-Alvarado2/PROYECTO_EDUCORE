@@ -12,7 +12,12 @@ class NivelMySQL01(JuegoBase):
     NIVEL_ACTUAL = NIVEL_ACTUAL
     FONDO_ACTUAL = FONDO_ACTUAL
     JUGADOR_X_INICIAL = 170
-
+    '''
+    CARTEL_FINAL = {
+    "x": 4000,
+    "ajuste_y": -10,
+    "mostrar_bloqueado": True,
+}'''
     # Usa valores pequeños.
     # Negativo = sube.
     # Positivo = baja.
@@ -45,7 +50,15 @@ class NivelMySQL01(JuegoBase):
         "orden_leccion": 2,
         "requiere_anterior": True,
         "repetible": True,
-        "practica": 2,  
+        "practicas": (2,3)
+    },
+    {
+        "nombre": "pinguino_3",
+        "x": 3500,
+        "ajuste_y": -8,
+        "orden_leccion": 3,
+        "requiere_anterior": True,
+        "repetible": True,
     },
     )
     OBSTACULOS =(
@@ -121,6 +134,138 @@ class NivelMySQL01(JuegoBase):
             "hitbox_reducir_ancho": 20,
             "hitbox_reducir_alto":10,
         },
+         {
+            "tipo":"fragmento",
+            "imagen":"mysql/plataforma.png",
+            "x": 1940,
+            "ajuste_y":-40,
+            "ancho": 120,
+            "alto": 36,
+            "hitbox_offset_x": 10,
+            "hitbox_offset_y": 10,
+            "hitbox_reducir_ancho": 20,
+            "hitbox_reducir_alto":10,
+        },
+         {
+            "tipo":"fragmento",
+            "imagen":"mysql/plataforma.png",
+            "x": 2170,
+            "ajuste_y":-80,
+            "ancho": 120,
+            "alto": 36,
+            "hitbox_offset_x": 10,
+            "hitbox_offset_y": 10,
+            "hitbox_reducir_ancho": 20,
+            "hitbox_reducir_alto":10,
+        },
+         {
+            "tipo":"fragmento",
+            "imagen":"mysql/plataforma.png",
+            "x": 2390,
+            "ajuste_y":-120,
+            "ancho": 120,
+            "alto": 36,
+            "hitbox_offset_x": 10,
+            "hitbox_offset_y": 10,
+            "hitbox_reducir_ancho": 20,
+            "hitbox_reducir_alto":10,
+        },
+        {
+            "tipo":"puas",
+            "imagen":"mysql/pinchos.png",
+            "x": 2390,
+            "ajuste_y":-5,
+            "ancho": 80,
+            "alto": 50,
+            "hitbox_offset_x": 25,
+            "hitbox_offset_y": 30,
+            "hitbox_reducir_ancho": 45,
+            "hitbox_reducir_alto":25,
+        },
+        {
+            "tipo":"puas",
+            "imagen":"mysql/pinchos.png",
+            "x": 2480,
+            "ajuste_y":-5,
+            "ancho": 80,
+            "alto": 50,
+            "hitbox_offset_x": 25,
+            "hitbox_offset_y": 30,
+            "hitbox_reducir_ancho": 45,
+            "hitbox_reducir_alto":25,
+        },
+        {
+            "tipo":"puas",
+            "imagen":"mysql/pinchos.png",
+            "x": 2570,
+            "ajuste_y":-5,
+            "ancho": 80,
+            "alto": 50,
+            "hitbox_offset_x": 25,
+            "hitbox_offset_y": 30,
+            "hitbox_reducir_ancho": 45,
+            "hitbox_reducir_alto":25,
+        },
+         {
+            "tipo":"puas",
+            "imagen":"mysql/pinchos.png",
+            "x": 2660,
+            "ajuste_y":-5,
+            "ancho": 80,
+            "alto": 50,
+            "hitbox_offset_x": 25,
+            "hitbox_offset_y": 30,
+            "hitbox_reducir_ancho": 45,
+            "hitbox_reducir_alto":25,
+        },
+         {
+            "tipo":"puas",
+            "imagen":"mysql/pinchos.png",
+            "x": 2750,
+            "ajuste_y":-5,
+            "ancho": 80,
+            "alto": 50,
+            "hitbox_offset_x": 25,
+            "hitbox_offset_y": 30,
+            "hitbox_reducir_ancho": 45,
+            "hitbox_reducir_alto":25,
+        },
+        {
+            "tipo":"fragmento",
+            "imagen":"mysql/plataforma.png",
+            "x": 2700,
+            "ajuste_y":-120,
+            "ancho": 120,
+            "alto": 36,
+            "hitbox_offset_x": 10,
+            "hitbox_offset_y": 10,
+            "hitbox_reducir_ancho": 20,
+            "hitbox_reducir_alto":10,
+        },
+        {
+            "tipo":"fragmento",
+            "imagen":"mysql/plataforma.png",
+            "x": 2970,
+            "ajuste_y":-80,
+            "ancho": 120,
+            "alto": 36,
+            "hitbox_offset_x": 10,
+            "hitbox_offset_y": 10,
+            "hitbox_reducir_ancho": 20,
+            "hitbox_reducir_alto":10,
+        },
+        {
+            "tipo":"fragmento",
+            "imagen":"mysql/plataforma.png",
+            "x": 3190,
+            "ajuste_y":-40,
+            "ancho": 120,
+            "alto": 36,
+            "hitbox_offset_x": 10,
+            "hitbox_offset_y": 10,
+            "hitbox_reducir_ancho": 20,
+            "hitbox_reducir_alto":10,
+        },
     )
     
     PRACTICAS = (
@@ -132,7 +277,7 @@ class NivelMySQL01(JuegoBase):
             "nombre": "practica_mysql_01",
         },
         {
-        "x": 1800,
+        "x": 1840,
         "y": None,
         "tipo": "eleccion_multiple",
         "pregunta": (
@@ -146,6 +291,46 @@ class NivelMySQL01(JuegoBase):
         ],
         "respuesta_correcta": 2,
         "nombre": "mysql_eleccion_02",
+        },
+        {
+            "x": 2730,
+            "y": 370,
+            "tipo": "codigo",
+            "pregunta": (
+                "Arrastra las opciones correctas para completar la instruccion "
+                "que crea y empieza a usar una base de datos."
+            ),
+            "nombre": "practica_codigo_mysql_01",
+            "respuestas": {
+                "crear": "CREATE",
+                "base": "DATABASE",
+                "usar": "USE",
+            },
+            "codigo": [
+                {   
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"hueco": "crear"},
+                        {"hueco": "base"},
+                        {"texto": "educore;"},
+                    ],
+                },
+                {
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"hueco": "usar"},
+                        {"texto": " educore;"},
+                    ],
+                },
+            ],
+            "opciones": [
+                "CREATE",
+                "DATABASE",
+                "USE",
+                "USAR",
+                "DABATASE",
+                
+            ],
         },
     )
 

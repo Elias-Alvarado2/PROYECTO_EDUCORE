@@ -6,6 +6,7 @@ from ConexionBD import ConexionBD
 from Transicion import FormTransicion, FormAnterior
 from AjusteResponsive import ElementosResponsivos
 from quitar_barra import quitar
+from LogoReutilizable import LogoReutilizable
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
@@ -43,6 +44,13 @@ class EliminarUsuario(QtWidgets.QWidget):
                 / "Botones"
         )
 
+        ruta_logo = (
+                PROYECTO_DIR
+                / "EXPO-DISEÑOS"
+                / "Logo"
+                / "logo_confondo.png"
+        )
+
         if not ruta_ui.exists():
             raise FileNotFoundError(f"No se encontró el archivo UI:\n{ruta_ui}")
 
@@ -75,6 +83,13 @@ class EliminarUsuario(QtWidgets.QWidget):
         self.setMaximumSize(16777215, 16777215)
 
         self.fondo = FondoImagen(self, ruta_imagen)
+
+        self.logo_reutilizable = LogoReutilizable(
+            self,
+            ruta_logo
+        )
+
+        self.lbl_logo.raise_()
 
         self.elementos_responsivos = ElementosResponsivos(
             ventana=self.Eliminar_Usuario,
@@ -160,6 +175,12 @@ class EliminarUsuario(QtWidgets.QWidget):
                 self.height()
             )
             self.fondo.lower()
+
+        if hasattr(self, "lbl_logo"):
+            self.lbl_logo.raise_()
+
+        if hasattr(self, "logo_reutilizable"):
+            self.logo_reutilizable.actualizar()
 
         if hasattr(self, "Eliminar_Usuario"):
             self.Eliminar_Usuario.setGeometry(

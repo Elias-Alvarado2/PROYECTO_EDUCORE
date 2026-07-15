@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-from PyQt6 import QtGui, QtWidgets, uic
+from PyQt6 import QtGui, QtWidgets, uic, QtCore
 from Transicion import FormAnterior, FormTransicion
 from AjusteResponsive import BotonesResponsivos
 from quitar_barra import quitar
@@ -74,6 +74,12 @@ class NivelesMySQL(QtWidgets.QWidget):
             / "Niveles-MySQL.png"
         )
 
+        ruta_botones = (
+                proyecto_dir
+                / "EXPO-DISEÑOS"
+                / "Botones"
+        )
+
         if not ruta_ui.exists():
             raise FileNotFoundError(
                 f"No se encontró el archivo UI:\n{ruta_ui}"
@@ -84,9 +90,20 @@ class NivelesMySQL(QtWidgets.QWidget):
                 f"No se encontró la imagen:\n{ruta_imagen}"
             )
 
+        if not ruta_botones.exists():
+            raise FileNotFoundError(
+                f"No se encontró la carpeta de botones:\n{ruta_botones}"
+            )
+
         uic.loadUi(
             str(ruta_ui),
             self,
+        )
+
+        # Conserva los StyleSheet de Designer y corrige
+        # las rutas que comienzan con ../Botones/.
+        self.corregir_rutas_stylesheet(
+            ruta_botones
         )
 
         self.resize(
@@ -135,7 +152,56 @@ class NivelesMySQL(QtWidgets.QWidget):
             escalar_fuentes=False,
         )
 
+        self.configurar_botones()
         self.conectar_eventos()
+
+    def corregir_rutas_stylesheet(self, ruta_botones):
+        """
+        Conserva los StyleSheet creados en Qt Designer,
+        reemplazando ../Botones/ por la ruta absoluta.
+        """
+
+        ruta_absoluta = ruta_botones.resolve().as_posix()
+
+        # Revisa la ventana y todos los controles del formulario.
+        controles = [
+            self,
+            *self.findChildren(QtWidgets.QWidget),
+        ]
+
+        for control in controles:
+            estilo_original = control.styleSheet()
+
+            if not estilo_original:
+                continue
+
+            estilo_corregido = estilo_original
+
+            # Ejemplo:
+            # url("../Botones/carpeta/imagen.png")
+            estilo_corregido = estilo_corregido.replace(
+                'url("../Botones/',
+                f'url("{ruta_absoluta}/'
+            )
+
+            # Ejemplo:
+            # url('../Botones/carpeta/imagen.png')
+            estilo_corregido = estilo_corregido.replace(
+                "url('../Botones/",
+                f"url('{ruta_absoluta}/"
+            )
+
+            # Ejemplo:
+            # url(../Botones/carpeta/imagen.png)
+            estilo_corregido = estilo_corregido.replace(
+                "url(../Botones/",
+                f"url({ruta_absoluta}/"
+            )
+
+            if estilo_corregido != estilo_original:
+                control.setStyleSheet(
+                    estilo_corregido
+                )
 
     # ========================================================
     # CONEXIÓN DE BOTONES
@@ -390,7 +456,31 @@ class NivelesMySQL(QtWidgets.QWidget):
             )
             self.fondo.lower()
 
+        if hasattr(self, "botones_responsivos"):
+            self.botones_responsivos.ajustar()
+
         super().resizeEvent(event)
+
+    def configurar_botones(self):
+        botones = [
+            self.btnVolver,
+            self.btnNivel1,
+            self.btnNivel2,
+            self.btnNivel3,
+            self.btnNivel4,
+            self.btnNivel5,
+            self.btnComenzar,
+        ]
+
+        for boton in botones:
+            boton.setCursor(
+                QtGui.QCursor(
+                    QtCore.Qt.CursorShape.PointingHandCursor
+                )
+            )
+
+            # No usar boton.setStyleSheet() aquí,
+            # porque borraría el border-image de Designer.
 
 
 if __name__ == "__main__":
