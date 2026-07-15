@@ -38,8 +38,8 @@ class NivelPython01(JuegoBase):
     },
     {
         "nombre": "pinguino_2",
-        "x": 1900,
-        "ajuste_y": -60,
+        "x": 2390,
+        "ajuste_y": -8,
         "orden_leccion": 2,
         "requiere_anterior": True,
         "repetible": True,
@@ -70,7 +70,7 @@ class NivelPython01(JuegoBase):
             "alto": 35,
             "ajuste_y": -35,
             "hitbox_offset_x": 4,
-            "hitbox_offset_y": 4,
+            "hitbox_offset_y": 8,
         },
         {
             "tipo": "fragmento",
@@ -80,7 +80,7 @@ class NivelPython01(JuegoBase):
             "alto": 35,
             "ajuste_y": -75,
             "hitbox_offset_x": 4,
-            "hitbox_offset_y": 4,
+            "hitbox_offset_y": 8,
         },
         {
             "tipo": "fragmento",
@@ -90,7 +90,7 @@ class NivelPython01(JuegoBase):
             "alto": 35,
             "ajuste_y": -115,
             "hitbox_offset_x": 4,
-            "hitbox_offset_y": 4,
+            "hitbox_offset_y": 8,
         },
 
         # Escalera para bajar
@@ -102,7 +102,7 @@ class NivelPython01(JuegoBase):
             "alto": 35,
             "ajuste_y": -70,
             "hitbox_offset_x": 4,
-            "hitbox_offset_y": 4,
+            "hitbox_offset_y": 8,
         },
         {
             "tipo": "fragmento",
@@ -112,7 +112,7 @@ class NivelPython01(JuegoBase):
             "alto": 35,
             "ajuste_y": -25,
             "hitbox_offset_x": 4,
-            "hitbox_offset_y": 4,
+            "hitbox_offset_y": 8,
         },
 # ----------------------------------------------------
         # PÚAS NUEVAS
@@ -153,11 +153,11 @@ class NivelPython01(JuegoBase):
             "tipo": "fragmento",
             "imagen": "python/obstaculo_fragmento2.png",
             "x": 2520,
-            "ancho": 130,
+            "ancho": 100,
             "alto": 45,
             "ajuste_y": -20,
             "hitbox_offset_x": 4,
-            "hitbox_offset_y": 0,
+            "hitbox_offset_y": 8,
             "hitbox_reducir_ancho": 8,
             "hitbox_reducir_alto": 0,
         },
@@ -171,14 +171,14 @@ class NivelPython01(JuegoBase):
     # Más a la derecha
     "x": 2520,
 
-    "ancho": 130,
+    "ancho": 100,
     "alto": 45,
 
     # Más abajo, casi a nivel del suelo
     "ajuste_y": -20,
 
     "hitbox_offset_x": 4,
-    "hitbox_offset_y": 0,
+    "hitbox_offset_y": 8,
     "hitbox_reducir_ancho": 8,
     "hitbox_reducir_alto": 0,
 },
@@ -192,14 +192,14 @@ class NivelPython01(JuegoBase):
     # Más a la derecha
     "x": 2795,
 
-    "ancho": 130,
+    "ancho": 100,
     "alto": 45,
 
     # Más abajo, casi a nivel del suelo
     "ajuste_y": -20,
 
     "hitbox_offset_x": 4,
-    "hitbox_offset_y": 0,
+    "hitbox_offset_y": 8,
     "hitbox_reducir_ancho": 8,
     "hitbox_reducir_alto": 0,
 },
@@ -214,14 +214,14 @@ class NivelPython01(JuegoBase):
     # Más a la derecha que el primero
     "x": 2655,
 
-    "ancho": 130,
+    "ancho": 100,
     "alto": 45,
 
     # Más arriba que el primero
     "ajuste_y": -85,
 
     "hitbox_offset_x": 4,
-    "hitbox_offset_y": 0,
+    "hitbox_offset_y": 8,
     "hitbox_reducir_ancho": 8,
     "hitbox_reducir_alto": 0,
 },
@@ -246,12 +246,13 @@ class NivelPython01(JuegoBase):
         {
             "x": 1374,
             "y": 395,
-            "pregunta": 'En Python, una variable sirve para almacenar un dato que puede utilizarse después.',
+            "pregunta": 'La variable siguiente guarda un número entero:'
+            'cantidad = 10',
             "respuesta_correcta": True,
             "nombre": "practica_python_01",
         },
         {
-            "x": 1900,
+            "x": 2450,
             "y": None,
             "tipo": "codigo",
             "pregunta": (
