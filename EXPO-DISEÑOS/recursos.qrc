@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/Logo">
+    <file>Logo/logo_confondo.png</file>
+    <file>Logo/logo_transparente.png</file>
+  </qresource>
+</RCC>
