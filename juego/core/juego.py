@@ -230,6 +230,7 @@ class JuegoBase(motor.JuegoEduCore):
 
         # Carga únicamente las prácticas declaradas en el nivel actual.
         self.cargar_practicas_desde_nivel()
+        self.cargar_cartel_final_desde_nivel()
 
     # ========================================================
     # CREACIÓN DE OBSTÁCULOS

@@ -12,7 +12,12 @@ class NivelMySQL01(JuegoBase):
     NIVEL_ACTUAL = NIVEL_ACTUAL
     FONDO_ACTUAL = FONDO_ACTUAL
     JUGADOR_X_INICIAL = 170
-
+    '''
+    CARTEL_FINAL = {
+    "x": 4000,
+    "ajuste_y": -10,
+    "mostrar_bloqueado": True,
+}'''
     # Usa valores pequeños.
     # Negativo = sube.
     # Positivo = baja.
@@ -46,6 +51,14 @@ class NivelMySQL01(JuegoBase):
         "requiere_anterior": True,
         "repetible": True,
         "practicas": (2,3)
+    },
+    {
+        "nombre": "pinguino_3",
+        "x": 3500,
+        "ajuste_y": -8,
+        "orden_leccion": 3,
+        "requiere_anterior": True,
+        "repetible": True,
     },
     )
     OBSTACULOS =(
@@ -222,6 +235,30 @@ class NivelMySQL01(JuegoBase):
             "imagen":"mysql/plataforma.png",
             "x": 2700,
             "ajuste_y":-120,
+            "ancho": 120,
+            "alto": 36,
+            "hitbox_offset_x": 10,
+            "hitbox_offset_y": 10,
+            "hitbox_reducir_ancho": 20,
+            "hitbox_reducir_alto":10,
+        },
+        {
+            "tipo":"fragmento",
+            "imagen":"mysql/plataforma.png",
+            "x": 2970,
+            "ajuste_y":-80,
+            "ancho": 120,
+            "alto": 36,
+            "hitbox_offset_x": 10,
+            "hitbox_offset_y": 10,
+            "hitbox_reducir_ancho": 20,
+            "hitbox_reducir_alto":10,
+        },
+        {
+            "tipo":"fragmento",
+            "imagen":"mysql/plataforma.png",
+            "x": 3190,
+            "ajuste_y":-40,
             "ancho": 120,
             "alto": 36,
             "hitbox_offset_x": 10,

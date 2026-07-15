@@ -24,11 +24,15 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
-from juego.interfaz.practica import PantallaPractica
+from juego.interfaz.practica import (
+    PantallaPractica,
+    cargar_fuente_pixel as cargar_fuente_practica,
+)
 from juego.interfaz.practica_codigo import PantallaPracticaCodigo
 from juego.interfaz.practica_eleccion_multiple import (
     PantallaPracticaEleccionMultiple,
 )
+from juego.interfaz.cartel_final import CartelFinal
 
 try:
     import mysql.connector
@@ -114,6 +118,8 @@ RUTA_FUENTE_PIXEL = FUENTES_DIR / "PixelOperator-Bold.ttf"
 RUTA_BURBUJA_DIALOGO = UI_DIR / "BurbujaDialogo.png"
 RUTA_CUADRO_AVISO = UI_DIR / "cuadro_aviso.png"
 RUTA_MONEDA_PRACTICA = UI_DIR / "moneda_practica.png"
+# Imagen opcional. Si no existe, cartel_final.py dibuja un cartel pixel art.
+RUTA_CARTEL_FINAL = UI_DIR / "cartel_final.png"
 
 RUTA_BOTON_REANUDAR = UI_DIR / "reanudar.png"
 RUTA_BOTON_REANUDAR_CLICK = UI_DIR / "reanudar_click.png"
@@ -2227,6 +2233,13 @@ class Interaccion:
         if juego.game_over:
             return False
 
+        if (
+            hasattr(juego, "cartel_final")
+            and juego.cartel_final is not None
+            and juego.cartel_final.menu_visible
+        ):
+            return False
+
         if hasattr(juego, "transicion_iris") and juego.transicion_iris.activa():
             return False
 
@@ -2634,6 +2647,13 @@ class JuegoEduCore:
     def _inicializar_pygame(self):
         pygame.init()
 
+        # pygame.quit() invalida las fuentes de la ejecución anterior, pero
+        # las funciones con lru_cache conservan esos objetos. Se limpian antes
+        # de crear la interfaz de una nueva ejecución del nivel.
+        cargar_fuente_pixel.cache_clear()
+        cargar_fuente_orbitron.cache_clear()
+        cargar_fuente_practica.cache_clear()
+
         try:
             pygame.mixer.init()
         except pygame.error as error:
@@ -2685,6 +2705,7 @@ class JuegoEduCore:
         self.npcs = []
         self.npc = None
         self.npc_activo = None
+        self.cartel_final = None
 
         self.en_pausa = False
         self.boton_pausa_rects = {}
@@ -2819,6 +2840,7 @@ class JuegoEduCore:
         self.objeto_en_contacto = None
         self.objetos_practica = []
         self.cargar_practicas_desde_nivel()
+        self.cargar_cartel_final_desde_nivel()
 
     def cargar_npcs_desde_nivel(self):
         """
@@ -3141,6 +3163,85 @@ class JuegoEduCore:
 
             self.objetos_practica.append(objeto)
 
+    def cargar_cartel_final_desde_nivel(self):
+        """Crea el cartel final usando la configuración CARTEL_FINAL del nivel.
+
+        Ejemplo dentro de nivel_01.py:
+
+            CARTEL_FINAL = {
+                "x": 4400,
+                "ajuste_y": 0,
+                "mostrar_bloqueado": True,
+            }
+
+        Las coordenadas usan las mismas medidas pequeñas de NPCS, PRACTICAS
+        y OBSTACULOS. El motor aplica ESCALA_JUEGO automáticamente.
+        """
+        configuracion = getattr(self, "CARTEL_FINAL", {}) or {}
+
+        if not isinstance(configuracion, dict):
+            print(
+                "[CARTEL_FINAL] La configuración debe ser un diccionario. "
+                "Se usará la configuración automática."
+            )
+            configuracion = {}
+
+        longitud_nivel = float(
+            getattr(self, "LONGITUD_NIVEL", 5000)
+        )
+
+        x_config = configuracion.get(
+            "x",
+            max(700, longitud_nivel - 250),
+        )
+        x_mundo = round(float(x_config) * ESCALA_JUEGO)
+
+        ajuste_y = round(
+            float(configuracion.get("ajuste_y", 0))
+            * ESCALA_JUEGO
+        )
+
+        obtener_piso_nivel = getattr(
+            self,
+            "obtener_piso_colision_nivel",
+            None,
+        )
+
+        if callable(obtener_piso_nivel):
+            suelo_y = int(obtener_piso_nivel())
+        else:
+            suelo_y = PISO_COLISION_Y
+
+        nivel_actual = int(
+            getattr(
+                self,
+                "NIVEL_ACTUAL",
+                self.orden_leccion_solicitado or 1,
+            )
+        )
+        total_niveles = int(
+            getattr(self, "TOTAL_NIVELES", 6)
+        )
+
+        self.cartel_final = CartelFinal(
+            x_mundo=x_mundo,
+            suelo_y=suelo_y + ajuste_y,
+            ancho_pantalla=ANCHO,
+            alto_pantalla=ALTO,
+            escala_juego=ESCALA_JUEGO,
+            ruta_imagen=RUTA_CARTEL_FINAL,
+            ruta_fuente=RUTA_FUENTE_PIXEL,
+            siguiente_disponible=(nivel_actual < total_niveles),
+            mostrar_bloqueado=bool(
+                configuracion.get("mostrar_bloqueado", True)
+            ),
+        )
+
+        # Útil al volver a abrir una lección ya completada dentro de la misma
+        # ejecución. Normalmente se desbloquea al finalizar las prácticas.
+        if self.leccion_ya_completada:
+            self.cartel_final.desbloquear()
+
     def hay_practica_visible(self):
         return bool(
             (hasattr(self, "practica") and self.practica.visible)
@@ -3453,6 +3554,9 @@ class JuegoEduCore:
         self.objeto_practica_actual = None
         self.objeto_en_contacto = None
 
+        if self.cartel_final is not None:
+            self.cartel_final.cerrar_menu()
+
         self.cerrar_practicas()
 
         self.jugador.velocidad_y = 0
@@ -3658,6 +3762,10 @@ class JuegoEduCore:
             or self.game_over
             or self.transicion_iris.activa()
             or self.hay_practica_visible()
+            or (
+                self.cartel_final is not None
+                and self.cartel_final.menu_visible
+            )
         ):
             return 0
 
@@ -3690,6 +3798,10 @@ class JuegoEduCore:
                 and not self.en_pausa
                 and not self.transicion_iris.activa()
                 and not self.hay_practica_visible()
+                and not (
+                    self.cartel_final is not None
+                    and self.cartel_final.menu_visible
+                )
             ):
                 self.jugador.saltar()
 
@@ -3820,6 +3932,9 @@ class JuegoEduCore:
             )
 
         self.leccion_ya_completada = True
+
+        if self.cartel_final is not None:
+            self.cartel_final.desbloquear()
 
     def finalizar_practica_objeto(self, respuesta_correcta):
         objeto = self.objeto_practica_actual
@@ -4069,6 +4184,13 @@ class JuegoEduCore:
             self.jugador.actualizar_animacion(0)
             return
 
+        if (
+            self.cartel_final is not None
+            and self.cartel_final.menu_visible
+        ):
+            self.jugador.actualizar_animacion(0)
+            return
+
         practica_visible = self.obtener_practica_visible()
 
         if practica_visible is not None:
@@ -4213,6 +4335,16 @@ class JuegoEduCore:
                 2,
             )
 
+        if self.cartel_final is not None:
+            pygame.draw.rect(
+                pantalla,
+                (255, 70, 180),
+                self.cartel_final.obtener_zona_pantalla(
+                    self.camara_x
+                ),
+                2,
+            )
+
     def dibujar_fps(self):
         if not MOSTRAR_FPS:
             return
@@ -4303,7 +4435,15 @@ class JuegoEduCore:
         )
 
     def dibujar_instruccion_interaccion(self):
-        if self.en_dialogo or self.game_over or self.hay_practica_visible():
+        if (
+            self.en_dialogo
+            or self.game_over
+            or self.hay_practica_visible()
+            or (
+                self.cartel_final is not None
+                and self.cartel_final.menu_visible
+            )
+        ):
             return
 
         if not self.interaccion_actual:
@@ -4928,6 +5068,20 @@ class JuegoEduCore:
             ):
                 npc.dibujar(surface, camara_px)
 
+        if self.cartel_final is not None:
+            rect_cartel = self.cartel_final.obtener_rect_pantalla(
+                camara_px
+            )
+
+            if (
+                rect_cartel.right >= -margen
+                and rect_cartel.left <= ANCHO + margen
+            ):
+                self.cartel_final.dibujar_mundo(
+                    surface,
+                    camara_px,
+                )
+
         self.jugador.dibujar(surface)
         self.dibujar_panel_jugador()
         self.dibujar_instruccion_interaccion()
@@ -4959,8 +5113,37 @@ class JuegoEduCore:
         if hasattr(self, "practica_eleccion") and self.practica_eleccion:
             self.practica_eleccion.dibujar(surface)
 
+        if self.cartel_final is not None:
+            self.cartel_final.dibujar_interfaz(
+                surface,
+                camara_px,
+                self.jugador.obtener_rect_mundo(
+                    self.camara_x
+                ),
+            )
+
         self.transicion_iris.dibujar(surface)
         pygame.display.flip()
+
+    def _manejar_evento_cartel_final(self, evento):
+        if self.cartel_final is None:
+            return None
+
+        resultado = self.cartel_final.manejar_evento(
+            evento,
+            self.jugador.obtener_rect_mundo(
+                self.camara_x
+            ),
+            self.camara_x,
+        )
+
+        if (
+            resultado == CartelFinal.EVENTO_CONSUMIDO
+            and self.cartel_final.menu_visible
+        ):
+            self.interaccion_actual = None
+
+        return resultado
 
     def _manejar_evento_practica(self, evento):
         practica_visible = self.obtener_practica_visible()
@@ -5071,6 +5254,23 @@ class JuegoEduCore:
                     motivo_salida = "menu_niveles"
                     ejecutando = False
                     break
+
+                resultado_cartel = (
+                    self._manejar_evento_cartel_final(evento)
+                )
+
+                if resultado_cartel == CartelFinal.ACCION_MENU:
+                    motivo_salida = "menu_niveles"
+                    ejecutando = False
+                    break
+
+                if resultado_cartel == CartelFinal.ACCION_SIGUIENTE:
+                    motivo_salida = "siguiente_leccion"
+                    ejecutando = False
+                    break
+
+                if resultado_cartel == CartelFinal.EVENTO_CONSUMIDO:
+                    continue
 
                 if self._manejar_evento_practica(evento):
                     continue
