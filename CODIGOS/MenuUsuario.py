@@ -1,10 +1,10 @@
 from pathlib import Path
 from PyQt6 import QtWidgets, uic, QtGui, QtCore
-
 from Alertas import Alertas
 from AjusteResponsive import BotonesResponsivos
 from Transicion import FormTransicion
 from quitar_barra import quitar
+from LogoReutilizable import LogoReutilizable
 
 
 class FondoImagen(QtWidgets.QLabel):
@@ -67,6 +67,13 @@ class MenuUsuario(QtWidgets.QWidget):
             / "Menu-Usuario.png"
         )
 
+        ruta_logo = (
+                PROYECTO_DIR
+                / "EXPO-DISEÑOS"
+                / "Logo"
+                / "logo_confondo.png"
+        )
+
         ruta_botones = (
             PROYECTO_DIR
             / "EXPO-DISEÑOS"
@@ -117,6 +124,13 @@ class MenuUsuario(QtWidgets.QWidget):
             self,
             ruta_imagen
         )
+
+        self.logo_reutilizable = LogoReutilizable(
+            self,
+            ruta_logo
+        )
+
+        self.lbl_logo.raise_()
 
         self.botones_responsivos = BotonesResponsivos(
             ventana=self,
@@ -290,6 +304,12 @@ class MenuUsuario(QtWidgets.QWidget):
             )
 
             self.fondo.lower()
+
+        if hasattr(self, "lbl_logo"):
+            self.lbl_logo.raise_()
+
+        if hasattr(self, "logo_reutilizable"):
+            self.logo_reutilizable.actualizar()
 
         if hasattr(self, "MenuJugador"):
             self.MenuJugador.setGeometry(

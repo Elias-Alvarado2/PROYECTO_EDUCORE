@@ -6,6 +6,7 @@ from ConexionBD import ConexionBD
 from Transicion import FormTransicion, FormAnterior
 from AjusteResponsive import ElementosResponsivos
 from quitar_barra import quitar
+from LogoReutilizable import LogoReutilizable
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
@@ -58,6 +59,13 @@ class EditarUsuario(QtWidgets.QWidget):
                 / "Botones"
         )
 
+        ruta_logo = (
+                PROYECTO_DIR
+                / "EXPO-DISEÑOS"
+                / "Logo"
+                / "logo_confondo.png"
+        )
+
         if not ruta_ui.exists():
             raise FileNotFoundError(
                 f"No se encontró el archivo UI:\n{ruta_ui}"
@@ -103,6 +111,13 @@ class EditarUsuario(QtWidgets.QWidget):
             self,
             ruta_imagen
         )
+
+        self.logo_reutilizable = LogoReutilizable(
+            self,
+            ruta_logo
+        )
+
+        self.lbl_logo.raise_()
 
         # Ajuste automático del frame, botones, campos y ComboBox.
         self.elementos_responsivos = ElementosResponsivos(
@@ -197,6 +212,12 @@ class EditarUsuario(QtWidgets.QWidget):
                 self.height()
             )
             self.fondo.lower()
+
+        if hasattr(self, "lbl_logo"):
+            self.lbl_logo.raise_()
+
+        if hasattr(self, "logo_reutilizable"):
+            self.logo_reutilizable.actualizar()
 
         if hasattr(self, "elementos_responsivos"):
             self.elementos_responsivos.ajustar()
