@@ -32,6 +32,7 @@ from juego.interfaz.practica_codigo import PantallaPracticaCodigo
 from juego.interfaz.practica_eleccion_multiple import (
     PantallaPracticaEleccionMultiple,
 )
+from juego.interfaz.practica_ejemplo import PantallaPracticaEjemplo
 from juego.interfaz.cartel_final import CartelFinal
 
 try:
@@ -1555,6 +1556,7 @@ class ObjetoPractica:
         tipo="verdadero_falso",
         configuracion_codigo=None,
         configuracion_eleccion=None,
+        configuracion_ejemplo=None,
     ):
         self.nombre = nombre
         self.pregunta = pregunta
@@ -1562,6 +1564,7 @@ class ObjetoPractica:
         self.tipo = str(tipo or "verdadero_falso").strip().lower()
         self.configuracion_codigo = dict(configuracion_codigo or {})
         self.configuracion_eleccion = dict(configuracion_eleccion or {})
+        self.configuracion_ejemplo = dict(configuracion_ejemplo or {})
         self.completado = False
 
         # Cada moneda se habilita únicamente cuando termina
@@ -2836,6 +2839,7 @@ class JuegoEduCore:
         self.practica = PantallaPractica()
         self.practica_codigo = PantallaPracticaCodigo(ANCHO, ALTO)
         self.practica_eleccion = PantallaPracticaEleccionMultiple()
+        self.practica_ejemplo = PantallaPracticaEjemplo()
         self.objeto_practica_actual = None
         self.objeto_en_contacto = None
         self.objetos_practica = []
@@ -3092,6 +3096,9 @@ class JuegoEduCore:
                 configuracion.get("tipo", "verdadero_falso")
             ).strip().lower()
 
+            if tipo == "practica_ejemplo":
+                tipo = "ejemplo"
+
             pregunta = str(configuracion.get("pregunta", ""))
             nombre = str(
                 configuracion.get(
@@ -3109,6 +3116,7 @@ class JuegoEduCore:
 
             configuracion_codigo = {}
             configuracion_eleccion = {}
+            configuracion_ejemplo = {}
 
             if tipo == "codigo":
                 configuracion_codigo = {
@@ -3144,6 +3152,19 @@ class JuegoEduCore:
                     ),
                 }
 
+            elif tipo == "ejemplo":
+                configuracion_ejemplo = {
+                    "imagen": configuracion.get("imagen", ""),
+                    "ancho": configuracion.get(
+                        "ancho",
+                        configuracion.get("ancho_imagen"),
+                    ),
+                    "alto": configuracion.get(
+                        "alto",
+                        configuracion.get("alto_imagen"),
+                    ),
+                }
+
             objeto = ObjetoPractica(
                 x=x,
                 y=y,
@@ -3153,6 +3174,7 @@ class JuegoEduCore:
                 tipo=tipo,
                 configuracion_codigo=configuracion_codigo,
                 configuracion_eleccion=configuracion_eleccion,
+                configuracion_ejemplo=configuracion_ejemplo,
             )
 
             # Normalmente queda False. Puede configurarse True en PRACTICAS
@@ -3253,6 +3275,10 @@ class JuegoEduCore:
                 hasattr(self, "practica_eleccion")
                 and self.practica_eleccion.visible
             )
+            or (
+                hasattr(self, "practica_ejemplo")
+                and self.practica_ejemplo.visible
+            )
         )
 
     def obtener_practica_visible(self):
@@ -3268,6 +3294,12 @@ class JuegoEduCore:
         ):
             return self.practica_eleccion
 
+        if (
+            hasattr(self, "practica_ejemplo")
+            and self.practica_ejemplo.visible
+        ):
+            return self.practica_ejemplo
+
         if hasattr(self, "practica") and self.practica.visible:
             return self.practica
 
@@ -3282,6 +3314,9 @@ class JuegoEduCore:
 
         if hasattr(self, "practica_eleccion"):
             self.practica_eleccion.cerrar()
+
+        if hasattr(self, "practica_ejemplo"):
+            self.practica_ejemplo.cerrar()
 
     def _cargar_assets_interfaz(self):
         rutas_por_atributo = (
@@ -3901,6 +3936,17 @@ class JuegoEduCore:
             self.practica_eleccion.iniciar(
                 objeto.pregunta,
                 objeto.configuracion_eleccion,
+            )
+        elif objeto.tipo == "ejemplo":
+            if (
+                not hasattr(self, "practica_ejemplo")
+                or self.practica_ejemplo is None
+            ):
+                self.practica_ejemplo = PantallaPracticaEjemplo()
+
+            self.practica_ejemplo.iniciar(
+                objeto.pregunta,
+                objeto.configuracion_ejemplo,
             )
         else:
             self.practica.iniciar(
@@ -5112,6 +5158,9 @@ class JuegoEduCore:
 
         if hasattr(self, "practica_eleccion") and self.practica_eleccion:
             self.practica_eleccion.dibujar(surface)
+
+        if hasattr(self, "practica_ejemplo") and self.practica_ejemplo:
+            self.practica_ejemplo.dibujar(surface)
 
         if self.cartel_final is not None:
             self.cartel_final.dibujar_interfaz(

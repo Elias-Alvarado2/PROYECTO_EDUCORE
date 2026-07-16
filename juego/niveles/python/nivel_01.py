@@ -52,7 +52,7 @@ class NivelPython01(JuegoBase):
         "orden_leccion": 3,
         "requiere_anterior": True,
         "repetible": True,
-        "practica": 0,
+        "practica": 3,
     },
 )
 
@@ -230,7 +230,7 @@ class NivelPython01(JuegoBase):
     {
         "tipo": "piedra",
         "imagen": "python/obstaculo_tumulo.png",
-        "x": 3300,
+        "x": 3500,
         "ancho": 100,
         "alto": 25,
         "ajuste_y": 0,
@@ -241,6 +241,52 @@ class NivelPython01(JuegoBase):
         "hitbox_arriba": 2,
         "hitbox_abajo": 2,
     },
+      # Túmulo colocado después de los fragmentos
+    {
+        "tipo": "piedra",
+        "imagen": "python/obstaculo_tumulo.png",
+        "x": 3600,
+        "ancho": 100,
+        "alto": 25,
+        "ajuste_y": -40,
+
+        # Hitbox para que el jugador pueda pararse encima
+        "hitbox_izquierda": 3,
+        "hitbox_derecha": 3,
+        "hitbox_arriba": 2,
+        "hitbox_abajo": 2,
+    },
+       # Túmulo colocado después de los fragmentos
+    {
+        "tipo": "piedra",
+        "imagen": "python/obstaculo_tumulo.png",
+        "x": 3700,
+        "ancho": 100,
+        "alto": 25,
+        "ajuste_y": -40,
+
+        # Hitbox para que el jugador pueda pararse encima
+        "hitbox_izquierda": 3,
+        "hitbox_derecha": 3,
+        "hitbox_arriba": 2,
+        "hitbox_abajo": 2,
+    },
+        # Túmulo colocado después de los fragmentos
+    {
+        "tipo": "piedra",
+        "imagen": "python/obstaculo_tumulo.png",
+        "x": 3800,
+        "ancho": 100,
+        "alto": 25,
+        "ajuste_y": 0,
+
+        # Hitbox para que el jugador pueda pararse encima
+        "hitbox_izquierda": 3,
+        "hitbox_derecha": 3,
+        "hitbox_arriba": 2,
+        "hitbox_abajo": 2,
+    },
+
     )
     PRACTICAS = (
         {
@@ -251,15 +297,31 @@ class NivelPython01(JuegoBase):
             "respuesta_correcta": True,
             "nombre": "practica_python_01",
         },
+         {
+        "x": 3000,
+        "y": None,
+        "tipo": "eleccion_multiple",
+        "pregunta": (
+        "¿Qué tipo de información guarda la variable nombre?"
+        "para comenzar a trabajar en ella?"
+        ),
+        "opciones": [
+            "SELECT",
+            "USE",
+            "CREATE",
+        ],
+        "respuesta_correcta": 2,
+        "nombre": "practica_codigo_python_03",
+        },
         {
-            "x": 2450,
+            "x": 4000,
             "y": None,
             "tipo": "codigo",
             "pregunta": (
                 "Arrastra las opciones correctas para completar el código "
                 "que comprueba si edad es mayor o igual que 18."
             ),
-            "nombre": "practica_codigo_python_01",
+            "nombre": "practica_codigo_python_02",
             "respuestas": {
                 "variable": "edad",
                 "condicional": "if",
@@ -297,6 +359,7 @@ class NivelPython01(JuegoBase):
                 "18",
             ],
         },
+       
     )
 
 
