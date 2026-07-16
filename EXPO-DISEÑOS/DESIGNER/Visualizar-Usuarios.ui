@@ -147,27 +147,47 @@ QTableView::item:selected:hover {
    <widget class="QPushButton" name="btn_anterior">
     <property name="geometry">
      <rect>
-      <x>80</x>
-      <y>920</y>
-      <width>81</width>
-      <height>26</height>
+      <x>60</x>
+      <y>970</y>
+      <width>241</width>
+      <height>51</height>
      </rect>
     </property>
     <property name="text">
-     <string>ANTERIOR</string>
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>../Botones/botones_visualizar_usuarios/boton_anterior.png</normaloff>../Botones/botones_visualizar_usuarios/boton_anterior.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>245</width>
+      <height>245</height>
+     </size>
     </property>
    </widget>
    <widget class="QPushButton" name="btn_siguiente">
     <property name="geometry">
      <rect>
-      <x>1770</x>
-      <y>930</y>
-      <width>81</width>
-      <height>26</height>
+      <x>1620</x>
+      <y>980</y>
+      <width>251</width>
+      <height>51</height>
      </rect>
     </property>
     <property name="text">
-     <string>SIGUIENTE</string>
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset>
+      <normaloff>../Botones/botones_visualizar_usuarios/boton_siguiente.png</normaloff>../Botones/botones_visualizar_usuarios/boton_siguiente.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>245</width>
+      <height>245</height>
+     </size>
     </property>
    </widget>
    <widget class="QLabel" name="lbl_logo">
