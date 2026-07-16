@@ -43,13 +43,13 @@ class NivelMySQL02(JuegoBase):
 
     PRACTICAS = (
     {
-    "x": 2200,
+    "x": 400,
     "y": None,
     "tipo": "ejemplo",
-    "pregunta": "Observa cómo se organizan los datos en esta tabla.",
-    "imagen": "mysql/tabla_usuarios.png",
-    "ancho": 1000,
-    "alto": 500,
+    "pregunta": "Observa esta tabla como ejemplo.",
+    "imagen": "mysql/tabla_ejemplo1.png",
+    "ancho": 750,
+    "alto": 350,
     "nombre": "ejemplo_tabla_usuarios",
 },
     )

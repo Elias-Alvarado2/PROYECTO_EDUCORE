@@ -91,7 +91,8 @@ class PantallaPracticaEjemplo(PantallaPractica):
         self.rect_cerrar = self.rect_relativo(38, 35, 78, 72)
         self.rect_titulo = self.rect_relativo(132, 43, 255, 62)
         self.rect_texto = self.rect_relativo(95, 145, 1258, 125)
-        self.rect_area_imagen = self.rect_relativo(95, 292, 1258, 550)
+        self.rect_panel_imagen = self.rect_relativo(240, 292, 960, 550)
+        self.rect_area_imagen = self.rect_relativo(122, 319, 1204, 496)
         self.rect_responder = self.rect_relativo(885, 882, 415, 90)
 
         # Conserva los atributos esperados por PantallaPractica.
@@ -217,39 +218,91 @@ class PantallaPracticaEjemplo(PantallaPractica):
 
         ancho_original = max(1, imagen.get_width())
         alto_original = max(1, imagen.get_height())
-        ancho = (
+        ancho_limite = (
             round(self.ancho_imagen * self.escala_x)
             if self.ancho_imagen is not None
-            else None
+            else self.rect_area_imagen.width
         )
-        alto = (
+        alto_limite = (
             round(self.alto_imagen * self.escala_y)
             if self.alto_imagen is not None
-            else None
+            else self.rect_area_imagen.height
         )
 
-        usar_todo_el_espacio = ancho is None and alto is None
-
-        if usar_todo_el_espacio:
-            ancho = ancho_original
-            alto = alto_original
-        elif ancho is None:
-            ancho = round(ancho_original * (alto / alto_original))
-        elif alto is None:
-            alto = round(alto_original * (ancho / ancho_original))
-
-        escala_limite = min(
-            self.rect_area_imagen.width / max(1, ancho),
-            self.rect_area_imagen.height / max(1, alto),
+        # Ancho y alto forman una caja limite. Una sola escala conserva
+        # siempre la proporcion original de tablas, diagramas y texto.
+        escala = min(
+            ancho_limite / ancho_original,
+            alto_limite / alto_original,
+            self.rect_area_imagen.width / ancho_original,
+            self.rect_area_imagen.height / alto_original,
         )
-        if not usar_todo_el_espacio:
-            escala_limite = min(1.0, escala_limite)
-
-        ancho = max(1, round(ancho * escala_limite))
-        alto = max(1, round(alto * escala_limite))
+        ancho = max(1, round(ancho_original * escala))
+        alto = max(1, round(alto_original * escala))
         rect = pygame.Rect(0, 0, ancho, alto)
         rect.center = self.rect_area_imagen.center
         return rect
+
+    def _dibujar_panel_imagen(self, pantalla: pygame.Surface) -> None:
+        """Dibuja el mismo panel oscuro de la practica de codigo."""
+        desplazamiento_x = max(2, round(5 * self.escala_x))
+        desplazamiento_y = max(2, round(6 * self.escala_y))
+        sombra = self.rect_panel_imagen.move(
+            desplazamiento_x,
+            desplazamiento_y,
+        )
+        borde = self.rect_panel_imagen.inflate(
+            max(4, round(7 * self.escala_x)),
+            max(4, round(7 * self.escala_y)),
+        )
+        interior = self.rect_panel_imagen.inflate(
+            -max(4, round(7 * self.escala_x)),
+            -max(4, round(7 * self.escala_y)),
+        )
+        corte = max(6, round(13 * self.escala_y))
+
+        pygame.draw.polygon(
+            pantalla,
+            (6, 17, 29),
+            self.puntos_pixel(sombra, corte),
+        )
+        pygame.draw.polygon(
+            pantalla,
+            (222, 238, 241),
+            self.puntos_pixel(borde, corte + 1),
+        )
+        pygame.draw.polygon(
+            pantalla,
+            (12, 43, 72),
+            self.puntos_pixel(self.rect_panel_imagen, corte),
+        )
+        pygame.draw.polygon(
+            pantalla,
+            (10, 23, 38),
+            self.puntos_pixel(interior, max(4, corte - 2)),
+        )
+
+    def _dibujar_imagen_suavizada(
+        self,
+        pantalla: pygame.Surface,
+        rect: pygame.Rect,
+    ) -> None:
+        """Escala fotografias y diagramas sin el dentado del pixel art."""
+        if self.imagen_ejemplo is None:
+            return
+
+        tamano = (max(1, rect.width), max(1, rect.height))
+        clave_cache = ("ejemplo_suave", id(self.imagen_ejemplo), tamano)
+        imagen_escalada = self._cache_imagenes_escaladas.get(clave_cache)
+
+        if imagen_escalada is None:
+            imagen_escalada = pygame.transform.smoothscale(
+                self.imagen_ejemplo,
+                tamano,
+            )
+            self._cache_imagenes_escaladas[clave_cache] = imagen_escalada
+
+        pantalla.blit(imagen_escalada, rect.topleft)
 
     def _dibujar_texto(self, pantalla: pygame.Surface) -> None:
         fuente = self.fuente_pregunta
@@ -291,20 +344,13 @@ class PantallaPracticaEjemplo(PantallaPractica):
             y += salto
 
     def _dibujar_error_imagen(self, pantalla: pygame.Surface) -> None:
-        self.dibujar_caja_pixel(
-            pantalla,
-            self.rect_area_imagen,
-            (255, 238, 214),
-            (8, 35, 70),
-            sombra=False,
-        )
         mensaje = self.error_imagen or "No se pudo cargar la imagen"
         self.dibujar_texto_centrado(
             pantalla,
             mensaje,
             self.fuente_resultado,
             self.rect_area_imagen,
-            (180, 45, 45),
+            (255, 145, 135),
         )
 
     def dibujar(self, pantalla: pygame.Surface) -> None:
@@ -337,16 +383,15 @@ class PantallaPracticaEjemplo(PantallaPractica):
             (255, 70, 70),
         )
         self._dibujar_texto(pantalla)
+        self._dibujar_panel_imagen(pantalla)
 
         rect_imagen = self._obtener_rect_imagen()
         if rect_imagen is None:
             self._dibujar_error_imagen(pantalla)
         else:
-            self.dibujar_imagen_ajustada(
+            self._dibujar_imagen_suavizada(
                 pantalla,
-                self.imagen_ejemplo,
                 rect_imagen,
-                mantener_aspecto=False,
             )
 
         self.dibujar_boton(
