@@ -80,7 +80,7 @@ def obtener_argumentos():
     parser.add_argument(
         "--nivel",
         type=int,
-        default=2,
+        default=3,
     )
 
     parser.add_argument(

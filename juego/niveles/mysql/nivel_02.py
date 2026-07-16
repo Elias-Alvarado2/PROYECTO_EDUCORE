@@ -30,7 +30,7 @@ class NivelMySQL02(JuegoBase):
     NPCS = (
     {
         "nombre": "pinguino_1",
-        "x": 200,
+        "x": 300,
         "ajuste_y": -8,
         "orden_leccion": 4,
         "requiere_anterior": False,
@@ -39,12 +39,30 @@ class NivelMySQL02(JuegoBase):
     },
     {
         "nombre": "pinguino_2",
-        "x": 1800,
-        "ajuste_y": -200,
+        "x": 1750,
+        "ajuste_y": -225,
         "orden_leccion": 5,
         "requiere_anterior": True,
         "repetible": True,
-        "practica": 2,
+        "practica": (2,3),
+    },
+    {
+        "nombre": "pinguino_3",
+        "x": 2850,
+        "ajuste_y": -8,
+        "orden_leccion": 6,
+        "requiere_anterior": True,
+        "repetible": True,
+        "practica": (4,5),
+    },
+    {
+        "nombre": "pinguino_4",
+        "x": 3700,
+        "ajuste_y": -8,
+        "orden_leccion": 7,
+        "requiere_anterior": True,
+        "repetible": True,
+        "practica": (6),
     },
 
     )
@@ -122,6 +140,128 @@ class NivelMySQL02(JuegoBase):
             "hitbox_reducir_ancho": 20,
             "hitbox_reducir_alto":10,
         },
+        {
+            "tipo":"puas",
+            "imagen":"mysql/pinchos.png",
+            "x": 2010,
+            "cantidad": 3,
+            "ajuste_y":-5,
+            "ancho": 80,
+            "alto": 50,
+            "hitbox_offset_x": 25,
+            "hitbox_offset_y": 30,
+            "hitbox_reducir_ancho": 45,
+            "hitbox_reducir_alto":25,
+        },
+        {
+            "tipo":"fragmento",
+            "imagen":"mysql/plataforma.png",
+            "x": 2080,
+            "ajuste_y":-60,
+            "ancho": 120,
+            "alto": 36,
+            "hitbox_offset_x": 10,
+            "hitbox_offset_y": 10,
+            "hitbox_reducir_ancho": 20,
+            "hitbox_reducir_alto":10,
+        },
+        {
+            "tipo":"puas",
+            "imagen":"mysql/pinchos.png",
+            "x": 2550,
+            "ajuste_y":-5,
+            "ancho": 80,
+            "alto": 50,
+            "hitbox_offset_x": 25,
+            "hitbox_offset_y": 30,
+            "hitbox_reducir_ancho": 45,
+            "hitbox_reducir_alto":25,
+        },
+        {
+            "tipo":"puas",
+            "imagen":"mysql/pinchos.png",
+            "x": 2750,
+            "ajuste_y":-5,
+            "ancho": 80,
+            "alto": 50,
+            "hitbox_offset_x": 25,
+            "hitbox_offset_y": 30,
+            "hitbox_reducir_ancho": 45,
+            "hitbox_reducir_alto":25,
+        },
+
+         {
+            "tipo":"tronco",
+            "imagen":"mysql/tronco.png",
+            "x": 3000,
+            "ajuste_y":-5,
+            "ancho": 120,
+            "alto": 50,
+            "hitbox_offset_x": 10,
+            "hitbox_offset_y": 15,
+            "hitbox_reducir_ancho": 20,
+            "hitbox_reducir_alto":20,
+        },
+        {
+            "tipo":"puas",
+            "imagen":"mysql/pinchos.png",
+            "x": 3120,
+            "ajuste_y":-5,
+            "ancho": 80,
+            "alto": 50,
+            "hitbox_offset_x": 25,
+            "hitbox_offset_y": 30,
+            "hitbox_reducir_ancho": 45,
+            "hitbox_reducir_alto":25,
+        },
+        {
+            "tipo":"puas",
+            "imagen":"mysql/pinchos.png",
+            "x": 3225,
+            "ajuste_y":-5,
+            "ancho": 80,
+            "alto": 50,
+            "hitbox_offset_x": 25,
+            "hitbox_offset_y": 30,
+            "hitbox_reducir_ancho": 45,
+            "hitbox_reducir_alto":25,
+        },
+         {
+            "tipo":"tronco",
+            "imagen":"mysql/tronco.png",
+            "x": 3300,
+            "ajuste_y":-5,
+            "ancho": 120,
+            "alto": 50,
+            "hitbox_offset_x": 10,
+            "hitbox_offset_y": 15,
+            "hitbox_reducir_ancho": 20,
+            "hitbox_reducir_alto":20,
+        },
+         {
+            "tipo":"bloque",
+            "imagen":"mysql/bloque.png",
+            "x": 3850,
+            "ajuste_y":-5,
+            "ancho": 100,
+            "alto": 36,
+            "hitbox_offset_x": 10,
+            "hitbox_offset_y": 10,
+            "hitbox_reducir_ancho": 20,
+            "hitbox_reducir_alto":10,
+        },
+         {
+            "tipo":"fragmento",
+            "imagen":"mysql/plataforma.png",
+            "x": 4000,
+            "ajuste_y":-60,
+            "ancho": 120,
+            "alto": 36,
+            "hitbox_offset_x": 10,
+            "hitbox_offset_y": 10,
+            "hitbox_reducir_ancho": 20,
+            "hitbox_reducir_alto":10,
+        },
     )
 
     PRACTICAS = (
@@ -135,6 +275,106 @@ class NivelMySQL02(JuegoBase):
     "alto": 350,
     "nombre": "ejemplo_tabla_usuarios",
     },
+    {
+        "x": 2120,
+        "y": 430,
+        "tipo": "eleccion_multiple",
+        "pregunta": (
+        "¿Qué tipo de dato almacena numeros enteros? "
+        ),
+        "opciones": [
+            "INT",
+            "VARCHAR",
+            "DATE",
+        ],
+        "respuesta_correcta": 1,
+        "nombre": "mysql_eleccion_01",
+        },
+    {
+            "x": 2430,
+            "y": None,
+            "tipo": "codigo",
+            "pregunta": (
+                "Arrastra las opciones correctas para completar la instruccion "
+                "que crea una tabla."
+            ),
+            "nombre": "practica_codigo_mysql_01",
+            "respuestas": {
+                "tabla": "TABLE",
+                "par": "(",
+                "id":"id_estudiante",
+                "varchar":"VARCHAR(50)"
+            },
+            "codigo": [
+                {   
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"texto": "CREATE "},
+                        {"hueco": "tabla"},
+                        {"texto": " estudiantes "},
+                        {"hueco": "par"}
+                    ],
+                },
+                {
+                    "indentacion": 1,
+                    "segmentos": [
+                        {"hueco": "id"},
+                        {"texto": " INT,"},
+                    ],
+                },
+                {
+                    "indentacion": 1,
+                    "segmentos": [
+                        {"texto": "nombre "},
+                        {"hueco": "varchar"},
+                    ],
+                },
+                {
+                    "indentacion": 1,
+                    "segmentos": [
+                        {"texto": ");"},
+                    ],
+                },
+            ],
+            "opciones": [
+                "TABLE",
+                "(",
+                "id_estudiante",
+                "USAR",
+                "INT",
+                "VARCHAR(50)",
+                
+            ],
+        },
+        {
+        "x": 3450,
+        "y": None,
+        "tipo": "eleccion_multiple",
+        "pregunta": (
+        "¿Qué valores tendrá el campo id INT AUTO_INCREMENT PRIMARY KEY? "
+        ),
+        "opciones": [
+            "1,2,3...",
+            "2,5,4...",
+            "10,15,20...",
+        ],
+        "respuesta_correcta": 1,
+        "nombre": "mysql_eleccion_01",
+        },
+        {
+            "x": 3500,
+            "y": None,
+            "pregunta": 'Cuando usamos PRIMARY KEY pueden haber dos registros con la misma Clave primaria.',
+            "respuesta_correcta": False,
+            "nombre": "practica_mysql_01",
+        },
+        {
+            "x": 4040,
+            "y": 440,
+            "pregunta": '¿El siguiente campo puede quedar vacio? \n edad INT NOT NULL',
+            "respuesta_correcta": False,
+            "nombre": "practica_mysql_01",
+        },
     )
 
 

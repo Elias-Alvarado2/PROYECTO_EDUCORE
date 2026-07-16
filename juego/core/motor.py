@@ -280,8 +280,8 @@ PERSONAJES_CONFIG = {
         _FRAMES_CERDO,
         escala=5.1,
 
-        hitbox_izquierda=60,
-        hitbox_derecha=60,
+        hitbox_izquierda=50,
+        hitbox_derecha=40,
         hitbox_arriba=60,
         hitbox_abajo=20,
     ),
@@ -314,9 +314,9 @@ PERSONAJES_CONFIG = {
         _FRAMES_GATO_SALTAR,
         escala=4.3,
 
-        hitbox_izquierda=30,
-        hitbox_derecha=30,
-        hitbox_arriba=110,
+        hitbox_izquierda=40,
+        hitbox_derecha=40,
+        hitbox_arriba=115,
         hitbox_abajo=20,
     ),
 
@@ -3091,9 +3091,9 @@ class JuegoEduCore:
         if not self.npcs:
             print("[NPCS] No se creó ningún pingüino válido.")
 
-    def obtener_zona_interaccion_npc(self, npc):
+    def npc_esta_desbloqueado(self, npc):
         if npc is None:
-            return None
+            return False
 
         indice = getattr(npc, "indice_npc", 0)
 
@@ -3101,7 +3101,13 @@ class JuegoEduCore:
             npc_anterior = self.npcs[indice - 1]
 
             if not getattr(npc_anterior, "dialogo_terminado", False):
-                return None
+                return False
+
+        return True
+
+    def obtener_zona_interaccion_npc(self, npc):
+        if not self.npc_esta_desbloqueado(npc):
+            return None
 
         if (
             not getattr(npc, "repetible", True)
@@ -4425,6 +4431,9 @@ class JuegoEduCore:
             )
 
         for npc in self.npcs:
+            if not self.npc_esta_desbloqueado(npc):
+                continue
+
             zona_npc = pygame.Rect(
                 int(npc.zona_dialogo.x - self.camara_x),
                 int(npc.zona_dialogo.y),
@@ -5164,6 +5173,9 @@ class JuegoEduCore:
                 objeto_activo.dibujar(surface, camara_px)
 
         for npc in self.npcs:
+            if not self.npc_esta_desbloqueado(npc):
+                continue
+
             npc_x = round(npc.rect.x - camara_px)
 
             if (

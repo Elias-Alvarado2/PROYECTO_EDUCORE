@@ -202,6 +202,12 @@ class PantallaPracticaCodigo:
     botones utilizan la misma animación de rebote de la práctica original.
     """
 
+    # Todos los huecos vacios comienzan con estas mismas medidas. El ancho de
+    # 72 px corresponde aproximadamente al hueco pequeno que aparece despues
+    # de "estudiantes" y evita revelar la respuesta por el tamano del espacio.
+    ANCHO_HUECO_VACIO = 72
+    ALTO_HUECO_VACIO = 50
+
     def __init__(self, ancho: int = 1920, alto: int = 1080):
         self.ancho = int(ancho)
         self.alto = int(alto)
@@ -390,6 +396,12 @@ class PantallaPracticaCodigo:
                 return token
         return None
 
+    def _obtener_tamano_hueco_vacio(self) -> tuple[int, int]:
+        """Devuelve la medida comun de un hueco antes de colocar una ficha."""
+        # No se consulta la respuesta correcta ni las opciones disponibles.
+        # De esa manera el tamano del hueco vacio nunca da pistas al jugador.
+        return self.ANCHO_HUECO_VACIO, self.ALTO_HUECO_VACIO
+
     def _recalcular_codigo(self) -> None:
         huecos_anteriores = self.huecos
         self.fragmentos = []
@@ -397,6 +409,7 @@ class PantallaPracticaCodigo:
 
         respuestas = self.configuracion.get("respuestas", {})
         lineas = self.configuracion.get("codigo", [])
+        ancho_vacio, alto_vacio = self._obtener_tamano_hueco_vacio()
         x_inicial = self.rect_codigo.x + 42
         y = self.rect_codigo.y + 38
         alto_linea = max(56, self.fuente_codigo.get_height() + 28)
@@ -422,11 +435,8 @@ class PantallaPracticaCodigo:
 
                 identificador = str(segmento["hueco"])
                 respuesta = str(respuestas.get(identificador, ""))
-                ancho_respuesta, alto_respuesta = self.fuente_codigo.size(respuesta)
-                ancho_base = int(
-                    segmento.get("ancho", max(72, ancho_respuesta + 34))
-                )
-                alto_base = max(50, alto_respuesta + 20)
+                ancho_base = ancho_vacio
+                alto_base = alto_vacio
 
                 token_id = None
                 if identificador in huecos_anteriores:
@@ -437,7 +447,10 @@ class PantallaPracticaCodigo:
                 alto_hueco = alto_base
 
                 if token is not None:
-                    ancho_hueco = max(ancho_base, token.rect.width + 12)
+                    # El hueco solo cambia de tamano despues de colocar una
+                    # ficha y usa el ancho de ESA ficha, sea correcta o no.
+                    # Al retirarla, _recalcular_codigo restaura 72 x 50.
+                    ancho_hueco = token.rect.width + 12
                     alto_hueco = max(alto_base, token.rect.height + 10)
 
                 rect = pygame.Rect(x, y - 8, ancho_hueco, alto_hueco)
