@@ -7,6 +7,7 @@ from juego.interfaz.practica_codigo import PantallaPracticaCodigo
 from juego.interfaz.practica_eleccion_multiple import (
     PantallaPracticaEleccionMultiple,
 )
+from juego.interfaz.practica_ejemplo import PantallaPracticaEjemplo
 
 
 
@@ -14,6 +15,11 @@ TIPOS_ELECCION_MULTIPLE = {
     "eleccion_multiple",
     "seleccion_multiple",
     "multiple",
+}
+
+TIPOS_EJEMPLO = {
+    "ejemplo",
+    "practica_ejemplo",
 }
 
 
@@ -237,6 +243,7 @@ class JuegoBase(motor.JuegoEduCore):
         self.practica_eleccion = (
             PantallaPracticaEleccionMultiple()
         )
+        self.practica_ejemplo = PantallaPracticaEjemplo()
 
         self.objeto_practica_actual = None
         self.objeto_en_contacto = None
@@ -412,6 +419,8 @@ class JuegoBase(motor.JuegoEduCore):
 
             if tipo in TIPOS_ELECCION_MULTIPLE:
                 tipo = "eleccion_multiple"
+            elif tipo in TIPOS_EJEMPLO:
+                tipo = "ejemplo"
 
             y_config = config.get("y")
 
@@ -430,6 +439,7 @@ class JuegoBase(motor.JuegoEduCore):
             )
             configuracion_codigo = {}
             configuracion_eleccion = {}
+            configuracion_ejemplo = {}
 
             if tipo == "codigo":
                 configuracion_codigo = {
@@ -461,6 +471,19 @@ class JuegoBase(motor.JuegoEduCore):
                     "respuesta_correcta": respuesta_configurada,
                 }
 
+            elif tipo == "ejemplo":
+                configuracion_ejemplo = {
+                    "imagen": config.get("imagen", ""),
+                    "ancho": config.get(
+                        "ancho",
+                        config.get("ancho_imagen"),
+                    ),
+                    "alto": config.get(
+                        "alto",
+                        config.get("alto_imagen"),
+                    ),
+                }
+
             respuesta_objeto = respuesta_configurada
 
             if tipo != "eleccion_multiple":
@@ -478,6 +501,7 @@ class JuegoBase(motor.JuegoEduCore):
                 tipo=tipo,
                 configuracion_codigo=configuracion_codigo,
                 configuracion_eleccion=configuracion_eleccion,
+                configuracion_ejemplo=configuracion_ejemplo,
             )
             objeto.desbloqueada = bool(
                 config.get("desbloqueada", False)

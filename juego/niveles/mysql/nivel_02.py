@@ -27,37 +27,31 @@ class NivelMySQL02(JuegoBase):
         (0, LONGITUD_NIVEL),
     )
 
+    NPCS = (
+    {
+        "nombre": "pinguino_1",
+        "x": 200,
+        "ajuste_y": -8,
+        "orden_leccion": 4,
+        "requiere_anterior": False,
+        "repetible": True,
+        "practica": 1,
+    },)
+
     OBSTACULOS = (
-        {
-            "tipo": "tronco",
-            "imagen": "tronco.png",
-            "x": 580,
-            "ajuste_y": 40,
-            "hitbox_offset_x": 10,
-            "hitbox_offset_y": 40,
-            "hitbox_reducir_ancho": 20,
-            "hitbox_reducir_alto": 70,
-        },
-        {
-            "tipo": "tronco",
-            "imagen": "tronco.png",
-            "x": 1450,
-            "ajuste_y": 40,
-            "hitbox_offset_x": 10,
-            "hitbox_offset_y": 40,
-            "hitbox_reducir_ancho": 20,
-            "hitbox_reducir_alto": 70,
-        },
     )
 
     PRACTICAS = (
-        {
-            "x": 1340,
-            "y": None,
-            "pregunta": 'En MySQL, SELECT se utiliza para consultar datos de una tabla.',
-            "respuesta_correcta": True,
-            "nombre": "practica_mysql_02",
-        },
+    {
+    "x": 2200,
+    "y": None,
+    "tipo": "ejemplo",
+    "pregunta": "Observa cómo se organizan los datos en esta tabla.",
+    "imagen": "mysql/tabla_usuarios.png",
+    "ancho": 1000,
+    "alto": 500,
+    "nombre": "ejemplo_tabla_usuarios",
+},
     )
 
 
