@@ -61,9 +61,9 @@ background-color: transparent;
     <property name="geometry">
      <rect>
       <x>690</x>
-      <y>10</y>
+      <y>-10</y>
       <width>561</width>
-      <height>121</height>
+      <height>151</height>
      </rect>
     </property>
     <property name="text">
