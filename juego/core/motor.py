@@ -316,7 +316,7 @@ PERSONAJES_CONFIG = {
 
         hitbox_izquierda=30,
         hitbox_derecha=30,
-        hitbox_arriba=35,
+        hitbox_arriba=110,
         hitbox_abajo=20,
     ),
 
@@ -1680,7 +1680,7 @@ class Jugador:
         self.velocidad_animacion_salto = 10
 
         self.velocidad_y = 0
-        self.fuerza_salto = -15
+        self.fuerza_salto = -17
         self.gravedad = 0.975
         self.velocidad_caida_maxima = 22.5
 
@@ -2042,20 +2042,78 @@ class CajaDialogo:
         self.fuente_pequena = cargar_fuente_pixel(24)
 
         self.rect = pygame.Rect(40, 0, 100, 100)
+        self.ancho_pantalla = 0
+        self.alto_pantalla = 0
+        self.alto_base = self.rect.height
+        self.margen_inferior = 0
 
     def redimensionar(self, ancho, alto):
-        margen_inferior = round(30 * ESCALA_JUEGO)
+        self.ancho_pantalla = ancho
+        self.alto_pantalla = alto
+        self.margen_inferior = round(30 * ESCALA_JUEGO)
 
         ancho_caja = min(ancho - 120, round(760 * ESCALA_JUEGO))
         alto_caja = round(150 * ESCALA_JUEGO)
 
         ancho_caja = max(round(360 * ESCALA_JUEGO), ancho_caja)
         alto_caja = max(round(120 * ESCALA_JUEGO), alto_caja)
+        self.alto_base = alto_caja
 
-        x = (ancho - ancho_caja) // 2
-        y = alto - alto_caja - margen_inferior
+        self.rect = pygame.Rect(0, 0, ancho_caja, alto_caja)
+        self._colocar_caja(alto_caja)
 
-        self.rect = pygame.Rect(x, y, ancho_caja, alto_caja)
+        if self.visible and self.paginas:
+            self._ajustar_alto_a_pagina()
+
+    def _colocar_caja(self, alto_caja):
+        x = (self.ancho_pantalla - self.rect.width) // 2
+        y = self.alto_pantalla - alto_caja - self.margen_inferior
+        self.rect = pygame.Rect(x, y, self.rect.width, alto_caja)
+
+    def _pagina_actual_es_codigo(self):
+        primera_linea = self.texto_completo.split("\n", 1)[0]
+        return primera_linea.strip() == "Ejemplo:"
+
+    def _capacidad_lineas(self, alto_caja, salto_linea):
+        margen_y = int(alto_caja * 0.24)
+        ultimo_y_visible = alto_caja - 65
+        espacio_lineas = ultimo_y_visible - margen_y
+
+        if espacio_lineas < 0:
+            return 0
+
+        return espacio_lineas // salto_linea + 1
+
+    def _ajustar_alto_a_pagina(self):
+        alto_caja = self.alto_base
+
+        if self._pagina_actual_es_codigo():
+            margen_x = int(self.rect.width * 0.075)
+            ancho_texto = self.rect.width - (margen_x * 2)
+            lineas = self.dividir_lineas(
+                self.texto_completo,
+                ancho_texto,
+            )
+            salto_linea = self.fuente.get_height() + 7
+            margen_superior_minimo = round(20 * ESCALA_JUEGO)
+            alto_maximo = max(
+                self.alto_base,
+                self.alto_pantalla
+                - self.margen_inferior
+                - margen_superior_minimo,
+            )
+
+            while (
+                self._capacidad_lineas(alto_caja, salto_linea)
+                < len(lineas)
+                and alto_caja < alto_maximo
+            ):
+                alto_caja = min(
+                    alto_caja + salto_linea,
+                    alto_maximo,
+                )
+
+        self._colocar_caja(alto_caja)
 
     def iniciar(self, paginas):
         self.visible = True
@@ -2068,6 +2126,7 @@ class CajaDialogo:
         self.texto_actual = ""
         self.indice = 0
         self.contador_tiempo = 0
+        self._ajustar_alto_a_pagina()
 
     def actualizar(self, dt):
         if not self.visible:
@@ -3469,7 +3528,6 @@ class JuegoEduCore:
                     ),
                     mensaje=(
                         "Presiona ENTER para iniciar la lección "
-                        f"{npc.orden_leccion}"
                     ),
                     accion=(
                         lambda npc=npc:
