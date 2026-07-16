@@ -232,8 +232,7 @@ class LoginWindow(QtWidgets.QDialog):
                 f"No se pudo abrir el registro.\n\nDetalles:\n{e}",
                 "error"
             )
-
-
+            
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
 
