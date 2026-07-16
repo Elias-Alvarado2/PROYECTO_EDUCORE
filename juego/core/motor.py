@@ -573,6 +573,16 @@ def dividir_texto_en_paginas(texto, max_caracteres=105):
 
 
 def construir_paginas_leccion(leccion, nombre_lenguaje):
+    """Construye las paginas respetando el orden de la leccion.
+
+    Todos los bloques son opcionales y se muestran en este orden:
+    1. contenido_teoria
+    2. codigo_ejemplo
+    3. contenido_final
+
+    Si alguno esta vacio o contiene NULL, simplemente se omite y no se
+    genera una pagina en blanco.
+    """
     if not leccion:
         return [
             "Hola, soy tu guia.",
@@ -583,13 +593,31 @@ def construir_paginas_leccion(leccion, nombre_lenguaje):
     titulo = normalizar_texto(leccion.get("titulo"))
     teoria = normalizar_texto(leccion.get("contenido_teoria"))
     codigo = normalizar_texto(leccion.get("codigo_ejemplo"))
+    contenido_final = normalizar_texto(
+        leccion.get("contenido_final")
+    )
 
-    paginas = [
-        f"Leccion de {nombre_lenguaje}: {titulo}",
-    ]
+    paginas = []
 
-    paginas.extend(dividir_texto_en_paginas(teoria, max_caracteres=105))
+    if titulo:
+        paginas.append(
+            f"Leccion de {nombre_lenguaje}: {titulo}"
+        )
+    else:
+        paginas.append(
+            f"Leccion de {nombre_lenguaje}"
+        )
 
+    # 1. Texto inicial, solamente cuando existe.
+    if teoria:
+        paginas.extend(
+            dividir_texto_en_paginas(
+                teoria,
+                max_caracteres=105,
+            )
+        )
+
+    # 2. Ejemplo de codigo, solamente cuando existe.
     if codigo:
         lineas_codigo = codigo.split("\n")
         bloque = "Ejemplo:\n"
@@ -597,7 +625,10 @@ def construir_paginas_leccion(leccion, nombre_lenguaje):
         for linea in lineas_codigo:
             posible = bloque + linea + "\n"
 
-            if len(posible) > 115 and bloque.strip() != "Ejemplo:":
+            if (
+                len(posible) > 115
+                and bloque.strip() != "Ejemplo:"
+            ):
                 paginas.append(bloque.rstrip())
                 bloque = "Ejemplo:\n" + linea + "\n"
             else:
@@ -605,6 +636,15 @@ def construir_paginas_leccion(leccion, nombre_lenguaje):
 
         if bloque.strip():
             paginas.append(bloque.rstrip())
+
+    # 3. Texto posterior al ejemplo, solamente cuando existe.
+    if contenido_final:
+        paginas.extend(
+            dividir_texto_en_paginas(
+                contenido_final,
+                max_caracteres=105,
+            )
+        )
 
     return paginas
 
@@ -959,7 +999,8 @@ class ConexionEduCore:
         leccion = self.seleccionar_uno(
             """
             SELECT id_leccion, id_lenguaje, titulo, contenido_teoria,
-                   codigo_ejemplo, orden, puntos, estado
+                   codigo_ejemplo, contenido_final,
+                   orden, puntos, estado
             FROM leccion
             WHERE id_lenguaje = %s
               AND orden = %s
@@ -975,7 +1016,8 @@ class ConexionEduCore:
         return self.seleccionar_uno(
             """
             SELECT id_leccion, id_lenguaje, titulo, contenido_teoria,
-                   codigo_ejemplo, orden, puntos, estado
+                   codigo_ejemplo, contenido_final,
+                   orden, puntos, estado
             FROM leccion
             WHERE id_lenguaje = %s
               AND estado = 'Activa'
@@ -997,7 +1039,8 @@ class ConexionEduCore:
         return self.seleccionar_uno(
             """
             SELECT id_leccion, id_lenguaje, titulo, contenido_teoria,
-                   codigo_ejemplo, orden, puntos, estado
+                   codigo_ejemplo, contenido_final,
+                   orden, puntos, estado
             FROM leccion
             WHERE id_lenguaje = %s
               AND orden = %s

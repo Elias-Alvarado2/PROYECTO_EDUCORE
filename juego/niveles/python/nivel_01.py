@@ -302,64 +302,47 @@ class NivelPython01(JuegoBase):
         "y": None,
         "tipo": "eleccion_multiple",
         "pregunta": (
-        "¿Qué tipo de información guarda la variable nombre?"
-        "para comenzar a trabajar en ella?"
+        "¿Qué tipo de información guarda la variable 'nombre'?\n"
+        """nombre = 'Ana'"""
         ),
         "opciones": [
-            "SELECT",
-            "USE",
-            "CREATE",
+            "Un número entero",
+            "Un texto",
+            "Un valor verdadero o falso",
         ],
         "respuesta_correcta": 2,
-        "nombre": "practica_codigo_python_03",
+        "nombre": "practica_codigo_python_02",
         },
+       {
+    "x": 3700,
+    "y": 430,
+    "tipo": "codigo",
+    "pregunta": (
+        "Arrastra las opciones correctas para completar el código. "
+        "Crea una variable llamada edad que guarde el número 15."
+    ),
+    "nombre": "practica_codigo_python_03",
+    "respuestas": {
+        "variable": "edad",
+        "valor": "15",
+    },
+    "codigo": [
         {
-            "x": 4000,
-            "y": None,
-            "tipo": "codigo",
-            "pregunta": (
-                "Arrastra las opciones correctas para completar el código "
-                "que comprueba si edad es mayor o igual que 18."
-            ),
-            "nombre": "practica_codigo_python_02",
-            "respuestas": {
-                "variable": "edad",
-                "condicional": "if",
-                "funcion": "print",
-            },
-            "codigo": [
-                {   
-                    "indentacion": 0,
-                    "segmentos": [
-                        {"hueco": "variable"},
-                        {"texto": " = 18"},
-                    ],
-                },
-                {
-                    "indentacion": 0,
-                    "segmentos": [
-                        {"hueco": "condicional"},
-                        {"texto": " edad >= 18:"},
-                    ],
-                },
-                {
-                    "indentacion": 1,
-                    "segmentos": [
-                        {"hueco": "funcion"},
-                        {"texto": '("Mayor de edad")'},
-                    ],
-                },
-            ],
-            "opciones": [
-                "while",
-                "print",
-                "edad",
-                "input",
-                "if",
-                "18",
+            "indentacion": 0,
+            "segmentos": [
+                {"hueco": "variable"},
+                {"texto": " = "},
+                {"hueco": "valor"},
             ],
         },
-       
+    ],
+    "opciones": [
+        "nombre",
+        "edad",
+        '"15"',
+        "15",
+    ],
+},
     )
 
 

@@ -80,16 +80,7 @@ class JuegoBase(motor.JuegoEduCore):
     )
 
     OBSTACULOS = (
-        {
-            "tipo": "tronco",
-            "imagen": "tronco.png",
-            "x": 500,
-            "ajuste_y": 40,
-            "hitbox_offset_x": 10,
-            "hitbox_offset_y": 40,
-            "hitbox_reducir_ancho": 20,
-            "hitbox_reducir_alto": 70,
-        },
+       
     )
 
     # Si un nivel no declara PRACTICAS, no aparece ninguna.
