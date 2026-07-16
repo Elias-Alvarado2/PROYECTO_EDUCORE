@@ -149,8 +149,8 @@ QLineEdit:focus {
    <widget class="QLineEdit" name="txt_nombreusuario">
     <property name="geometry">
      <rect>
-      <x>630</x>
-      <y>510</y>
+      <x>625</x>
+      <y>513</y>
       <width>931</width>
       <height>31</height>
      </rect>
@@ -173,8 +173,8 @@ QLineEdit:focus {
    <widget class="QLineEdit" name="txt_correo">
     <property name="geometry">
      <rect>
-      <x>520</x>
-      <y>570</y>
+      <x>518</x>
+      <y>576</y>
       <width>1031</width>
       <height>31</height>
      </rect>
@@ -198,7 +198,7 @@ QLineEdit:focus {
     <property name="geometry">
      <rect>
       <x>560</x>
-      <y>640</y>
+      <y>638</y>
       <width>991</width>
       <height>31</height>
      </rect>
