@@ -156,13 +156,19 @@ class Lecciones(QtWidgets.QWidget):
                 )
             )
 
+            # Al comenzar, todos los lenguajes aparecen grises.
+            self.aplicar_escala_grises(
+                boton,
+                activar=True
+            )
+
         self.btnComenzar.setCursor(
             QtGui.QCursor(
                 QtCore.Qt.CursorShape.PointingHandCursor
             )
         )
 
-        # El botón comienza desactivado hasta elegir un lenguaje.
+        # Desactivado hasta elegir un lenguaje.
         self.btnComenzar.setEnabled(False)
 
     def conectar_eventos(self):
@@ -193,25 +199,27 @@ class Lecciones(QtWidgets.QWidget):
     def seleccionar_lenguaje(self, lenguaje):
         self.lenguaje_seleccionado = lenguaje
 
-        # Habilita el botón Comenzar.
-        self.btnComenzar.setEnabled(True)
+        botones = {
+            "Python": self.btnPython,
+            "Java": self.btnJava,
+            "C": self.btnC,
+            "MySQL": self.btnMySQL,
+        }
 
-        # Limpia la selección anterior.
+        # Todos vuelven a ponerse grises.
         self.limpiar_estilos_lenguajes()
 
-        boton = None
+        # Recupera los colores del botón seleccionado.
+        boton_seleccionado = botones.get(lenguaje)
 
-        if lenguaje == "Python":
-            boton = self.btnPython
+        if boton_seleccionado is not None:
+            self.aplicar_escala_grises(
+                boton_seleccionado,
+                activar=False
+            )
 
-        elif lenguaje == "Java":
-            boton = self.btnJava
-
-        elif lenguaje == "C":
-            boton = self.btnC
-
-        elif lenguaje == "MySQL":
-            boton = self.btnMySQL
+        # Habilita el botón Comenzar.
+        self.btnComenzar.setEnabled(True)
 
     def limpiar_estilos_lenguajes(self):
         botones_lenguaje = [
@@ -220,6 +228,12 @@ class Lecciones(QtWidgets.QWidget):
             self.btnC,
             self.btnMySQL,
         ]
+
+        for boton in botones_lenguaje:
+            self.aplicar_escala_grises(
+                boton,
+                activar=True
+            )
 
     def comenzar_aventura(self):
         if self.lenguaje_seleccionado is None:
@@ -477,6 +491,36 @@ class Lecciones(QtWidgets.QWidget):
             self.fondo.lower()
 
         super().resizeEvent(event)
+
+    def aplicar_escala_grises(self, boton, activar=True):
+        """
+        Coloca el botón en escala de grises o recupera
+        sus colores originales.
+        """
+
+        if activar:
+            efecto_gris = QtWidgets.QGraphicsColorizeEffect(
+                boton
+            )
+
+            efecto_gris.setColor(
+                QtGui.QColor(
+                    115,
+                    115,
+                    115
+                )
+            )
+
+            # 1.0 = completamente gris.
+            efecto_gris.setStrength(1.0)
+
+            boton.setGraphicsEffect(
+                efecto_gris
+            )
+
+        else:
+            # Quita el efecto y muestra la imagen original.
+            boton.setGraphicsEffect(None)
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
