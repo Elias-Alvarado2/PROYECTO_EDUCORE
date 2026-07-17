@@ -83,6 +83,10 @@ class JuegoBase(motor.JuegoEduCore):
        
     )
 
+    # Espacio horizontal predeterminado entre copias de una fila. Se expresa
+    # en las mismas unidades pequenas usadas por x y ancho en cada nivel.
+    SEPARACION_OBSTACULOS_FILA = 10
+
     # Si un nivel no declara PRACTICAS, no aparece ninguna.
     PRACTICAS = ()
 
@@ -192,7 +196,7 @@ class JuegoBase(motor.JuegoEduCore):
 
         self.obstaculos = [
             self._crear_obstaculo(config)
-            for config in deepcopy(self.OBSTACULOS)
+            for config in self._expandir_configuraciones_obstaculos()
         ]
 
         self.colocar_jugador_en_inicio()
@@ -247,6 +251,44 @@ class JuegoBase(motor.JuegoEduCore):
     # ========================================================
     # CREACIÓN DE OBSTÁCULOS
     # ========================================================
+
+    def _expandir_configuraciones_obstaculos(self) -> list[dict]:
+        """Convierte cada configuracion con cantidad en una fila horizontal."""
+        configuraciones_expandidas = []
+
+        for config in deepcopy(self.OBSTACULOS):
+            cantidad = int(config.get("cantidad", 1))
+
+            # cantidad=0 permite desactivar temporalmente una fila completa.
+            if cantidad <= 0:
+                continue
+
+            x_inicial = config["x"]
+            separacion = config.get(
+                "separacion",
+                self.SEPARACION_OBSTACULOS_FILA,
+            )
+
+            # Cuando no existe un ancho personalizado, _crear_obstaculo usa
+            # TAMANO_OBSTACULO. Se convierte a unidades del nivel para que el
+            # calculo de la siguiente x ocurra antes de aplicar la escala.
+            ancho_fila = config.get("ancho")
+            if ancho_fila is None:
+                ancho_fila = (
+                    motor.TAMANO_OBSTACULO
+                    / motor.ESCALA_JUEGO
+                )
+
+            paso_x = float(ancho_fila) + float(separacion)
+
+            for indice in range(cantidad):
+                copia = dict(config)
+                copia.pop("cantidad", None)
+                copia.pop("separacion", None)
+                copia["x"] = x_inicial + indice * paso_x
+                configuraciones_expandidas.append(copia)
+
+        return configuraciones_expandidas
 
     def _crear_obstaculo(self, config: dict):
         ancho = self.escalar(

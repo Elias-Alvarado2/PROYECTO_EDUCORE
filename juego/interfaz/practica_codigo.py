@@ -92,6 +92,7 @@ class HuecoCodigo:
         self.ancho_base = int(ancho_base)
         self.alto_base = int(alto_base)
         self.token_id: int | None = None
+        self.es_correcto: bool | None = None
 
     def dibujar(self, superficie: pygame.Surface) -> None:
         sombra = self.rect.move(3, 4)
@@ -100,9 +101,16 @@ class HuecoCodigo:
             (3, 12, 23),
             _puntos_pixel(sombra, 7),
         )
+        color_borde = (145, 208, 231)
+
+        if self.es_correcto is True:
+            color_borde = (46, 196, 102)
+        elif self.es_correcto is False:
+            color_borde = (225, 62, 70)
+
         pygame.draw.polygon(
             superficie,
-            (145, 208, 231),
+            color_borde,
             _puntos_pixel(self.rect, 7),
         )
         interior = self.rect.inflate(-6, -6)
@@ -201,6 +209,12 @@ class PantallaPracticaCodigo:
     Las opciones aparecen directamente sobre el fondo beige y todos los
     botones utilizan la misma animación de rebote de la práctica original.
     """
+
+    # Todos los huecos vacios comienzan con estas mismas medidas. El ancho de
+    # 72 px corresponde aproximadamente al hueco pequeno que aparece despues
+    # de "estudiantes" y evita revelar la respuesta por el tamano del espacio.
+    ANCHO_HUECO_VACIO = 72
+    ALTO_HUECO_VACIO = 50
 
     def __init__(self, ancho: int = 1920, alto: int = 1080):
         self.ancho = int(ancho)
@@ -390,6 +404,12 @@ class PantallaPracticaCodigo:
                 return token
         return None
 
+    def _obtener_tamano_hueco_vacio(self) -> tuple[int, int]:
+        """Devuelve la medida comun de un hueco antes de colocar una ficha."""
+        # No se consulta la respuesta correcta ni las opciones disponibles.
+        # De esa manera el tamano del hueco vacio nunca da pistas al jugador.
+        return self.ANCHO_HUECO_VACIO, self.ALTO_HUECO_VACIO
+
     def _recalcular_codigo(self) -> None:
         huecos_anteriores = self.huecos
         self.fragmentos = []
@@ -397,6 +417,7 @@ class PantallaPracticaCodigo:
 
         respuestas = self.configuracion.get("respuestas", {})
         lineas = self.configuracion.get("codigo", [])
+        ancho_vacio, alto_vacio = self._obtener_tamano_hueco_vacio()
         x_inicial = self.rect_codigo.x + 42
 
         # Empieza cerca de la parte superior, pero conserva suficiente
@@ -429,11 +450,8 @@ class PantallaPracticaCodigo:
 
                 identificador = str(segmento["hueco"])
                 respuesta = str(respuestas.get(identificador, ""))
-                ancho_respuesta, alto_respuesta = self.fuente_codigo.size(respuesta)
-                ancho_base = int(
-                    segmento.get("ancho", max(72, ancho_respuesta + 34))
-                )
-                alto_base = max(50, alto_respuesta + 20)
+                ancho_base = ancho_vacio
+                alto_base = alto_vacio
 
                 token_id = None
                 if identificador in huecos_anteriores:
@@ -444,7 +462,10 @@ class PantallaPracticaCodigo:
                 alto_hueco = alto_base
 
                 if token is not None:
-                    ancho_hueco = max(ancho_base, token.rect.width + 12)
+                    # El hueco solo cambia de tamano despues de colocar una
+                    # ficha y usa el ancho de ESA ficha, sea correcta o no.
+                    # Al retirarla, _recalcular_codigo restaura 72 x 50.
+                    ancho_hueco = token.rect.width + 12
                     alto_hueco = max(alto_base, token.rect.height + 10)
 
                 rect = pygame.Rect(x, y - 8, ancho_hueco, alto_hueco)
@@ -554,9 +575,15 @@ class PantallaPracticaCodigo:
         correcto = True
         for hueco in self.huecos.values():
             token = self._obtener_token(hueco.token_id)
-            if token is None or token.texto != hueco.respuesta:
+            hueco.es_correcto = (
+                token is not None
+                and token.texto == hueco.respuesta
+            )
+
+            # Se revisan todos los huecos, incluso despues de encontrar uno
+            # incorrecto, para poder pintar cada borde verde o rojo.
+            if not hueco.es_correcto:
                 correcto = False
-                break
 
         self.respondido = True
         self.respuesta_final = correcto
