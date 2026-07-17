@@ -280,8 +280,8 @@ PERSONAJES_CONFIG = {
         _FRAMES_CERDO,
         escala=5.1,
 
-        hitbox_izquierda=40,
-        hitbox_derecha=30,
+        hitbox_izquierda=60,
+        hitbox_derecha=60,
         hitbox_arriba=60,
         hitbox_abajo=20,
     ),
@@ -314,9 +314,9 @@ PERSONAJES_CONFIG = {
         _FRAMES_GATO_SALTAR,
         escala=4.3,
 
-        hitbox_izquierda=40,
-        hitbox_derecha=40,
-        hitbox_arriba=115,
+        hitbox_izquierda=30,
+        hitbox_derecha=30,
+        hitbox_arriba=110,
         hitbox_abajo=20,
     ),
 
@@ -593,13 +593,9 @@ def construir_paginas_leccion(leccion, nombre_lenguaje):
     titulo = normalizar_texto(leccion.get("titulo"))
     teoria = normalizar_texto(leccion.get("contenido_teoria"))
     codigo = normalizar_texto(leccion.get("codigo_ejemplo"))
-
     contenido_final = normalizar_texto(
         leccion.get("contenido_final")
     )
-
-    contenido_final = normalizar_texto(leccion.get("contenido_final"))
-
 
     paginas = []
 
@@ -629,17 +625,17 @@ def construir_paginas_leccion(leccion, nombre_lenguaje):
         for linea in lineas_codigo:
             posible = bloque + linea + "\n"
 
-    if (
-        len(posible) > 115
-        and bloque.strip() != "Ejemplo:"
-    ):
-        paginas.append(bloque.rstrip())
-        bloque = "Ejemplo:\n" + linea + "\n"
-    else:
-        bloque = posible
+            if (
+                len(posible) > 115
+                and bloque.strip() != "Ejemplo:"
+            ):
+                paginas.append(bloque.rstrip())
+                bloque = "Ejemplo:\n" + linea + "\n"
+            else:
+                bloque = posible
+
         if bloque.strip():
             paginas.append(bloque.rstrip())
-
 
     # 3. Texto posterior al ejemplo, solamente cuando existe.
     if contenido_final:
@@ -649,16 +645,6 @@ def construir_paginas_leccion(leccion, nombre_lenguaje):
                 max_caracteres=105,
             )
         )
-
-    # contenido_final pertenece al cierre de la leccion, por eso se agrega
-    # despues del ejemplo de codigo y conserva la paginacion del texto normal.
-    paginas.extend(
-        dividir_texto_en_paginas(
-            contenido_final,
-            max_caracteres=105,
-        )
-    )
-
 
     return paginas
 
@@ -1012,13 +998,9 @@ class ConexionEduCore:
 
         leccion = self.seleccionar_uno(
             """
-
             SELECT id_leccion, id_lenguaje, titulo, contenido_teoria,
                    codigo_ejemplo, contenido_final,
                    orden, puntos, estado
-
-            SELECT leccion.*
-
             FROM leccion
             WHERE id_lenguaje = %s
               AND orden = %s
@@ -1033,13 +1015,9 @@ class ConexionEduCore:
 
         return self.seleccionar_uno(
             """
-
             SELECT id_leccion, id_lenguaje, titulo, contenido_teoria,
                    codigo_ejemplo, contenido_final,
                    orden, puntos, estado
-
-            SELECT leccion.*
-
             FROM leccion
             WHERE id_lenguaje = %s
               AND estado = 'Activa'
@@ -1060,13 +1038,9 @@ class ConexionEduCore:
 
         return self.seleccionar_uno(
             """
-
             SELECT id_leccion, id_lenguaje, titulo, contenido_teoria,
                    codigo_ejemplo, contenido_final,
                    orden, puntos, estado
-
-            SELECT leccion.*
-
             FROM leccion
             WHERE id_lenguaje = %s
               AND orden = %s
@@ -2094,10 +2068,6 @@ class NPC:
 # ============================================================
 
 class CajaDialogo:
-    # Mantiene el texto a la misma distancia del borde superior aunque una
-    # pagina de codigo haga crecer la caja de dialogo.
-    MARGEN_SUPERIOR_TEXTO = round(36 * ESCALA_JUEGO)
-
     def __init__(self):
         self.visible = False
 
@@ -2148,7 +2118,7 @@ class CajaDialogo:
         return primera_linea.strip() == "Ejemplo:"
 
     def _capacidad_lineas(self, alto_caja, salto_linea):
-        margen_y = self.MARGEN_SUPERIOR_TEXTO
+        margen_y = int(alto_caja * 0.24)
         ultimo_y_visible = alto_caja - 65
         espacio_lineas = ultimo_y_visible - margen_y
 
@@ -2310,7 +2280,7 @@ class CajaDialogo:
         self.dibujar_fondo(pantalla)
 
         margen_x = int(self.rect.width * 0.075)
-        margen_y = self.MARGEN_SUPERIOR_TEXTO
+        margen_y = int(self.rect.height * 0.24)
         ancho_texto = self.rect.width - (margen_x * 2)
         salto_linea = self.fuente.get_height() + 7
 
@@ -3164,9 +3134,9 @@ class JuegoEduCore:
         if not self.npcs:
             print("[NPCS] No se creó ningún pingüino válido.")
 
-    def npc_esta_desbloqueado(self, npc):
+    def obtener_zona_interaccion_npc(self, npc):
         if npc is None:
-            return False
+            return None
 
         indice = getattr(npc, "indice_npc", 0)
 
@@ -3174,13 +3144,7 @@ class JuegoEduCore:
             npc_anterior = self.npcs[indice - 1]
 
             if not getattr(npc_anterior, "dialogo_terminado", False):
-                return False
-
-        return True
-
-    def obtener_zona_interaccion_npc(self, npc):
-        if not self.npc_esta_desbloqueado(npc):
-            return None
+                return None
 
         if (
             not getattr(npc, "repetible", True)
@@ -4504,9 +4468,6 @@ class JuegoEduCore:
             )
 
         for npc in self.npcs:
-            if not self.npc_esta_desbloqueado(npc):
-                continue
-
             zona_npc = pygame.Rect(
                 int(npc.zona_dialogo.x - self.camara_x),
                 int(npc.zona_dialogo.y),
@@ -5246,9 +5207,6 @@ class JuegoEduCore:
                 objeto_activo.dibujar(surface, camara_px)
 
         for npc in self.npcs:
-            if not self.npc_esta_desbloqueado(npc):
-                continue
-
             npc_x = round(npc.rect.x - camara_px)
 
             if (

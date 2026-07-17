@@ -218,3 +218,12 @@ CREATE TABLE historial (
     ON DELETE CASCADE
     ON UPDATE CASCADE
 );
+ALTER TABLE jugador
+ADD COLUMN fecha_recuperacion_vidas DATETIME NULL
+AFTER vidas;
+
+UPDATE jugador
+SET fecha_recuperacion_vidas = NOW()
+WHERE vidas < 5
+  AND fecha_recuperacion_vidas IS NULL;
+  set SQL_SAFE_UPDATES=0;
