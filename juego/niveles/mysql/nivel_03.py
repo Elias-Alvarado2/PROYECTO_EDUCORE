@@ -38,13 +38,13 @@ class NivelMySQL03(JuegoBase):
         "practica": 1,
     },
     {
-        "nombre": "pinguino_1",
-        "x": 1200,
-        "ajuste_y": -160,
-        "orden_leccion": 8,
-        "requiere_anterior": False,
+        "nombre": "pinguino_2",
+        "x": 1550,
+        "ajuste_y": -305,
+        "orden_leccion": 9,
+        "requiere_anterior": True,
         "repetible": True,
-        "practica": 1,
+        "practica": (2,3,4),
     },
     )
     OBSTACULOS = (
@@ -210,7 +210,7 @@ class NivelMySQL03(JuegoBase):
         {
             "tipo":"cofre",
             "imagen":"mysql/cofre.png",
-            "x": 2680,
+            "x": 2670,
             "ajuste_y":-180,
             "ancho": 40,
             "alto": 25,
@@ -283,7 +283,7 @@ class NivelMySQL03(JuegoBase):
 
     PRACTICAS = (
     {
-        "x": 1230,
+        "x": 1240,
         "y": 350,
         "tipo": "eleccion_multiple",
         "pregunta": (
@@ -296,6 +296,103 @@ class NivelMySQL03(JuegoBase):
         ],
         "respuesta_correcta": 3,
         "nombre": "mysql_eleccion_01",
+        },
+        {
+            "x": 2400,
+            "y": 305,
+            "tipo": "codigo",
+            "pregunta": (
+                "Arrastra las opciones correctas para completar la instruccion "
+                "que selecciona todos los datos de una tabla."
+            ),
+            "nombre": "practica_codigo_mysql_01",
+            "respuestas": {
+                "from": "FROM",
+                "tabla": "estudiantes",
+                "*":"*",
+            },
+            "codigo": [
+                {   
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"texto": "SELECT "},
+                        {"hueco": "*"},
+                        {"hueco": "from"},
+                        {"hueco": "tabla"}
+                    ],
+                },
+            ],
+            "opciones": [
+                "SELECT",
+                "FROM",
+                "*",
+                "estudiantes",
+                "nombre",
+                "edad",
+                
+            ],
+        },
+        {
+            "x": 3135,
+            "y": 305,
+            "tipo": "codigo",
+            "pregunta": (
+                "Arrastra las opciones correctas para completar la instruccion "
+                "que inserta en estudiantes el estudiante Juan de 15 años."
+            ),
+            "nombre": "practica_codigo_mysql_01",
+            "respuestas": {
+                "into": "INTO",
+                "nombre": "nombre",
+                "values":"VALUES",
+                "quince":"15",
+            },
+            "codigo": [
+                {   
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"texto": "INSERT "},
+                        {"hueco": "into"},
+                        {"texto": " estudiantes("},
+                        {"hueco": "nombre"},
+                        {"texto": " , edad, grado)"}
+                    ],
+                },
+                 {   
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"hueco": "values"},
+                        {"texto": "('Juan', "},
+                        {"hueco": "quince"},
+                        {"texto": ", Segundo);"},
+                    ],
+                },
+            ],
+            "opciones": [
+                "INTO",
+                "FROM",
+                "nombre",
+                "'Juan'",
+                "VALUES",
+                "15",
+                
+            ],
+        },
+        {
+        "x": 3740,
+        "y": 320,
+        "tipo": "eleccion_multiple",
+        "pregunta": (
+        "¿Cuál instruccion muestra todos los campos"
+        "y registros de la tabla estudiantes?"
+        ),
+         "opciones": [
+            "INSERT INTO estudiantes;",
+             "SELECT * FROM estudiantes;",
+             "VALUES estudiantes;",
+    ],
+        "respuesta_correcta": 2,
+        "nombre": "mysql_eleccion_02",
         },
     )
 

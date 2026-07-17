@@ -92,6 +92,7 @@ class HuecoCodigo:
         self.ancho_base = int(ancho_base)
         self.alto_base = int(alto_base)
         self.token_id: int | None = None
+        self.es_correcto: bool | None = None
 
     def dibujar(self, superficie: pygame.Surface) -> None:
         sombra = self.rect.move(3, 4)
@@ -100,9 +101,16 @@ class HuecoCodigo:
             (3, 12, 23),
             _puntos_pixel(sombra, 7),
         )
+        color_borde = (145, 208, 231)
+
+        if self.es_correcto is True:
+            color_borde = (46, 196, 102)
+        elif self.es_correcto is False:
+            color_borde = (225, 62, 70)
+
         pygame.draw.polygon(
             superficie,
-            (145, 208, 231),
+            color_borde,
             _puntos_pixel(self.rect, 7),
         )
         interior = self.rect.inflate(-6, -6)
@@ -560,9 +568,15 @@ class PantallaPracticaCodigo:
         correcto = True
         for hueco in self.huecos.values():
             token = self._obtener_token(hueco.token_id)
-            if token is None or token.texto != hueco.respuesta:
+            hueco.es_correcto = (
+                token is not None
+                and token.texto == hueco.respuesta
+            )
+
+            # Se revisan todos los huecos, incluso despues de encontrar uno
+            # incorrecto, para poder pintar cada borde verde o rojo.
+            if not hueco.es_correcto:
                 correcto = False
-                break
 
         self.respondido = True
         self.respuesta_final = correcto

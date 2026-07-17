@@ -280,8 +280,8 @@ PERSONAJES_CONFIG = {
         _FRAMES_CERDO,
         escala=5.1,
 
-        hitbox_izquierda=50,
-        hitbox_derecha=40,
+        hitbox_izquierda=45,
+        hitbox_derecha=35,
         hitbox_arriba=60,
         hitbox_abajo=20,
     ),
@@ -583,6 +583,7 @@ def construir_paginas_leccion(leccion, nombre_lenguaje):
     titulo = normalizar_texto(leccion.get("titulo"))
     teoria = normalizar_texto(leccion.get("contenido_teoria"))
     codigo = normalizar_texto(leccion.get("codigo_ejemplo"))
+    contenido_final = normalizar_texto(leccion.get("contenido_final"))
 
     paginas = [
         f"Leccion de {nombre_lenguaje}: {titulo}",
@@ -597,7 +598,7 @@ def construir_paginas_leccion(leccion, nombre_lenguaje):
         for linea in lineas_codigo:
             posible = bloque + linea + "\n"
 
-            if len(posible) > 115 and bloque.strip() != "Ejemplo:":
+            if len(posible) > 180 and bloque.strip() != "Ejemplo:":
                 paginas.append(bloque.rstrip())
                 bloque = "Ejemplo:\n" + linea + "\n"
             else:
@@ -605,6 +606,15 @@ def construir_paginas_leccion(leccion, nombre_lenguaje):
 
         if bloque.strip():
             paginas.append(bloque.rstrip())
+
+    # contenido_final pertenece al cierre de la leccion, por eso se agrega
+    # despues del ejemplo de codigo y conserva la paginacion del texto normal.
+    paginas.extend(
+        dividir_texto_en_paginas(
+            contenido_final,
+            max_caracteres=105,
+        )
+    )
 
     return paginas
 
@@ -958,8 +968,7 @@ class ConexionEduCore:
 
         leccion = self.seleccionar_uno(
             """
-            SELECT id_leccion, id_lenguaje, titulo, contenido_teoria,
-                   codigo_ejemplo, orden, puntos, estado
+            SELECT leccion.*
             FROM leccion
             WHERE id_lenguaje = %s
               AND orden = %s
@@ -974,8 +983,7 @@ class ConexionEduCore:
 
         return self.seleccionar_uno(
             """
-            SELECT id_leccion, id_lenguaje, titulo, contenido_teoria,
-                   codigo_ejemplo, orden, puntos, estado
+            SELECT leccion.*
             FROM leccion
             WHERE id_lenguaje = %s
               AND estado = 'Activa'
@@ -996,8 +1004,7 @@ class ConexionEduCore:
 
         return self.seleccionar_uno(
             """
-            SELECT id_leccion, id_lenguaje, titulo, contenido_teoria,
-                   codigo_ejemplo, orden, puntos, estado
+            SELECT leccion.*
             FROM leccion
             WHERE id_lenguaje = %s
               AND orden = %s
@@ -2025,6 +2032,10 @@ class NPC:
 # ============================================================
 
 class CajaDialogo:
+    # Mantiene el texto a la misma distancia del borde superior aunque una
+    # pagina de codigo haga crecer la caja de dialogo.
+    MARGEN_SUPERIOR_TEXTO = round(36 * ESCALA_JUEGO)
+
     def __init__(self):
         self.visible = False
 
@@ -2075,7 +2086,7 @@ class CajaDialogo:
         return primera_linea.strip() == "Ejemplo:"
 
     def _capacidad_lineas(self, alto_caja, salto_linea):
-        margen_y = int(alto_caja * 0.24)
+        margen_y = self.MARGEN_SUPERIOR_TEXTO
         ultimo_y_visible = alto_caja - 65
         espacio_lineas = ultimo_y_visible - margen_y
 
@@ -2237,7 +2248,7 @@ class CajaDialogo:
         self.dibujar_fondo(pantalla)
 
         margen_x = int(self.rect.width * 0.075)
-        margen_y = int(self.rect.height * 0.24)
+        margen_y = self.MARGEN_SUPERIOR_TEXTO
         ancho_texto = self.rect.width - (margen_x * 2)
         salto_linea = self.fuente.get_height() + 7
 

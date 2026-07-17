@@ -68,7 +68,7 @@ def obtener_argumentos():
     parser.add_argument(
         "--jugador",
         type=int,
-        default=2,
+        default=1,
     )
 
     parser.add_argument(
@@ -80,7 +80,8 @@ def obtener_argumentos():
     parser.add_argument(
         "--nivel",
         type=int,
-        default=3,
+        default=
+        4,
     )
 
     parser.add_argument(

@@ -35,6 +35,7 @@ CREATE TABLE leccion (
     titulo VARCHAR(100) NOT NULL,
     contenido_teoria TEXT,
     codigo_ejemplo TEXT,
+    contenido_final TEXT,
     orden INT NOT NULL,
     puntos INT DEFAULT 0,
     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
