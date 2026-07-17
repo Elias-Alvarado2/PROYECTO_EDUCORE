@@ -340,7 +340,7 @@ class NivelMySQL03(JuegoBase):
                 "Arrastra las opciones correctas para completar la instruccion "
                 "que inserta en estudiantes el estudiante Juan de 15 años."
             ),
-            "nombre": "practica_codigo_mysql_01",
+            "nombre": "practica_codigo_mysql_02",
             "respuestas": {
                 "into": "INTO",
                 "nombre": "nombre",
@@ -364,7 +364,7 @@ class NivelMySQL03(JuegoBase):
                         {"hueco": "values"},
                         {"texto": "('Juan', "},
                         {"hueco": "quince"},
-                        {"texto": ", Segundo);"},
+                        {"texto": ", 'Segundo');"},
                     ],
                 },
             ],

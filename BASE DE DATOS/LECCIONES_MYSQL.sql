@@ -1,6 +1,6 @@
 select *from leccion;
 select *from jugador;
-update jugador set vidas=5 where id_jugador=2;
+update jugador set vidas=100 where id_jugador=8;
 INSERT INTO leccion (
     id_lenguaje,
     titulo,
@@ -175,16 +175,146 @@ VALUES (
     'Insercion de datos',
     'Para guardar nuevos registros en una tabla se utiliza la instrucción INSERT INTO. Después se escribe el nombre de la tabla y, entre paréntesis, los campos que recibirán información. Luego se utiliza VALUES para indicar los valores que se guardarán, los textos deben estar escritos entre comillas simples, mientras que los numeros se escriben sin comillas.',
     'INSERT INTO estudiantes(nombre, edad)
-VALUES (''Ana'', 15);',
+VALUES (''Ana'', 15);
+no es necesario colocar id_estudiante, porque AUTO_INCREMENT genera el valor.',
     8,
+    10,
+    CURRENT_TIMESTAMP,
+    'Activa'
+);
+INSERT INTO leccion (
+    id_lenguaje,
+    titulo,
+    contenido_teoria,
+    codigo_ejemplo,
+    contenido_final,
+    orden,
+    puntos,
+    fecha_creacion,
+    estado
+)
+VALUES (
+    4,
+    'Clausula Select',
+    'Para consultar información almacenada se utiliza la instrucción SELECT seguido de los campos que queremos ver separados por comas y por ultimo la palabra FROM para indicar la tabla que queremos ver los campos. Tambien, para seleccionar todos los campos de una tabla puedes usar
+    SELECT *FROM seguido del nombre de la tabla.',
+    'Supongamos que tenemos la tabla estudiantes con los campos nombre, edad y grado:
+SELECT nombre, edad
+FROM estudiantes;
+SELECT *FROM estudiantes;',
+'la primera consulta solo nos muestra los campos "nombre" y "edad", mientras que la segunda nos muestra todos los campos.',
+    9,
+    10,
+    CURRENT_TIMESTAMP,
+    'Activa'
+);
+-- =====================================================
+-- ORDEN 10: FILTROS CON WHERE
+-- =====================================================
+
+INSERT INTO leccion (
+    id_lenguaje,
+    titulo,
+    contenido_teoria,
+    codigo_ejemplo,
+    contenido_final,
+    orden,
+    puntos,
+    fecha_creacion,
+    estado
+)
+VALUES (
+    4,
+    'Filtros con WHERE',
+    'Cuando una tabla contiene muchos registros, no siempre necesitamos mostrar toda la información. La cláusula WHERE permite mostrar únicamente los registros que cumplen una condición. WHERE se escribe después del nombre de la tabla. Una condición está formada por el nombre de un campo, un operador de comparación y un valor. Los textos deben escribirse entre comillas simples, mientras que los números se escriben sin comillas.',
+    'SELECT * FROM estudiantes WHERE edad = 15;',
+    'Esta consulta muestra todos los campos de los estudiantes cuya edad sea exactamente 15. Los estudiantes que tengan una edad diferente no aparecerán en el resultado.',
+    10,
     10,
     CURRENT_TIMESTAMP,
     'Activa'
 );
 
 
+-- =====================================================
+-- ORDEN 11: OPERADORES DE COMPARACIÓN
+-- =====================================================
+
+INSERT INTO leccion (
+    id_lenguaje,
+    titulo,
+    contenido_teoria,
+    codigo_ejemplo,
+    contenido_final,
+    orden,
+    puntos,
+    fecha_creacion,
+    estado
+)
+VALUES (
+    4,
+    'Operadores de comparación',
+    'Los operadores de comparación permiten indicar qué condición debe cumplir un registro. El operador = significa igual que, <> significa diferente de, > significa mayor que, < significa menor que, >= significa mayor o igual que y <= significa menor o igual que. La consulta solamente muestra los registros en los que la comparación sea verdadera.',
+    'SELECT nombre, edad FROM estudiantes WHERE edad >= 15;',
+    'Esta consulta muestra el nombre y la edad de los estudiantes que tengan 15 años o más. El operador >= significa mayor o igual que.',
+    11,
+    10,
+    CURRENT_TIMESTAMP,
+    'Activa'
+);
 
 
+-- =====================================================
+-- ORDEN 12: USO DE AND
+-- =====================================================
+
+INSERT INTO leccion (
+    id_lenguaje,
+    titulo,
+    contenido_teoria,
+    codigo_ejemplo,
+    contenido_final,
+    orden,
+    puntos,
+    fecha_creacion,
+    estado
+)
+VALUES (
+    4,
+    'Varias condiciones con AND',
+    'La palabra AND permite unir dos o más condiciones dentro de WHERE. Para que un registro aparezca en el resultado, todas las condiciones unidas con AND deben cumplirse. AND se escribe entre la primera condición y la siguiente condición.',
+    'SELECT * FROM estudiantes WHERE edad >= 15 AND grado = ''Segundo'';',
+    'Esta consulta muestra únicamente a los estudiantes que tengan 15 años o más y que también pertenezcan al grado Segundo. Si solamente se cumple una de las condiciones, el estudiante no aparecerá.',
+    12,
+    10,
+    CURRENT_TIMESTAMP,
+    'Activa'
+);
 
 
+-- =====================================================
+-- ORDEN 13: USO DE OR
+-- =====================================================
 
+INSERT INTO leccion (
+    id_lenguaje,
+    titulo,
+    contenido_teoria,
+    codigo_ejemplo,
+    contenido_final,
+    orden,
+    puntos,
+    fecha_creacion,
+    estado
+)
+VALUES (
+    4,
+    'Varias opciones con OR',
+    'La palabra OR permite unir dos o más condiciones dentro de WHERE. Para que un registro aparezca en el resultado, es suficiente con que se cumpla al menos una de las condiciones. OR se escribe entre una condición y la siguiente condición.',
+    'SELECT * FROM estudiantes WHERE grado = ''Primero'' OR grado = ''Segundo'';',
+    'Esta consulta muestra a los estudiantes que pertenecen al grado Primero o al grado Segundo. Si un estudiante pertenece a cualquiera de esos dos grados, aparecerá en el resultado.',
+    13,
+    10,
+    CURRENT_TIMESTAMP,
+    'Activa'
+);
