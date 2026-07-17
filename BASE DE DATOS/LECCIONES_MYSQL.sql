@@ -1,3 +1,4 @@
+
 select *from leccion;
 select *from jugador;
 update jugador set vidas=100 where id_jugador=8;
