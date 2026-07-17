@@ -280,8 +280,8 @@ PERSONAJES_CONFIG = {
         _FRAMES_CERDO,
         escala=5.1,
 
-        hitbox_izquierda=45,
-        hitbox_derecha=35,
+        hitbox_izquierda=40,
+        hitbox_derecha=30,
         hitbox_arriba=60,
         hitbox_abajo=20,
     ),
