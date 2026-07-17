@@ -30,20 +30,42 @@ class NivelPython02(JuegoBase):
     NPCS = (
     {
         "nombre": "pinguino_1",
-        "x": 2990,
-        "ajuste_y": -126,
-        "orden_leccion": 1,
+        "x": 720,
+        "ajuste_y": -8,
+        "orden_leccion": 4,
         "requiere_anterior": False,
         "repetible": True,
         "practica": 1,
     },
+     {
+        "nombre": "pinguino_1",
+        "x": 3225,
+        "ajuste_y": -115,
+        "orden_leccion": 5,
+        "requiere_anterior": False,
+        "repetible": True,
+        "practica": 2,
+    },
+      {
+        "nombre": "pinguino_1",
+        "x": 4200,
+        "ajuste_y": -8,
+        "orden_leccion": 6,
+        "requiere_anterior": False,
+        "repetible": True,
+        "practica": 3,
+    },
+    
 )
+
     # ========================================================
     # OBSTÁCULOS
     # ========================================================
 
     OBSTACULOS = (
-        # Fragmento 1: abajo
+        # ========================================================
+        # FRAGMENTO 1: ABAJO
+        # ========================================================
         {
             "tipo": "fragmento",
             "imagen": "python/obstaculo_fragmento.png",
@@ -57,7 +79,9 @@ class NivelPython02(JuegoBase):
             "hitbox_reducir_alto": 8,
         },
 
-        # Fragmento 2: más arriba
+        # ========================================================
+        # FRAGMENTO 2: MÁS ARRIBA
+        # ========================================================
         {
             "tipo": "fragmento",
             "imagen": "python/obstaculo_fragmento.png",
@@ -70,7 +94,11 @@ class NivelPython02(JuegoBase):
             "hitbox_reducir_ancho": 8,
             "hitbox_reducir_alto": 8,
         },
-{
+
+        # ========================================================
+        # PRIMERAS PÚAS
+        # ========================================================
+        {
             "tipo": "puas",
             "imagen": "python/puas_obstaculo.png",
             "x": 1525,
@@ -82,7 +110,10 @@ class NivelPython02(JuegoBase):
             "hitbox_reducir_ancho": 16,
             "hitbox_reducir_alto": 24,
         },
-        # Púas
+
+        # ========================================================
+        # SEGUNDAS PÚAS
+        # ========================================================
         {
             "tipo": "puas",
             "imagen": "python/puas_obstaculo.png",
@@ -96,48 +127,23 @@ class NivelPython02(JuegoBase):
             "hitbox_reducir_alto": 24,
         },
 
-        # Fragmento 3
+        # ========================================================
+        # FRAGMENTO SUPERIOR IZQUIERDO
+        # ========================================================
         {
             "tipo": "fragmento",
             "imagen": "python/obstaculo_fragmento2.png",
-            "x": 2200,
+            "x": 1950,
             "ancho": 130,
             "alto": 35,
-            "ajuste_y": -110,
+            "ajuste_y": -170,
             "hitbox_offset_x": 4,
             "hitbox_offset_y": 8,
             "hitbox_reducir_ancho": 8,
-            "hitbox_reducir_alto": 8,
+            "hitbox_reducir_alto": 0,
         },
-{
-    "tipo": "fragmento",
-    "imagen": "python/obstaculo_fragmento2.png",
-    "x": 1950,
-    "ancho": 130,
-    "alto": 35,
-    "ajuste_y": -170,
-    "hitbox_offset_x": 4,
-    "hitbox_offset_y": 8,
-    "hitbox_reducir_ancho": 8,
-    "hitbox_reducir_alto": 0,
-},
 
-# ========================================================
-# FRAGMENTO INFERIOR
-# ========================================================
-{
-    "tipo": "fragmento",
-    "imagen": "python/obstaculo_fragmento2.png",
-    "x": 2050,
-    "ancho": 130,
-    "alto": 35,
-    "ajuste_y": -20,
-    "hitbox_offset_x": 4,
-    "hitbox_offset_y": 8,
-    "hitbox_reducir_ancho": 8,
-    "hitbox_reducir_alto": 0,
-},
-# ========================================================
+        # ========================================================
         # FRAGMENTO INFERIOR
         # ========================================================
         {
@@ -154,7 +160,7 @@ class NivelPython02(JuegoBase):
         },
 
         # ========================================================
-        # PÚAS NUEVAS
+        # PÚAS DESPUÉS DEL FRAGMENTO INFERIOR
         # ========================================================
         {
             "tipo": "puas",
@@ -170,7 +176,23 @@ class NivelPython02(JuegoBase):
         },
 
         # ========================================================
-        # FRAGMENTO NUEVO A LA DERECHA
+        # FRAGMENTO SUPERIOR
+        # ========================================================
+        {
+            "tipo": "fragmento",
+            "imagen": "python/obstaculo_fragmento2.png",
+            "x": 2200,
+            "ancho": 130,
+            "alto": 35,
+            "ajuste_y": -110,
+            "hitbox_offset_x": 4,
+            "hitbox_offset_y": 8,
+            "hitbox_reducir_ancho": 8,
+            "hitbox_reducir_alto": 8,
+        },
+
+        # ========================================================
+        # FRAGMENTO A LA DERECHA
         # ========================================================
         {
             "tipo": "fragmento",
@@ -184,11 +206,17 @@ class NivelPython02(JuegoBase):
             "hitbox_reducir_ancho": 8,
             "hitbox_reducir_alto": 0,
         },
-         # Fragmento bajo izquierdo
+
+        # ========================================================
+        # ESPACIO PARA CAMINAR
+        # La siguiente sección comienza más adelante.
+        # ========================================================
+
+        # Fragmento bajo izquierdo
         {
             "tipo": "fragmento",
             "imagen": "python/obstaculo_fragmento.png",
-            "x": 2580,
+            "x": 2830,
             "ancho": 100,
             "alto": 35,
             "ajuste_y": -20,
@@ -198,25 +226,11 @@ class NivelPython02(JuegoBase):
             "hitbox_reducir_alto": 0,
         },
 
-        # Fragmento alto izquierdo
-        {
-            "tipo": "fragmento",
-            "imagen": "python/obstaculo_fragmento.png",
-            "x": 2720,
-            "ancho": 100,
-            "alto": 35,
-            "ajuste_y": -85,
-            "hitbox_offset_x": 4,
-            "hitbox_offset_y": 8,
-            "hitbox_reducir_ancho": 8,
-            "hitbox_reducir_alto": 0,
-        },
-
-        # Púas al centro
+        # Púas del lado izquierdo
         {
             "tipo": "puas",
             "imagen": "python/puas_obstaculo.png",
-            "x": 2870,
+            "x": 2950,
             "ancho": 95,
             "alto": 50,
             "ajuste_y": 8,
@@ -226,11 +240,11 @@ class NivelPython02(JuegoBase):
             "hitbox_reducir_alto": 24,
         },
 
-        # Fragmento alto derecho
+        # Fragmento alto izquierdo
         {
             "tipo": "fragmento",
             "imagen": "python/obstaculo_fragmento.png",
-            "x": 2990,
+            "x": 2970,
             "ancho": 100,
             "alto": 35,
             "ajuste_y": -85,
@@ -240,11 +254,53 @@ class NivelPython02(JuegoBase):
             "hitbox_reducir_alto": 0,
         },
 
+        # Púas del centro
+        {
+            "tipo": "puas",
+            "imagen": "python/puas_obstaculo.png",
+            "x": 3120,
+            "ancho": 95,
+            "alto": 50,
+            "ajuste_y": 8,
+            "hitbox_offset_x": 8,
+            "hitbox_offset_y": 20,
+            "hitbox_reducir_ancho": 16,
+            "hitbox_reducir_alto": 24,
+        },
+
+        # Fragmento alto derecho, donde estará el NPC
+        {
+            "tipo": "fragmento",
+            "imagen": "python/obstaculo_fragmento.png",
+            "x": 3240,
+            "ancho": 100,
+            "alto": 35,
+            "ajuste_y": -85,
+            "hitbox_offset_x": 4,
+            "hitbox_offset_y": 8,
+            "hitbox_reducir_ancho": 8,
+            "hitbox_reducir_alto": 0,
+        },
+
+        # Púas debajo del NPC
+        {
+            "tipo": "puas",
+            "imagen": "python/puas_obstaculo.png",
+            "x": 3270,
+            "ancho": 95,
+            "alto": 50,
+            "ajuste_y": 8,
+            "hitbox_offset_x": 8,
+            "hitbox_offset_y": 20,
+            "hitbox_reducir_ancho": 16,
+            "hitbox_reducir_alto": 24,
+        },
+
         # Fragmento bajo derecho
         {
             "tipo": "fragmento",
             "imagen": "python/obstaculo_fragmento.png",
-            "x": 3140,
+            "x": 3390,
             "ancho": 100,
             "alto": 35,
             "ajuste_y": -20,
@@ -253,25 +309,217 @@ class NivelPython02(JuegoBase):
             "hitbox_reducir_ancho": 8,
             "hitbox_reducir_alto": 0,
         },
-    )
+                # ========================================================
+        # PÚAS DESPUÉS DE LA ÚLTIMA SECCIÓN
+        # ========================================================
 
+        # Púas 1: debajo de la roca
+        {
+            "tipo": "puas",
+            "imagen": "python/puas_obstaculo.png",
+            "x": 3650,
+            "ancho": 95,
+            "alto": 50,
+            "ajuste_y": 8,
+            "hitbox_offset_x": 8,
+            "hitbox_offset_y": 20,
+            "hitbox_reducir_ancho": 16,
+            "hitbox_reducir_alto": 24,
+        },
+                # ========================================================
+        # TÚMULOS DESPUÉS DE LA ÚNICA PÚA
+        # ========================================================
+
+        # Túmulo 1: abajo
+        {
+            "tipo": "piedra",
+            "imagen": "python/obstaculo_tumulo.png",
+            "x": 3800,
+            "ancho": 100,
+            "alto": 25,
+            "ajuste_y": 0,
+            "hitbox_offset_x": 3,
+            "hitbox_offset_y": 2,
+            "hitbox_reducir_ancho": 6,
+            "hitbox_reducir_alto": 2,
+        },
+
+        # Túmulo 2: arriba
+        {
+            "tipo": "piedra",
+            "imagen": "python/obstaculo_tumulo.png",
+            "x": 3900,
+            "ancho": 100,
+            "alto": 25,
+            "ajuste_y": -30,
+            "hitbox_offset_x": 3,
+            "hitbox_offset_y": 2,
+            "hitbox_reducir_ancho": 6,
+            "hitbox_reducir_alto": 2,
+        },
+
+        # Túmulo 3: abajo
+        {
+            "tipo": "piedra",
+            "imagen": "python/obstaculo_tumulo.png",
+            "x": 4000,
+            "ancho": 100,
+            "alto": 25,
+            "ajuste_y": 0,
+            "hitbox_offset_x": 3,
+            "hitbox_offset_y": 2,
+            "hitbox_reducir_ancho": 6,
+            "hitbox_reducir_alto": 2,
+        },
+         # ========================================================
+        # FRAGMENTO 1: ABAJO
+        # Después de los tres túmulos
+        # ========================================================
+        {
+            "tipo": "fragmento",
+            "imagen": "python/obstaculo_fragmento.png",
+            "x": 4350,
+            "ancho": 90,
+            "alto": 35,
+            "ajuste_y": -20,
+            "hitbox_offset_x": 4,
+            "hitbox_offset_y": 8,
+            "hitbox_reducir_ancho": 8,
+            "hitbox_reducir_alto": 0,
+        },
+
+        # ========================================================
+        # FRAGMENTO 2: MÁS ARRIBA
+        # ========================================================
+        {
+            "tipo": "fragmento",
+            "imagen": "python/obstaculo_fragmento.png",
+            "x": 4430,
+            "ancho": 90,
+            "alto": 35,
+            "ajuste_y": -60,
+            "hitbox_offset_x": 4,
+            "hitbox_offset_y": 8,
+            "hitbox_reducir_ancho": 8,
+            "hitbox_reducir_alto": 0,
+        },
+
+        # ========================================================
+        # PÚAS DESPUÉS DE LOS DOS FRAGMENTOS
+        # ========================================================
+        {
+            "tipo": "puas",
+            "imagen": "python/puas_obstaculo.png",
+            "x": 4600,
+            "ancho": 95,
+            "alto": 50,
+            "ajuste_y": 8,
+            "hitbox_offset_x": 8,
+            "hitbox_offset_y": 20,
+            "hitbox_reducir_ancho": 16,
+            "hitbox_reducir_alto": 24,
+        },
+
+    )
     # ========================================================
     # PRÁCTICAS
     # ========================================================
 
     PRACTICAS = (
-        {
-            "x": 1340,
-            "y": None,
-            "tipo": "verdadero_falso",
-            "pregunta": (
-                "En Python, una variable sirve para almacenar "
-                "un dato que puede utilizarse después."
-            ),
-            "respuesta_correcta": True,
-            "nombre": "practica_python_02",
-        },
+      {
+        "x": 2000,
+        "y": 320,
+        "tipo": "verdadero_falso",
+        "pregunta": (
+            '¿El siguiente código mostrará el mensaje "Mayor de edad"?\n\n'
+            'edad = 20\n'
+            'if edad >= 18:\n'
+            '    print("Mayor de edad")'
+        ),
+        "respuesta_correcta": True,
+        "nombre": "practica_python_02",
+    },
+      {
+        "x": 3830,
+        "y": 500,
+        "tipo": "eleccion_multiple",
+        "pregunta": (
+        "¿Qué mensaje muestra este código?\n"
+        "edad = 12\n"
+        'if edad >= 18:\n'
+        '    print("Mayor de edad")\n'
+        'else:\n'
+        '    print("Menor de edad")'
         
+        ),
+        "opciones": [
+            "No muestra ningún mensaje",
+            "Mayor de edad",
+            "Menor de edad",
+            
+        ],
+        "respuesta_correcta": 3,
+        "nombre": "practica_codigo_python_02",
+        },
+        {
+    "x": 4450,
+    "y": 430,
+    "tipo": "codigo",
+    "pregunta": (
+        "Arrastra las opciones correctas para completar el código. "
+        "Comprueba si la edad es mayor o igual que 18 y muestra "
+        "el mensaje correspondiente."
+    ),
+    "nombre": "practica_codigo_python_03",
+    "respuestas": {
+        "condicional": "if",
+        "funcion": "print",
+        "alternativa": "else",
+    },
+    "codigo": [
+        {
+            "indentacion": 0,
+            "segmentos": [
+                {"texto": "edad = 18"},
+            ],
+        },
+        {
+            "indentacion": 0,
+            "segmentos": [
+                {"hueco": "condicional"},
+                {"texto": " edad >= 18:"},
+            ],
+        },
+        {
+            "indentacion": 1,
+            "segmentos": [
+                {"hueco": "funcion"},
+                {"texto": '("Mayor de edad")'},
+            ],
+        },
+        {
+            "indentacion": 0,
+            "segmentos": [
+                {"hueco": "alternativa"},
+                {"texto": ":"},
+            ],
+        },
+        {
+            "indentacion": 1,
+            "segmentos": [
+                {"texto": 'print("Menor de edad")'},
+            ],
+        },
+    ],
+    "opciones": [
+        "if",
+        "print",
+        "else",
+        "while",
+        "input",
+        "elif",
+    ],
+},
     )
 
 

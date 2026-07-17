@@ -187,7 +187,7 @@ MARGEN_COLISION_VERTICAL = round(20 * ESCALA_JUEGO)
 
 VIDAS_MAXIMAS = 5
 
-TIPOS_OBSTACULOS_SOLIDOS = frozenset({"caja", "fragmento", "arena","tronco","cofre","bloque","piedra"})
+TIPOS_OBSTACULOS_SOLIDOS = frozenset({"caja", "fragmento", "arena","tronco","cofre","bloque","piedra", "bloque"})
 TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser", "cactus"})
 
 

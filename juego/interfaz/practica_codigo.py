@@ -398,9 +398,16 @@ class PantallaPracticaCodigo:
         respuestas = self.configuracion.get("respuestas", {})
         lineas = self.configuracion.get("codigo", [])
         x_inicial = self.rect_codigo.x + 42
-        y = self.rect_codigo.y + 38
-        alto_linea = max(56, self.fuente_codigo.get_height() + 28)
-        ancho_indentacion = max(35, round(self.fuente_codigo.size("    ")[0] * 0.78))
+
+        # Empieza cerca de la parte superior, pero conserva suficiente
+        # separación para que los huecos de líneas consecutivas no se monten.
+        y = self.rect_codigo.y + 12
+        alto_linea = max(57, self.fuente_codigo.get_height() + 16)
+
+        ancho_indentacion = max(
+            35,
+            round(self.fuente_codigo.size("    ")[0] * 0.78),
+        )
 
         for linea in lineas:
             x = x_inicial + int(linea.get("indentacion", 0)) * ancho_indentacion
@@ -868,16 +875,38 @@ class PantallaPracticaCodigo:
 
         self._dibujar_panel_codigo(superficie)
 
+        # Actualiza primero los tokens que ya fueron colocados en los huecos.
+        self._actualizar_tokens_colocados()
+
+        # Todo el código, los huecos y los tokens colocados se recortan
+        # al área del panel negro para que nada se dibuje fuera de él.
+        recorte_anterior = superficie.get_clip()
+        superficie.set_clip(self.rect_codigo)
+
         for fragmento in self.fragmentos:
             superficie.blit(fragmento["superficie"], fragmento["posicion"])
 
         for hueco in self.huecos.values():
             hueco.dibujar(superficie)
 
-        self._actualizar_tokens_colocados()
-
         for token in self.tokens:
-            if token.arrastrando:
+            if token.arrastrando or token.hueco_actual is None:
+                continue
+
+            nombre = f"token_{token.identificador}"
+            rect_animado = self._rect_animado(nombre, token.rect)
+            token.dibujar(
+                superficie,
+                bloqueado=self.respondido,
+                estado=self._estado_token(token),
+                rect_dibujo=rect_animado,
+            )
+
+        superficie.set_clip(recorte_anterior)
+
+        # Las opciones libres se dibujan fuera del recorte, en su zona beige.
+        for token in self.tokens:
+            if token.arrastrando or token.hueco_actual is not None:
                 continue
 
             nombre = f"token_{token.identificador}"
