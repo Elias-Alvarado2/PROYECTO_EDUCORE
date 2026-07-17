@@ -131,9 +131,9 @@ background-color: transparent;
    <widget class="QPushButton" name="btn_confirmar">
     <property name="geometry">
      <rect>
-      <x>830</x>
-      <y>950</y>
-      <width>261</width>
+      <x>818</x>
+      <y>994</y>
+      <width>281</width>
       <height>61</height>
      </rect>
     </property>
@@ -149,6 +149,95 @@ background-color: transparent;
       <width>275</width>
       <height>275</height>
      </size>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lbl_gato">
+    <property name="geometry">
+     <rect>
+      <x>673</x>
+      <y>869</y>
+      <width>151</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap resource="../recursos.qrc">:/Logo/Logo/titulo_gato.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lbl_cerdo">
+    <property name="geometry">
+     <rect>
+      <x>881</x>
+      <y>869</y>
+      <width>151</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap resource="../recursos.qrc">:/Logo/Logo/titulo_cerdo.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lbl_pato">
+    <property name="geometry">
+     <rect>
+      <x>1090</x>
+      <y>870</y>
+      <width>151</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap resource="../recursos.qrc">:/Logo/Logo/titulo_pato.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lbl_nombrepersonaje">
+    <property name="geometry">
+     <rect>
+      <x>855</x>
+      <y>620</y>
+      <width>215</width>
+      <height>56</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap resource="../recursos.qrc">:/Logo/Logo/titulo_vacio.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lbl_nomreelejido">
+    <property name="geometry">
+     <rect>
+      <x>894</x>
+      <y>633</y>
+      <width>139</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
     </property>
    </widget>
   </widget>

@@ -109,6 +109,70 @@ background-color: transparent;
      <string/>
     </property>
    </widget>
+   <widget class="QLabel" name="lbl_sonidogeneral">
+    <property name="geometry">
+     <rect>
+      <x>818</x>
+      <y>410</y>
+      <width>250</width>
+      <height>67</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap resource="../recursos.qrc">:/Logo/Logo/titulo_sonido.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lbl_efectos">
+    <property name="geometry">
+     <rect>
+      <x>818</x>
+      <y>578</y>
+      <width>250</width>
+      <height>67</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap resource="../recursos.qrc">:/Logo/Logo/titulo_efectos.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QSlider" name="hsz_efectos">
+    <property name="geometry">
+     <rect>
+      <x>590</x>
+      <y>710</y>
+      <width>701</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Orientation::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="btn_muteefectos">
+    <property name="geometry">
+     <rect>
+      <x>550</x>
+      <y>710</y>
+      <width>31</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
   </widget>
  </widget>
  <resources>
