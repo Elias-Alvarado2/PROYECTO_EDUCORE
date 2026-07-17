@@ -437,18 +437,18 @@ class NivelPython02(JuegoBase):
             '    print("Mayor de edad")'
         ),
         "respuesta_correcta": True,
-        "nombre": "practica_python_02",
+        "nombre": "practica_python_04",
     },
       {
         "x": 3830,
         "y": 500,
         "tipo": "eleccion_multiple",
         "pregunta": (
-        "¿Qué mensaje muestra este código?\n"
-        "edad = 12\n"
-        'if edad >= 18:\n'
-        '    print("Mayor de edad")\n'
-        'else:\n'
+        "¿Qué mensaje muestra este código?"
+        "edad = 12"
+        'if edad >= 18:'
+        '    print("Mayor de edad")'
+        'else:'
         '    print("Menor de edad")'
         
         ),
@@ -459,7 +459,7 @@ class NivelPython02(JuegoBase):
             
         ],
         "respuesta_correcta": 3,
-        "nombre": "practica_codigo_python_02",
+        "nombre": "practica_codigo_python_05",
         },
         {
     "x": 4450,
@@ -470,7 +470,7 @@ class NivelPython02(JuegoBase):
         "Comprueba si la edad es mayor o igual que 18 y muestra "
         "el mensaje correspondiente."
     ),
-    "nombre": "practica_codigo_python_03",
+    "nombre": "practica_codigo_python_06",
     "respuestas": {
         "condicional": "if",
         "funcion": "print",
