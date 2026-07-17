@@ -92,9 +92,9 @@ background-color: transparent;
    <widget class="QPushButton" name="btn_personaje1">
     <property name="geometry">
      <rect>
-      <x>600</x>
-      <y>670</y>
-      <width>161</width>
+      <x>612</x>
+      <y>667</y>
+      <width>150</width>
       <height>201</height>
      </rect>
     </property>
@@ -105,9 +105,9 @@ background-color: transparent;
    <widget class="QPushButton" name="btn_personaje2">
     <property name="geometry">
      <rect>
-      <x>790</x>
-      <y>660</y>
-      <width>161</width>
+      <x>789</x>
+      <y>667</y>
+      <width>150</width>
       <height>201</height>
      </rect>
     </property>
@@ -118,9 +118,9 @@ background-color: transparent;
    <widget class="QPushButton" name="btn_personaje3">
     <property name="geometry">
      <rect>
-      <x>960</x>
-      <y>660</y>
-      <width>161</width>
+      <x>965</x>
+      <y>667</y>
+      <width>150</width>
       <height>201</height>
      </rect>
     </property>
@@ -131,10 +131,10 @@ background-color: transparent;
    <widget class="QPushButton" name="btn_personaje4">
     <property name="geometry">
      <rect>
-      <x>1140</x>
-      <y>660</y>
-      <width>161</width>
-      <height>211</height>
+      <x>1142</x>
+      <y>667</y>
+      <width>150</width>
+      <height>201</height>
      </rect>
     </property>
     <property name="text">
@@ -144,9 +144,9 @@ background-color: transparent;
    <widget class="QLabel" name="lbl_personajelegido">
     <property name="geometry">
      <rect>
-      <x>740</x>
-      <y>260</y>
-      <width>441</width>
+      <x>744</x>
+      <y>250</y>
+      <width>430</width>
       <height>351</height>
      </rect>
     </property>
