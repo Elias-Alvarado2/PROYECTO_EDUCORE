@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="/Logo">
+    <file>Logo/titulo_efectos.png</file>
+    <file>Logo/titulo_sonido.png</file>
     <file>Logo/titulo_vacio.png</file>
     <file>Logo/titulo_cerdo.png</file>
     <file>Logo/titulo_gato.png</file>
