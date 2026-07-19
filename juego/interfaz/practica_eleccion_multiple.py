@@ -245,10 +245,10 @@ class PantallaPracticaEleccionMultiple(PantallaPractica):
         if self.boton_presionado == nombre and encima:
             return "clic"
 
-        if nombre in self.BOTONES_OPCION:
+        if not self.respondido and nombre in self.BOTONES_OPCION:
             numero = self.BOTONES_OPCION.index(nombre) + 1
             if self.seleccion == numero:
-                return "clic"
+                return "hover"
 
         if encima:
             return "hover"

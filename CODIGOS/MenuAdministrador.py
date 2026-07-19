@@ -1,11 +1,12 @@
 from pathlib import Path
 
-from PyQt6 import QtWidgets, uic, QtGui
+from PyQt6 import QtWidgets, uic, QtGui, QtCore
 from Alertas import Alertas
 from quitar_barra import quitar
 from Transicion import FormTransicion
 from AjusteResponsive import BotonesResponsivos
 from LogoReutilizable import LogoReutilizable
+from Ajustes import Ajustes
 
 
 class FondoImagen(QtWidgets.QLabel):
@@ -94,6 +95,15 @@ class MenuAdministrador(QtWidgets.QWidget):
             )
 
         uic.loadUi(str(ruta_ui), self)
+
+        # Conserva las referencias para evitar que las ventanas
+        # sean eliminadas por Python.
+        self.form_ajustes = None
+        self.transicion_ajustes = None
+
+        self.btnAjustes.clicked.connect(
+            self.abrir_ajustes
+        )
 
         # Conserva los StyleSheet de Designer y corrige sus rutas.
         self.corregir_rutas_stylesheet(ruta_botones)
@@ -307,3 +317,62 @@ class MenuAdministrador(QtWidgets.QWidget):
             )
 
             boton.setStyleSheet(estilo_corregido)
+
+    def abrir_ajustes(self):
+        """
+        Abre el formulario de Ajustes desde el menú administrador.
+        """
+
+        # Si la ventana ya está abierta, solamente la coloca al frente.
+        if (
+                self.form_ajustes is not None
+                and self.form_ajustes.isVisible()
+        ):
+            self.form_ajustes.raise_()
+            self.form_ajustes.activateWindow()
+            return
+
+        try:
+            self.form_ajustes = Ajustes(
+                ventana_anterior=self,
+                jugador=getattr(self, "jugador", None),
+                desde_juego=False,
+            )
+
+            # Permite liberar correctamente la ventana al cerrarla.
+            self.form_ajustes.setAttribute(
+                QtCore.Qt.WidgetAttribute.WA_DeleteOnClose,
+                True,
+            )
+
+            self.form_ajustes.destroyed.connect(
+                self._limpiar_form_ajustes
+            )
+
+            # Se guarda la transición para evitar que Python
+            # la elimine antes de terminar.
+            self.transicion_ajustes = FormTransicion(
+                self,
+                self.form_ajustes,
+            )
+
+        except Exception as error:
+            print(
+                "[MENU ADMIN] No se pudo abrir Ajustes:",
+                error,
+            )
+
+            # Apertura normal si la transición falla.
+            if self.form_ajustes is not None:
+                self.hide()
+                self.form_ajustes.showMaximized()
+                self.form_ajustes.raise_()
+                self.form_ajustes.activateWindow()
+
+    def _limpiar_form_ajustes(self):
+        """
+        Limpia la referencia para poder abrir Ajustes nuevamente.
+        """
+
+        self.form_ajustes = None
+        self.transicion_ajustes = None
