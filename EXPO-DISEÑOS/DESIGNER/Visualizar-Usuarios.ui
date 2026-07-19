@@ -153,6 +153,12 @@ QTableView::item:selected:hover {
       <height>101</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+    background-color: transparent;
+    border: none;
+}</string>
+    </property>
     <property name="text">
      <string/>
     </property>
@@ -175,6 +181,12 @@ QTableView::item:selected:hover {
       <width>101</width>
       <height>101</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+    background-color: transparent;
+    border: none;
+}</string>
     </property>
     <property name="text">
      <string/>

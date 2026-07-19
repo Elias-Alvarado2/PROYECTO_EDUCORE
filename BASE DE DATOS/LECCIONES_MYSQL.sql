@@ -319,3 +319,113 @@ VALUES (
     CURRENT_TIMESTAMP,
     'Activa'
 );
+-- =====================================================
+-- ORDEN 14: SINTAXIS BÁSICA DE DELETE
+-- =====================================================
+
+INSERT INTO leccion (
+    id_lenguaje,
+    titulo,
+    contenido_teoria,
+    codigo_ejemplo,
+    contenido_final,
+    orden,
+    puntos,
+    fecha_creacion,
+    estado
+)
+VALUES (
+    4,
+    'Eliminar registros con DELETE',
+    'La instrucción DELETE se utiliza para eliminar registros que ya existen dentro de una tabla. DELETE elimina una fila completa con todos sus campos. Su sintaxis básica es DELETE FROM nombre_tabla WHERE condicion;. Para usar DELETE debemos ser cuidadosos, ya que si no aplicamos una condicion se eliminaran todos los datos de una tabla.',
+    'DELETE FROM estudiantes
+WHERE id_estudiante = 4;',
+    'Esta consulta elimina de la tabla estudiantes únicamente el registro cuyo id_estudiante sea igual a 4.',
+    14,
+    10,
+    CURRENT_TIMESTAMP,
+    'Activa'
+);
+
+-- =====================================================
+-- ORDEN 15: SINTAXIS BÁSICA DE UPDATE
+-- =====================================================
+
+INSERT INTO leccion (
+    id_lenguaje,
+    titulo,
+    contenido_teoria,
+    codigo_ejemplo,
+    contenido_final,
+    orden,
+    puntos,
+    fecha_creacion,
+    estado
+)
+VALUES (
+    4,
+    'Modificar registros con UPDATE',
+    'La instrucción UPDATE se utiliza para modificar información que ya existe dentro de una tabla. Su sintaxis básica es UPDATE nombre_tabla SET nombre_campo = nuevo_valor WHERE condicion;. UPDATE indica la tabla que será modificada, SET indica el campo que cambiará y el nuevo valor que recibirá, mientras que WHERE permite seleccionar el registro que será actualizado.',
+    'UPDATE estudiantes
+SET grado = ''Segundo''
+WHERE id_estudiante = 3;',
+    'Esta consulta cambia el grado del estudiante cuyo id_estudiante sea igual a 3. El nuevo valor de la columna grado será Segundo. Cabe recalcar que al igual que con el comando DELETE hay que indicar la condicion, sino todos los datos de la tabla se veran afectados.',
+    15,
+    10,
+    CURRENT_TIMESTAMP,
+    'Activa'
+);
+-- =====================================================
+-- ORDEN 16: ACTUALIZAR VARIOS CAMPOS
+-- =====================================================
+
+INSERT INTO leccion (
+    id_lenguaje,
+    titulo,
+    contenido_teoria,
+    codigo_ejemplo,
+    contenido_final,
+    orden,
+    puntos,
+    fecha_creacion,
+    estado
+)
+VALUES (
+    4,
+    'Actualizar varios campos',
+    'UPDATE permite modificar más de un campo en una misma consulta. Después de SET se escribe cada campo junto con su nuevo valor. Cuando se modifican varios campos, cada asignación debe separarse utilizando una coma. La palabra SET solamente se escribe una vez. Al final se utiliza WHERE para indicar qué registro recibirá los cambios.',
+    'UPDATE estudiantes
+SET nombre = ''Ana'',
+    edad = 16
+WHERE id_estudiante = 5;',
+    'Esta consulta modifica dos campos del estudiante cuyo id_estudiante sea igual a 5. La columna nombre recibe el valor Ana y la columna edad recibe el valor 16. Las dos asignaciones están separadas por una coma.',
+    16,
+    10,
+    CURRENT_TIMESTAMP,
+    'Activa'
+);
+INSERT INTO leccion (
+    id_lenguaje,
+    titulo,
+    contenido_teoria,
+    codigo_ejemplo,
+    contenido_final,
+    orden,
+    puntos,
+    fecha_creacion,
+    estado
+)
+VALUES (
+    4,
+    'Actualizar varios campos',
+    'UPDATE permite modificar más de un campo en una misma consulta. Después de SET se escribe cada campo junto con su nuevo valor. Cuando se modifican varios campos, cada asignación debe separarse utilizando una coma. La palabra SET solamente se escribe una vez. Al final se utiliza WHERE para indicar qué registro recibirá los cambios.',
+    'UPDATE estudiantes
+SET nombre = ''Ana'',
+    edad = 16
+WHERE id_estudiante = 5;',
+    'Esta consulta modifica dos campos del estudiante cuyo id_estudiante sea igual a 5. La columna nombre recibe el valor Ana y la columna edad recibe el valor 16. Las dos asignaciones están separadas por una coma.',
+    17,
+    10,
+    CURRENT_TIMESTAMP,
+    'Activa'
+);

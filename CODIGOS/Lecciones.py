@@ -1,11 +1,14 @@
 import sys
 from pathlib import Path
+
 from PyQt6 import QtWidgets, uic, QtGui, QtCore
+
 from Alertas import Alertas
 from Transicion import FormTransicion, FormAnterior
 from AjusteResponsive import BotonesResponsivos
 from quitar_barra import quitar
 from LogoReutilizable import LogoReutilizable
+
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
@@ -26,9 +29,12 @@ class FondoImagen(QtWidgets.QLabel):
             ventana.height()
         )
 
-        self.setPixmap(self.pixmap_original)
+        self.setPixmap(
+            self.pixmap_original
+        )
 
-        # Mantiene el fondo detrás del frame y de los botones.
+        # Mantiene el fondo detrás del frame
+        # y de todos los controles.
         self.lower()
 
     def actualizar_tamano(self, ancho, alto):
@@ -40,10 +46,201 @@ class FondoImagen(QtWidgets.QLabel):
         )
 
 
+class EfectoHoverBoton(QtCore.QObject):
+    """
+    Agranda suavemente el botón al pasar el cursor.
+
+    No utiliza QGraphicsDropShadowEffect porque los botones
+    de los lenguajes ya utilizan QGraphicsColorizeEffect
+    para mostrarse en escala de grises.
+    """
+
+    def __init__(
+        self,
+        boton,
+        factor=1.04,
+        duracion=120,
+        parent=None
+    ):
+        super().__init__(
+            parent if parent is not None else boton
+        )
+
+        self.boton = boton
+        self.factor = factor
+        self.duracion = duracion
+        self.cursor_encima = False
+
+        # Guarda la posición y el tamaño normales.
+        self.geometria_normal = QtCore.QRect(
+            boton.geometry()
+        )
+
+        # Animación del tamaño y posición.
+        self.animacion = QtCore.QPropertyAnimation(
+            boton,
+            b"geometry",
+            self
+        )
+
+        self.animacion.setDuration(
+            self.duracion
+        )
+
+        self.animacion.setEasingCurve(
+            QtCore.QEasingCurve.Type.OutCubic
+        )
+
+        self.boton.installEventFilter(
+            self
+        )
+
+    def obtener_geometria_grande(self):
+        """
+        Calcula una geometría más grande manteniendo
+        el botón centrado.
+        """
+
+        rectangulo = self.geometria_normal
+
+        ancho_nuevo = round(
+            rectangulo.width() * self.factor
+        )
+
+        alto_nuevo = round(
+            rectangulo.height() * self.factor
+        )
+
+        diferencia_ancho = (
+            ancho_nuevo - rectangulo.width()
+        )
+
+        diferencia_alto = (
+            alto_nuevo - rectangulo.height()
+        )
+
+        return QtCore.QRect(
+            rectangulo.x() - diferencia_ancho // 2,
+            rectangulo.y() - diferencia_alto // 2,
+            ancho_nuevo,
+            alto_nuevo
+        )
+
+    def animar_hacia(self, geometria_destino):
+        """
+        Ejecuta la animación desde el tamaño actual
+        hasta la geometría indicada.
+        """
+
+        self.animacion.stop()
+
+        self.animacion.setStartValue(
+            self.boton.geometry()
+        )
+
+        self.animacion.setEndValue(
+            geometria_destino
+        )
+
+        self.animacion.start()
+
+    def preparar_ajuste_responsivo(self):
+        """
+        Detiene la animación antes de que
+        BotonesResponsivos cambie la geometría.
+        """
+
+        self.animacion.stop()
+
+        if self.cursor_encima:
+            self.boton.setGeometry(
+                self.geometria_normal
+            )
+
+    def actualizar_geometria_base(self):
+        """
+        Guarda la posición y tamaño establecidos
+        por BotonesResponsivos.
+        """
+
+        self.animacion.stop()
+
+        self.geometria_normal = QtCore.QRect(
+            self.boton.geometry()
+        )
+
+        if (
+            self.cursor_encima
+            and self.boton.isEnabled()
+        ):
+            self.boton.setGeometry(
+                self.obtener_geometria_grande()
+            )
+
+    def restaurar_inmediatamente(self):
+        """
+        Devuelve el botón a su tamaño normal sin animación.
+        Se utiliza cuando el botón queda deshabilitado.
+        """
+
+        self.cursor_encima = False
+        self.animacion.stop()
+
+        self.boton.setGeometry(
+            self.geometria_normal
+        )
+
+    def eventFilter(self, objeto, evento):
+        if objeto is self.boton:
+
+            if (
+                evento.type()
+                == QtCore.QEvent.Type.Enter
+                and self.boton.isEnabled()
+            ):
+                self.cursor_encima = True
+
+                # Coloca el botón por encima de los demás.
+                self.boton.raise_()
+
+                self.animar_hacia(
+                    self.obtener_geometria_grande()
+                )
+
+            elif (
+                evento.type()
+                == QtCore.QEvent.Type.Leave
+            ):
+                if self.cursor_encima:
+                    self.cursor_encima = False
+
+                    self.animar_hacia(
+                        self.geometria_normal
+                    )
+
+            elif (
+                evento.type()
+                == QtCore.QEvent.Type.EnabledChange
+            ):
+                if not self.boton.isEnabled():
+                    self.restaurar_inmediatamente()
+
+        return super().eventFilter(
+            objeto,
+            evento
+        )
+
+
 class Lecciones(QtWidgets.QWidget):
-    def __init__(self,jugador=None,ventana_anterior=None):
+    def __init__(
+        self,
+        jugador=None,
+        ventana_anterior=None
+    ):
         super().__init__()
+
         quitar(self)
+
         self.jugador = jugador
         self.ventana_anterior = ventana_anterior
 
@@ -69,10 +266,10 @@ class Lecciones(QtWidgets.QWidget):
         )
 
         ruta_logo = (
-                PROYECTO_DIR
-                / "EXPO-DISEÑOS"
-                / "Logo"
-                / "logo_confondo.png"
+            PROYECTO_DIR
+            / "EXPO-DISEÑOS"
+            / "Logo"
+            / "logo_confondo.png"
         )
 
         if not ruta_ui.exists():
@@ -85,19 +282,24 @@ class Lecciones(QtWidgets.QWidget):
                 f"No se encontró la imagen:\n{ruta_imagen}"
             )
 
-        # Carga el formulario de Qt Designer.
+        if not ruta_logo.exists():
+            raise FileNotFoundError(
+                f"No se encontró el logo:\n{ruta_logo}"
+            )
+
+        # Carga el formulario creado en Qt Designer.
         uic.loadUi(
             str(ruta_ui),
             self
         )
 
-        # Resolución utilizada para diseñar el formulario.
+        # Resolución base del diseño.
         self.resize(
             1920,
             1080
         )
 
-        # Permite que pueda ajustarse a resoluciones menores o mayores.
+        # Permite maximizar y adaptar la ventana.
         self.setMinimumSize(
             0,
             0
@@ -108,12 +310,13 @@ class Lecciones(QtWidgets.QWidget):
             16777215
         )
 
-        # Crea el fondo adaptable.
+        # Fondo adaptable.
         self.fondo = FondoImagen(
             self,
             ruta_imagen
         )
 
+        # Logo adaptable.
         self.logo_reutilizable = LogoReutilizable(
             self,
             ruta_logo
@@ -121,17 +324,28 @@ class Lecciones(QtWidgets.QWidget):
 
         self.lbl_logo.raise_()
 
+        # Botones de selección de lenguaje.
+        self.botones_lenguaje = [
+            self.btnPython,
+            self.btnJava,
+            self.btnC,
+            self.btnMySQL,
+        ]
+
+        # Todos los botones que tendrán efecto hover.
+        self.botones_interactivos = [
+            self.btnPython,
+            self.btnJava,
+            self.btnC,
+            self.btnMySQL,
+            self.btnComenzar,
+            self.btn_volver,
+        ]
+
         # Hace responsivos todos los botones.
         self.botones_responsivos = BotonesResponsivos(
             ventana=self,
-            botones=[
-                self.btnPython,
-                self.btnJava,
-                self.btnC,
-                self.btnMySQL,
-                self.btnComenzar,
-                self.btn_volver,
-            ],
+            botones=self.botones_interactivos,
             ancho_base=1920,
             alto_base=1080,
             escalar_iconos=True,
@@ -139,53 +353,102 @@ class Lecciones(QtWidgets.QWidget):
         )
 
         self.configurar_botones()
+
+        # Crea el efecto hover para todos los botones.
+        self.efectos_hover = [
+            EfectoHoverBoton(
+                boton=boton,
+                factor=1.04,
+                duracion=120,
+                parent=self
+            )
+            for boton in self.botones_interactivos
+        ]
+
+        # Espera a que Qt termine de colocar los controles
+        # antes de guardar sus posiciones originales.
+        QtCore.QTimer.singleShot(
+            0,
+            self.actualizar_hover_botones
+        )
+
         self.conectar_eventos()
 
     def configurar_botones(self):
-        botones_lenguaje = [
-            self.btnPython,
-            self.btnJava,
-            self.btnC,
-            self.btnMySQL,
-        ]
+        """
+        Configura el cursor, la escala de grises inicial
+        y el estado del botón Comenzar.
+        """
 
-        for boton in botones_lenguaje:
+        for boton in self.botones_interactivos:
             boton.setCursor(
                 QtGui.QCursor(
                     QtCore.Qt.CursorShape.PointingHandCursor
                 )
             )
 
-            # Al comenzar, todos los lenguajes aparecen grises.
+        # Todos los lenguajes comienzan en gris.
+        for boton in self.botones_lenguaje:
             self.aplicar_escala_grises(
                 boton,
                 activar=True
             )
 
-        self.btnComenzar.setCursor(
-            QtGui.QCursor(
-                QtCore.Qt.CursorShape.PointingHandCursor
-            )
+        # No se puede comenzar hasta seleccionar
+        # un lenguaje.
+        self.btnComenzar.setEnabled(
+            False
         )
 
-        # Desactivado hasta elegir un lenguaje.
-        self.btnComenzar.setEnabled(False)
+    def actualizar_hover_botones(self):
+        """
+        Actualiza las posiciones normales utilizadas
+        por las animaciones.
+        """
+
+        for efecto in getattr(
+            self,
+            "efectos_hover",
+            []
+        ):
+            efecto.actualizar_geometria_base()
+
+    def preparar_hover_para_resize(self):
+        """
+        Restaura temporalmente los botones antes
+        de aplicar el ajuste responsivo.
+        """
+
+        for efecto in getattr(
+            self,
+            "efectos_hover",
+            []
+        ):
+            efecto.preparar_ajuste_responsivo()
 
     def conectar_eventos(self):
         self.btnPython.clicked.connect(
-            lambda: self.seleccionar_lenguaje("Python")
+            lambda: self.seleccionar_lenguaje(
+                "Python"
+            )
         )
 
         self.btnJava.clicked.connect(
-            lambda: self.seleccionar_lenguaje("Java")
+            lambda: self.seleccionar_lenguaje(
+                "Java"
+            )
         )
 
         self.btnC.clicked.connect(
-            lambda: self.seleccionar_lenguaje("C")
+            lambda: self.seleccionar_lenguaje(
+                "C"
+            )
         )
 
         self.btnMySQL.clicked.connect(
-            lambda: self.seleccionar_lenguaje("MySQL")
+            lambda: self.seleccionar_lenguaje(
+                "MySQL"
+            )
         )
 
         self.btnComenzar.clicked.connect(
@@ -206,11 +469,13 @@ class Lecciones(QtWidgets.QWidget):
             "MySQL": self.btnMySQL,
         }
 
-        # Todos vuelven a ponerse grises.
+        # Coloca nuevamente todos los botones en gris.
         self.limpiar_estilos_lenguajes()
 
-        # Recupera los colores del botón seleccionado.
-        boton_seleccionado = botones.get(lenguaje)
+        # Recupera el color del lenguaje seleccionado.
+        boton_seleccionado = botones.get(
+            lenguaje
+        )
 
         if boton_seleccionado is not None:
             self.aplicar_escala_grises(
@@ -219,17 +484,17 @@ class Lecciones(QtWidgets.QWidget):
             )
 
         # Habilita el botón Comenzar.
-        self.btnComenzar.setEnabled(True)
+        self.btnComenzar.setEnabled(
+            True
+        )
 
     def limpiar_estilos_lenguajes(self):
-        botones_lenguaje = [
-            self.btnPython,
-            self.btnJava,
-            self.btnC,
-            self.btnMySQL,
-        ]
+        """
+        Coloca todos los botones de lenguajes
+        nuevamente en escala de grises.
+        """
 
-        for boton in botones_lenguaje:
+        for boton in self.botones_lenguaje:
             self.aplicar_escala_grises(
                 boton,
                 activar=True
@@ -240,7 +505,10 @@ class Lecciones(QtWidgets.QWidget):
             Alertas.mostrar(
                 self,
                 "Selecciona un lenguaje",
-                "Debes seleccionar un lenguaje antes de comenzar la aventura.",
+                (
+                    "Debes seleccionar un lenguaje antes "
+                    "de comenzar la aventura."
+                ),
                 "advertencia"
             )
             return
@@ -249,36 +517,47 @@ class Lecciones(QtWidgets.QWidget):
             if self.lenguaje_seleccionado == "Python":
                 from NivelesPython import NivelesPython
 
-                self.ventana_niveles = self.crear_ventana_niveles(
-                    NivelesPython
+                self.ventana_niveles = (
+                    self.crear_ventana_niveles(
+                        NivelesPython
+                    )
                 )
 
             elif self.lenguaje_seleccionado == "Java":
                 from NivelesJava import NivelesJava
 
-                self.ventana_niveles = self.crear_ventana_niveles(
-                    NivelesJava
+                self.ventana_niveles = (
+                    self.crear_ventana_niveles(
+                        NivelesJava
+                    )
                 )
 
             elif self.lenguaje_seleccionado == "C":
                 from NivelesC import NivelesC
 
-                self.ventana_niveles = self.crear_ventana_niveles(
-                    NivelesC
+                self.ventana_niveles = (
+                    self.crear_ventana_niveles(
+                        NivelesC
+                    )
                 )
 
             elif self.lenguaje_seleccionado == "MySQL":
                 from NivelesMySQL import NivelesMySQL
 
-                self.ventana_niveles = self.crear_ventana_niveles(
-                    NivelesMySQL
+                self.ventana_niveles = (
+                    self.crear_ventana_niveles(
+                        NivelesMySQL
+                    )
                 )
 
             else:
                 Alertas.mostrar(
                     self,
                     "Lenguaje no válido",
-                    "El lenguaje seleccionado no es válido.",
+                    (
+                        "El lenguaje seleccionado "
+                        "no es válido."
+                    ),
                     "advertencia"
                 )
                 return
@@ -288,19 +567,25 @@ class Lecciones(QtWidgets.QWidget):
                 self.ventana_niveles
             )
 
-        except Exception as e:
+        except Exception as error:
             Alertas.mostrar(
                 self,
                 "Error al abrir niveles",
-                f"No se pudo abrir la ventana de niveles.\n\nDetalles:\n{e}",
+                (
+                    "No se pudo abrir la ventana "
+                    "de niveles."
+                    f"\n\nDetalles:\n{error}"
+                ),
                 "error"
             )
 
-    def crear_ventana_niveles(self, clase_niveles):
+    def crear_ventana_niveles(
+        self,
+        clase_niveles
+    ):
         """
-        Intenta crear la ventana enviando el jugador y esta
-        ventana como anterior. Si la clase no recibe esos
-        argumentos, prueba con formas más simples.
+        Intenta crear la ventana enviando el jugador
+        y esta ventana como ventana anterior.
         """
 
         try:
@@ -322,16 +607,18 @@ class Lecciones(QtWidgets.QWidget):
         try:
             app = QtWidgets.QApplication.instance()
 
-            # Primero intenta utilizar el historial universal.
+            # Primero utiliza el historial universal.
             if (
                 hasattr(app, "historial_forms")
                 and len(app.historial_forms) > 0
             ):
-                FormAnterior(self)
+                FormAnterior(
+                    self
+                )
                 return
 
-            # Si se entregó una ventana anterior explícitamente,
-            # regresa a ella.
+            # Si se recibió una ventana anterior,
+            # regresa directamente a ella.
             if self.ventana_anterior is not None:
                 FormTransicion(
                     self,
@@ -341,8 +628,7 @@ class Lecciones(QtWidgets.QWidget):
                 return
 
             # Si no existe historial ni ventana anterior,
-            # determina si debe volver al menú de administrador
-            # o al menú de usuario.
+            # determina el menú correspondiente.
             if self.es_administrador():
                 from MenuAdministrador import MenuAdministrador
 
@@ -352,7 +638,9 @@ class Lecciones(QtWidgets.QWidget):
                     )
 
                 except TypeError:
-                    self.ventana_menu = MenuAdministrador()
+                    self.ventana_menu = (
+                        MenuAdministrador()
+                    )
 
             else:
                 from MenuUsuario import MenuUsuario
@@ -371,26 +659,40 @@ class Lecciones(QtWidgets.QWidget):
                 guardar_actual=False
             )
 
-        except Exception as e:
+        except Exception as error:
             Alertas.mostrar(
                 self,
                 "Error",
-                f"No se pudo volver a la pantalla anterior.\n\nDetalles:\n{e}",
-                "error"         
+                (
+                    "No se pudo volver a la pantalla "
+                    "anterior."
+                    f"\n\nDetalles:\n{error}"
+                ),
+                "error"
             )
 
     def es_administrador(self):
         """
-        Intenta determinar si la información recibida pertenece
-        a un administrador.
+        Determina si la información recibida
+        corresponde a un administrador.
         """
 
         if self.jugador is None:
             return False
 
-        # Cuando los datos vienen en forma de diccionario.
-        if isinstance(self.jugador, dict):
-            if str(self.jugador.get("rol", "")).lower() == "administrador":
+        # Cuando los datos vienen como diccionario.
+        if isinstance(
+            self.jugador,
+            dict
+        ):
+            rol = str(
+                self.jugador.get(
+                    "rol",
+                    ""
+                )
+            ).lower()
+
+            if rol == "administrador":
                 return True
 
             if "id_admin" in self.jugador:
@@ -404,53 +706,33 @@ class Lecciones(QtWidgets.QWidget):
 
             return False
 
-        # Cuando los datos vienen en forma de objeto.
-        if hasattr(self.jugador, "id_admin"):
+        # Cuando los datos vienen como objeto.
+        if hasattr(
+            self.jugador,
+            "id_admin"
+        ):
             return True
 
         if (
-            hasattr(self.jugador, "usuario")
-            and not hasattr(self.jugador, "id_jugador")
+            hasattr(
+                self.jugador,
+                "usuario"
+            )
+            and not hasattr(
+                self.jugador,
+                "id_jugador"
+            )
         ):
             return True
 
         return False
 
-    def resizeEvent(self, event):
-        # Ajusta el fondo al tamaño actual de la ventana.
-        if hasattr(self, "fondo"):
-            self.fondo.actualizar_tamano(
-                self.width(),
-                self.height()
-            )
-
-            self.fondo.lower()
-
-        if hasattr(self, "lbl_logo"):
-            self.lbl_logo.raise_()
-
-        if hasattr(self, "logo_reutilizable"):
-            self.logo_reutilizable.actualizar()
-
-        # El frame principal también ocupa toda la ventana.
-        if hasattr(self, "Lecciones"):
-            self.Lecciones.setGeometry(
-                0,
-                0,
-                self.width(),
-                self.height()
-            )
-
-            self.Lecciones.raise_()
-
-        # Ajusta nuevamente los botones después de cambiar
-        # el tamaño del frame.
-        if hasattr(self, "botones_responsivos"):
-            self.botones_responsivos.ajustar()
-
-        super().resizeEvent(event)
-
     def volver_menu_administrador(self):
+        """
+        Método conservado por compatibilidad con otras
+        partes del proyecto que puedan llamarlo.
+        """
+
         try:
             app = QtWidgets.QApplication.instance()
 
@@ -458,7 +740,9 @@ class Lecciones(QtWidgets.QWidget):
                 hasattr(app, "historial_forms")
                 and len(app.historial_forms) > 0
             ):
-                FormAnterior(self)
+                FormAnterior(
+                    self
+                )
                 return
 
             if self.ventana_anterior is not None:
@@ -471,36 +755,47 @@ class Lecciones(QtWidgets.QWidget):
 
             from MenuAdministrador import MenuAdministrador
 
+            try:
+                self.ventana_menu = MenuAdministrador(
+                    self.jugador
+                )
+
+            except TypeError:
+                self.ventana_menu = MenuAdministrador()
+
             FormTransicion(
                 self,
-                MenuAdministrador,
+                self.ventana_menu,
                 guardar_actual=False
             )
 
-        except Exception as e:
+        except Exception as error:
             Alertas.mostrar(
                 self,
                 "Error",
-                f"No se pudo volver al Menú Administrador.\n\nDetalles:\n{e}",
+                (
+                    "No se pudo volver al Menú "
+                    "Administrador."
+                    f"\n\nDetalles:\n{error}"
+                ),
                 "error"
             )
 
-    def resizeEvent(self, event):
-        if hasattr(self, "fondo"):
-            self.fondo.actualizar_tamano(self.width(), self.height())
-            self.fondo.lower()
-
-        super().resizeEvent(event)
-
-    def aplicar_escala_grises(self, boton, activar=True):
+    def aplicar_escala_grises(
+        self,
+        boton,
+        activar=True
+    ):
         """
         Coloca el botón en escala de grises o recupera
         sus colores originales.
         """
 
         if activar:
-            efecto_gris = QtWidgets.QGraphicsColorizeEffect(
-                boton
+            efecto_gris = (
+                QtWidgets.QGraphicsColorizeEffect(
+                    boton
+                )
             )
 
             efecto_gris.setColor(
@@ -511,22 +806,148 @@ class Lecciones(QtWidgets.QWidget):
                 )
             )
 
-            # 1.0 = completamente gris.
-            efecto_gris.setStrength(1.0)
+            # 1.0 significa completamente gris.
+            efecto_gris.setStrength(
+                1.0
+            )
 
             boton.setGraphicsEffect(
                 efecto_gris
             )
 
         else:
-            # Quita el efecto y muestra la imagen original.
-            boton.setGraphicsEffect(None)
+            # Quita el efecto y recupera
+            # la imagen con sus colores.
+            boton.setGraphicsEffect(
+                None
+            )
+
+    def resizeEvent(self, event):
+        """
+        Ajusta el fondo, frame, logo, botones responsivos
+        y geometrías utilizadas por el efecto hover.
+        """
+
+        # Ajusta el fondo.
+        if hasattr(
+            self,
+            "fondo"
+        ):
+            self.fondo.actualizar_tamano(
+                self.width(),
+                self.height()
+            )
+
+            self.fondo.lower()
+
+        # El frame principal ocupa toda la ventana.
+        if hasattr(
+            self,
+            "Lecciones"
+        ):
+            self.Lecciones.setGeometry(
+                0,
+                0,
+                self.width(),
+                self.height()
+            )
+
+            self.Lecciones.raise_()
+
+        # Mantiene el logo por encima del fondo y el frame.
+        if hasattr(
+            self,
+            "lbl_logo"
+        ):
+            self.lbl_logo.raise_()
+
+        if hasattr(
+            self,
+            "logo_reutilizable"
+        ):
+            self.logo_reutilizable.actualizar()
+
+        # Restaura temporalmente los botones antes
+        # de aplicar las nuevas posiciones responsivas.
+        if hasattr(
+            self,
+            "efectos_hover"
+        ):
+            self.preparar_hover_para_resize()
+
+        # Ajusta los botones a la resolución actual.
+        if hasattr(
+            self,
+            "botones_responsivos"
+        ):
+            self.botones_responsivos.ajustar()
+
+        # Guarda las nuevas posiciones normales.
+        if hasattr(
+            self,
+            "efectos_hover"
+        ):
+            self.actualizar_hover_botones()
+
+        super().resizeEvent(
+            event
+        )
+
+    def showEvent(self, event):
+        """
+        Actualiza la interfaz cuando se muestra
+        la ventana.
+        """
+
+        super().showEvent(
+            event
+        )
+
+        QtCore.QTimer.singleShot(
+            0,
+            self.actualizar_interfaz
+        )
+
+    def actualizar_interfaz(self):
+        """
+        Realiza un ajuste final después de que
+        la ventana termina de mostrarse.
+        """
+
+        if hasattr(
+            self,
+            "efectos_hover"
+        ):
+            self.preparar_hover_para_resize()
+
+        if hasattr(
+            self,
+            "botones_responsivos"
+        ):
+            self.botones_responsivos.ajustar()
+
+        if hasattr(
+            self,
+            "efectos_hover"
+        ):
+            self.actualizar_hover_botones()
+
+        if hasattr(
+            self,
+            "lbl_logo"
+        ):
+            self.lbl_logo.raise_()
+
 
 if __name__ == "__main__":
-    app = QtWidgets.QApplication(sys.argv)
+    app = QtWidgets.QApplication(
+        sys.argv
+    )
 
     ventana = Lecciones()
 
     ventana.showMaximized()
 
-    sys.exit(app.exec())
+    sys.exit(
+        app.exec()
+    )

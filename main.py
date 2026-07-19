@@ -96,7 +96,7 @@ def obtener_argumentos():
         "--nivel",
         type=int,
         default= 3,
-      
+
     )
 
     parser.add_argument(

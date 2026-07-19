@@ -34,6 +34,21 @@ class NivelMySQL01(JuegoBase):
     PISOS = (
         (0, LONGITUD_NIVEL),
     )
+    ENEMIGOS = (
+        {
+            
+        "tipo": "jabali",
+        "x_inicial": 3800,
+        "x_limite": 3400,
+        "ajuste_y": 0,
+        "ancho": 100,
+        "alto": 68,
+        "velocidad": 80,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+
+        },
+    )
     NPCS = (
     {
         "nombre": "pinguino_1",
