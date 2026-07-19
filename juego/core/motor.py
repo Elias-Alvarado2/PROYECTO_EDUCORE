@@ -14,8 +14,11 @@ import sys
 import textwrap
 import math
 import multiprocessing
+import subprocess
 from functools import lru_cache
 from pathlib import Path
+from juego.sistemas.audio import gestor_audio
+import os
 
 import pygame
 
@@ -103,7 +106,7 @@ MUSICA_DIR = ASSETS_DIR / "musica"
 EFECTOS_DIR = ASSETS_DIR / "efectos"
 RUTA_SONIDO_MUERTE = EFECTOS_DIR / "sonido_muerte.ogg"
 RUTA_MUSICA_FONDO = MUSICA_DIR / "musicamecanicogd.ogg"
-VOLUMEN_MUSICA = 1000
+VOLUMEN_MUSICA = 1.0
 
 RUTAS_NPC = [
     NPC_DIR / "profesor1.png",
@@ -280,8 +283,8 @@ PERSONAJES_CONFIG = {
         _FRAMES_CERDO,
         escala=5.1,
 
-        hitbox_izquierda=60,
-        hitbox_derecha=60,
+        hitbox_izquierda=40,
+        hitbox_derecha=30,
         hitbox_arriba=60,
         hitbox_abajo=20,
     ),
@@ -314,9 +317,9 @@ PERSONAJES_CONFIG = {
         _FRAMES_GATO_SALTAR,
         escala=4.3,
 
-        hitbox_izquierda=30,
-        hitbox_derecha=30,
-        hitbox_arriba=110,
+        hitbox_izquierda=40,
+        hitbox_derecha=40,
+        hitbox_arriba=115,
         hitbox_abajo=20,
     ),
 
@@ -593,9 +596,13 @@ def construir_paginas_leccion(leccion, nombre_lenguaje):
     titulo = normalizar_texto(leccion.get("titulo"))
     teoria = normalizar_texto(leccion.get("contenido_teoria"))
     codigo = normalizar_texto(leccion.get("codigo_ejemplo"))
+
     contenido_final = normalizar_texto(
         leccion.get("contenido_final")
     )
+
+    contenido_final = normalizar_texto(leccion.get("contenido_final"))
+
 
     paginas = []
 
@@ -625,17 +632,17 @@ def construir_paginas_leccion(leccion, nombre_lenguaje):
         for linea in lineas_codigo:
             posible = bloque + linea + "\n"
 
-            if (
-                len(posible) > 115
-                and bloque.strip() != "Ejemplo:"
-            ):
-                paginas.append(bloque.rstrip())
-                bloque = "Ejemplo:\n" + linea + "\n"
-            else:
-                bloque = posible
-
+    if (
+        len(posible) > 115
+        and bloque.strip() != "Ejemplo:"
+    ):
+        paginas.append(bloque.rstrip())
+        bloque = "Ejemplo:\n" + linea + "\n"
+    else:
+        bloque = posible
         if bloque.strip():
             paginas.append(bloque.rstrip())
+
 
     # 3. Texto posterior al ejemplo, solamente cuando existe.
     if contenido_final:
@@ -645,6 +652,16 @@ def construir_paginas_leccion(leccion, nombre_lenguaje):
                 max_caracteres=105,
             )
         )
+
+    # contenido_final pertenece al cierre de la leccion, por eso se agrega
+    # despues del ejemplo de codigo y conserva la paginacion del texto normal.
+    paginas.extend(
+        dividir_texto_en_paginas(
+            contenido_final,
+            max_caracteres=105,
+        )
+    )
+
 
     return paginas
 
@@ -998,9 +1015,13 @@ class ConexionEduCore:
 
         leccion = self.seleccionar_uno(
             """
+
             SELECT id_leccion, id_lenguaje, titulo, contenido_teoria,
                    codigo_ejemplo, contenido_final,
                    orden, puntos, estado
+
+            SELECT leccion.*
+
             FROM leccion
             WHERE id_lenguaje = %s
               AND orden = %s
@@ -1015,9 +1036,13 @@ class ConexionEduCore:
 
         return self.seleccionar_uno(
             """
+
             SELECT id_leccion, id_lenguaje, titulo, contenido_teoria,
                    codigo_ejemplo, contenido_final,
                    orden, puntos, estado
+
+            SELECT leccion.*
+
             FROM leccion
             WHERE id_lenguaje = %s
               AND estado = 'Activa'
@@ -1038,9 +1063,13 @@ class ConexionEduCore:
 
         return self.seleccionar_uno(
             """
+
             SELECT id_leccion, id_lenguaje, titulo, contenido_teoria,
                    codigo_ejemplo, contenido_final,
                    orden, puntos, estado
+
+            SELECT leccion.*
+
             FROM leccion
             WHERE id_lenguaje = %s
               AND orden = %s
@@ -2068,6 +2097,10 @@ class NPC:
 # ============================================================
 
 class CajaDialogo:
+    # Mantiene el texto a la misma distancia del borde superior aunque una
+    # pagina de codigo haga crecer la caja de dialogo.
+    MARGEN_SUPERIOR_TEXTO = round(36 * ESCALA_JUEGO)
+
     def __init__(self):
         self.visible = False
 
@@ -2118,7 +2151,7 @@ class CajaDialogo:
         return primera_linea.strip() == "Ejemplo:"
 
     def _capacidad_lineas(self, alto_caja, salto_linea):
-        margen_y = int(alto_caja * 0.24)
+        margen_y = self.MARGEN_SUPERIOR_TEXTO
         ultimo_y_visible = alto_caja - 65
         espacio_lineas = ultimo_y_visible - margen_y
 
@@ -2280,7 +2313,7 @@ class CajaDialogo:
         self.dibujar_fondo(pantalla)
 
         margen_x = int(self.rect.width * 0.075)
-        margen_y = int(self.rect.height * 0.24)
+        margen_y = self.MARGEN_SUPERIOR_TEXTO
         ancho_texto = self.rect.width - (margen_x * 2)
         salto_linea = self.fuente.get_height() + 7
 
@@ -2752,15 +2785,16 @@ class JuegoEduCore:
     def _inicializar_pygame(self):
         pygame.init()
 
-        # pygame.quit() invalida las fuentes de la ejecución anterior, pero
-        # las funciones con lru_cache conservan esos objetos. Se limpian antes
-        # de crear la interfaz de una nueva ejecución del nivel.
         cargar_fuente_pixel.cache_clear()
         cargar_fuente_orbitron.cache_clear()
         cargar_fuente_practica.cache_clear()
 
         try:
-            pygame.mixer.init()
+            if pygame.mixer.get_init() is None:
+                pygame.mixer.init()
+
+            gestor_audio.recargar()
+
         except pygame.error as error:
             print("[AUDIO] No se pudo iniciar el audio:", error)
 
@@ -2813,8 +2847,9 @@ class JuegoEduCore:
         self.cartel_final = None
 
         self.en_pausa = False
+        self.proceso_ajustes = None
         self.boton_pausa_rects = {}
-        self.musica_silenciada = False
+        self.musica_silenciada = gestor_audio.silenciado
         self.musica_fondo_preparada = False
         self.interacciones = []
         self.interaccion_actual = None
@@ -3134,9 +3169,9 @@ class JuegoEduCore:
         if not self.npcs:
             print("[NPCS] No se creó ningún pingüino válido.")
 
-    def obtener_zona_interaccion_npc(self, npc):
+    def npc_esta_desbloqueado(self, npc):
         if npc is None:
-            return None
+            return False
 
         indice = getattr(npc, "indice_npc", 0)
 
@@ -3144,7 +3179,13 @@ class JuegoEduCore:
             npc_anterior = self.npcs[indice - 1]
 
             if not getattr(npc_anterior, "dialogo_terminado", False):
-                return None
+                return False
+
+        return True
+
+    def obtener_zona_interaccion_npc(self, npc):
+        if not self.npc_esta_desbloqueado(npc):
+            return None
 
         if (
             not getattr(npc, "repetible", True)
@@ -3615,10 +3656,6 @@ class JuegoEduCore:
     def cargar_sonido_muerte(self):
         self.sonido_muerte = None
 
-        if not pygame.mixer.get_init():
-            print("[AUDIO] El mezclador de Pygame no está inicializado.")
-            return False
-
         if not RUTA_SONIDO_MUERTE.exists():
             print(
                 "[AUDIO] No se encontró el sonido de muerte:",
@@ -3626,62 +3663,73 @@ class JuegoEduCore:
             )
             return False
 
-        try:
-            self.sonido_muerte = pygame.mixer.Sound(
-                str(RUTA_SONIDO_MUERTE)
-            )
-            self.sonido_muerte.set_volume(0.8)
-            return True
-        except pygame.error as error:
-            print(
-                "[AUDIO] No se pudo cargar el sonido de muerte:",
-                error,
-            )
-            self.sonido_muerte = None
-            return False
+        self.sonido_muerte = gestor_audio.cargar_efecto(
+            str(RUTA_SONIDO_MUERTE)
+        )
+
+        return self.sonido_muerte is not None
 
     def preparar_musica_fondo(self):
         self.musica_fondo_preparada = False
 
-        if not pygame.mixer.get_init():
+        if not gestor_audio.inicializar_mixer():
             return False
 
         if not RUTA_MUSICA_FONDO.exists():
-            print("[AUDIO] No se encontro la musica:", RUTA_MUSICA_FONDO)
+            print(
+                "[AUDIO] No se encontró la música:",
+                RUTA_MUSICA_FONDO,
+            )
             return False
 
         try:
-            pygame.mixer.music.load(str(RUTA_MUSICA_FONDO))
-            self._aplicar_volumen_musica()
+            pygame.mixer.music.load(
+                str(RUTA_MUSICA_FONDO)
+            )
+
+            gestor_audio.aplicar_volumen()
+
             self.musica_fondo_preparada = True
             return True
+
         except pygame.error as error:
-            print("[AUDIO] No se pudo reproducir la musica:", error)
+            print(
+                "[AUDIO] No se pudo preparar la música:",
+                error,
+            )
             return False
 
     def iniciar_musica_fondo_preparada(self):
-        if not pygame.mixer.get_init() or not self.musica_fondo_preparada:
+        if (
+                not pygame.mixer.get_init()
+                or not self.musica_fondo_preparada
+        ):
             return
 
         try:
             pygame.mixer.music.play(-1)
+            gestor_audio.aplicar_volumen()
+
         except pygame.error as error:
-            print("[AUDIO] No se pudo reproducir la musica:", error)
+            print(
+                "[AUDIO] No se pudo reproducir la música:",
+                error,
+            )
 
     def reproducir_musica_fondo(self):
         if self.preparar_musica_fondo():
             self.iniciar_musica_fondo_preparada()
 
     def _aplicar_volumen_musica(self):
-        volumen = 0 if self.musica_silenciada else VOLUMEN_MUSICA
-        pygame.mixer.music.set_volume(volumen)
+        self.musica_silenciada = gestor_audio.silenciado
+        gestor_audio.aplicar_volumen()
 
     def alternar_musica(self):
-        if not pygame.mixer.get_init():
-            return
+        gestor_audio.alternar_silencio()
 
-        self.musica_silenciada = not self.musica_silenciada
-        self._aplicar_volumen_musica()
+        self.musica_silenciada = (
+            gestor_audio.silenciado
+        )
 
     def reiniciar(self):
         self.camara_x = 0
@@ -3739,7 +3787,10 @@ class JuegoEduCore:
                 pygame.mixer.music.stop()
 
             if self.sonido_muerte is not None:
-                self.sonido_muerte.play()
+                gestor_audio.reproducir_efecto(
+                    self.sonido_muerte,
+                    volumen_relativo=0.8,
+                )
 
             self.sonido_muerte_reproducido = True
 
@@ -4468,6 +4519,9 @@ class JuegoEduCore:
             )
 
         for npc in self.npcs:
+            if not self.npc_esta_desbloqueado(npc):
+                continue
+
             zona_npc = pygame.Rect(
                 int(npc.zona_dialogo.x - self.camara_x),
                 int(npc.zona_dialogo.y),
@@ -5122,16 +5176,331 @@ class JuegoEduCore:
             texto_rect = texto_renderizado.get_rect(center=boton.rect.center)
             pantalla.blit(texto_renderizado, texto_rect)
 
+    def ejecutar_transicion_pausa(
+            self,
+            modo,
+            centro=None,
+            duracion=0.45,
+    ):
+        """
+        Ejecuta una transición de iris mientras el juego está pausado.
+
+        modo:
+            "cerrar" = cierra la pantalla.
+            "abrir" = vuelve a mostrar el menú de pausa.
+        """
+
+        if modo not in ("cerrar", "abrir"):
+            raise ValueError(
+                "El modo debe ser 'cerrar' o 'abrir'."
+            )
+
+        if centro is None:
+            centro = (
+                ANCHO // 2,
+                ALTO // 2,
+            )
+
+        # Cancela cualquier transición anterior.
+        self.transicion_iris.modo = None
+        self.transicion_iris.tiempo = 0.0
+
+        duracion_original = (
+            self.transicion_iris.duracion
+        )
+
+        self.transicion_iris.duracion = max(
+            0.10,
+            float(duracion),
+        )
+
+        try:
+            if modo == "cerrar":
+                self.transicion_iris.iniciar_cierre(
+                    centro
+                )
+            else:
+                self.transicion_iris.iniciar_apertura(
+                    centro
+                )
+
+            while self.transicion_iris.activa():
+                dt = min(
+                    self.clock.tick_busy_loop(FPS)
+                    / 1000.0,
+                    0.05,
+                )
+
+                # Mantiene Pygame respondiendo durante
+                # la animación.
+                for evento in pygame.event.get():
+                    if evento.type == pygame.QUIT:
+                        return False
+
+                # Dibuja nuevamente el menú de pausa.
+                self.dibujar_menu_pausa()
+
+                # Coloca el iris encima.
+                self.transicion_iris.dibujar(
+                    self.superficie_logica
+                )
+
+                pygame.display.flip()
+
+                # Actualiza la animación después de dibujar.
+                self.transicion_iris.actualizar(dt)
+
+            if modo == "cerrar":
+                # Garantiza una pantalla totalmente negra
+                # antes de cambiar de ventana.
+                self.superficie_logica.fill(
+                    (0, 0, 0)
+                )
+
+                pygame.display.flip()
+
+            return True
+
+        finally:
+            self.transicion_iris.duracion = (
+                duracion_original
+            )
+
+            # Evita un salto grande de tiempo después
+            # de terminar la transición.
+            self.clock.tick()
+
+    def abrir_formulario_ajustes(self):
+        """
+        Abre el formulario Ajustes desde el menú de pausa.
+
+        Ajustes.py se encuentra dentro de la carpeta CODIGOS.
+        El nivel permanece pausado mientras el formulario está abierto.
+        """
+
+        codigos_dir = BASE_DIR / "CODIGOS"
+        ruta_ajustes = codigos_dir / "Ajustes.py"
+
+        print("[AJUSTES] Botón detectado")
+        print("[AJUSTES] Carpeta CODIGOS:", codigos_dir)
+        print("[AJUSTES] Ruta:", ruta_ajustes)
+
+        if not ruta_ajustes.is_file():
+            print(
+                "[AJUSTES] No se encontró Ajustes.py en:",
+                ruta_ajustes,
+            )
+            return
+
+        # Comprueba si ya existe un formulario abierto.
+        if self.proceso_ajustes is not None:
+            if self.proceso_ajustes.poll() is None:
+                print("[AJUSTES] El formulario ya está abierto.")
+                return
+
+            # El proceso anterior terminó; se limpia la referencia.
+            self.proceso_ajustes = None
+
+        centro_ajustes = (
+            self.botones_pausa["ajustes"].rect.center
+        )
+
+        transicion_completada = (
+            self.ejecutar_transicion_pausa(
+                modo="cerrar",
+                centro=centro_ajustes,
+            )
+        )
+
+        if not transicion_completada:
+            return
+
+        try:
+            # Asegura que el proceso de Ajustes pueda importar
+            # el paquete juego, aunque Ajustes.py esté en CODIGOS.
+            entorno = os.environ.copy()
+
+            pythonpath_actual = entorno.get(
+                "PYTHONPATH",
+                "",
+            )
+
+            if pythonpath_actual:
+                entorno["PYTHONPATH"] = (
+                        str(BASE_DIR)
+                        + os.pathsep
+                        + pythonpath_actual
+                )
+            else:
+                entorno["PYTHONPATH"] = str(BASE_DIR)
+
+            print("[AJUSTES] Abriendo formulario...")
+
+            self.proceso_ajustes = subprocess.Popen(
+                [
+                    sys.executable,
+                    str(ruta_ajustes),
+                    "--desde-juego",
+                ],
+                cwd=str(codigos_dir),
+                env=entorno,
+            )
+
+            print(
+                "[AJUSTES] Proceso iniciado. PID:",
+                self.proceso_ajustes.pid,
+            )
+
+            # Espera brevemente para detectar errores inmediatos.
+            pygame.time.wait(400)
+
+            codigo_salida = self.proceso_ajustes.poll()
+
+            if codigo_salida is not None:
+                print(
+                    "[AJUSTES] El formulario se cerró "
+                    "inmediatamente. Código:",
+                    codigo_salida,
+                )
+                return
+
+            # Mantiene el nivel pausado mientras Ajustes está abierto.
+            while self.proceso_ajustes.poll() is None:
+                for evento in pygame.event.get():
+                    if evento.type == pygame.QUIT:
+                        self.proceso_ajustes.terminate()
+                        break
+
+                # Lee los cambios de volumen guardados
+                # desde el proceso de PyQt6.
+                gestor_audio.recargar(
+                    aplicar=True,
+                    emitir=False,
+                )
+
+                self.musica_silenciada = (
+                    gestor_audio.silenciado
+                )
+
+                pygame.time.wait(50)
+
+        except Exception as error:
+            print(
+                "[AJUSTES] No se pudo abrir el formulario:",
+                type(error).__name__,
+                error,
+            )
+
+        finally:
+            # Permite volver a abrir Ajustes después de cerrarlo.
+            self.proceso_ajustes = None
+
+            gestor_audio.recargar(
+                aplicar=True,
+                emitir=False,
+            )
+
+            self.musica_silenciada = (
+                gestor_audio.silenciado
+            )
+
+            pygame.event.clear()
+            self.clock.tick()
+
+            self.recuperar_foco_pygame()
+
+            self.ejecutar_transicion_pausa(
+                modo="abrir",
+                centro=centro_ajustes,
+            )
+
+    def recuperar_foco_pygame(self):
+        """
+        Recupera el foco de la ventana Pygame después de cerrar PyQt6.
+        Es especialmente importante en Windows.
+        """
+
+        pygame.mouse.set_visible(True)
+        pygame.event.clear()
+
+        if sys.platform != "win32":
+            return
+
+        try:
+            import ctypes
+
+            informacion_ventana = (
+                pygame.display.get_wm_info()
+            )
+
+            identificador_ventana = (
+                informacion_ventana.get("window")
+            )
+
+            if identificador_ventana:
+                # 5 = mostrar normalmente.
+                ctypes.windll.user32.ShowWindow(
+                    identificador_ventana,
+                    5,
+                )
+
+                ctypes.windll.user32.SetForegroundWindow(
+                    identificador_ventana
+                )
+
+        except Exception as error:
+            print(
+                "[AJUSTES] No se pudo recuperar el foco:",
+                error,
+            )
+
     def manejar_click_pausa(self, posicion):
-        if self.botones_pausa["reanudar"].fue_presionado(posicion):
+        # =====================================================
+        # REANUDAR
+        # =====================================================
+
+        if self.botones_pausa[
+            "reanudar"
+        ].fue_presionado(posicion):
             self.en_pausa = False
+            pygame.event.clear()
+
             return None
 
-        if self.botones_pausa["ajustes"].fue_presionado(posicion):
+        # =====================================================
+        # AJUSTES
+        # =====================================================
+
+        if self.botones_pausa[
+            "ajustes"
+        ].fue_presionado(posicion):
+            self.abrir_formulario_ajustes()
+
             return None
 
-        if self.botones_pausa["salir"].fue_presionado(posicion):
-            return "salir"
+        # =====================================================
+        # SALIR DEL NIVEL
+        # =====================================================
+
+        if self.botones_pausa[
+            "salir"
+        ].fue_presionado(posicion):
+
+            centro_salida = (
+                self.botones_pausa["salir"].rect.center
+            )
+
+            transicion_completada = (
+                self.ejecutar_transicion_pausa(
+                    modo="cerrar",
+                    centro=centro_salida,
+                )
+            )
+
+            if transicion_completada:
+                return "salir"
+
+            return None
 
         return None
 
@@ -5207,6 +5576,9 @@ class JuegoEduCore:
                 objeto_activo.dibujar(surface, camara_px)
 
         for npc in self.npcs:
+            if not self.npc_esta_desbloqueado(npc):
+                continue
+
             npc_x = round(npc.rect.x - camara_px)
 
             if (
@@ -5374,13 +5746,21 @@ class JuegoEduCore:
         return False
 
     def _cerrar(self):
-        if pygame.mixer.get_init():
-            pygame.mixer.music.stop()
+        if (
+            self.proceso_ajustes is not None
+            and self.proceso_ajustes.poll() is None
+        ):
+            self.proceso_ajustes.terminate()
 
+            try:
+                self.proceso_ajustes.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                self.proceso_ajustes.kill()
+
+        self.proceso_ajustes = None
+
+        gestor_audio.detener_todo()
         self.db.cerrar()
-
-        # Cierra únicamente Pygame. No se usa sys.exit() porque el menú
-        # de niveles PyQt6 debe continuar abierto en el mismo proceso.
         pygame.quit()
 
     def ejecutar(self):
