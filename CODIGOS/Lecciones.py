@@ -20,6 +20,11 @@ class FondoImagen(QtWidgets.QLabel):
             str(self.ruta_imagen)
         )
 
+        if self.pixmap_original.isNull():
+            raise FileNotFoundError(
+                f"No se pudo cargar el fondo:\n{ruta_imagen}"
+            )
+
         self.setScaledContents(True)
 
         self.setGeometry(
@@ -33,8 +38,6 @@ class FondoImagen(QtWidgets.QLabel):
             self.pixmap_original
         )
 
-        # Mantiene el fondo detrás del frame
-        # y de todos los controles.
         self.lower()
 
     def actualizar_tamano(self, ancho, alto):
@@ -48,18 +51,19 @@ class FondoImagen(QtWidgets.QLabel):
 
 class EfectoHoverBoton(QtCore.QObject):
     """
-    Agranda suavemente el botón al pasar el cursor.
+    Agrega una animación suave de crecimiento,
+    elevación, presión y sombra.
 
-    No utiliza QGraphicsDropShadowEffect porque los botones
-    de los lenguajes ya utilizan QGraphicsColorizeEffect
-    para mostrarse en escala de grises.
+    La sombra se dibuja como un rectángulo desenfocado
+    detrás del botón. No copia la imagen del botón.
     """
 
     def __init__(
         self,
         boton,
-        factor=1.04,
-        duracion=120,
+        factor_hover=1.045,
+        factor_presionado=1.018,
+        elevacion=3,
         parent=None
     ):
         super().__init__(
@@ -67,163 +71,501 @@ class EfectoHoverBoton(QtCore.QObject):
         )
 
         self.boton = boton
-        self.factor = factor
-        self.duracion = duracion
-        self.cursor_encima = False
+        self.factor_hover = factor_hover
+        self.factor_presionado = factor_presionado
+        self.elevacion = elevacion
 
-        # Guarda la posición y el tamaño normales.
+        self.cursor_encima = False
+        self.presionado = False
+
         self.geometria_normal = QtCore.QRect(
-            boton.geometry()
+            self.boton.geometry()
         )
 
-        # Animación del tamaño y posición.
-        self.animacion = QtCore.QPropertyAnimation(
-            boton,
+        parent_boton = self.boton.parentWidget()
+
+        # Rectángulo independiente que produce la sombra.
+        # No contiene ninguna copia de la imagen del botón.
+        self.capa_sombra = QtWidgets.QFrame(
+            parent_boton
+        )
+
+        self.capa_sombra.setObjectName(
+            f"sombra_{self.boton.objectName()}"
+        )
+
+        self.capa_sombra.setAttribute(
+            QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents,
+            True
+        )
+
+        self.capa_sombra.setAttribute(
+            QtCore.Qt.WidgetAttribute.WA_StyledBackground,
+            True
+        )
+
+        self.capa_sombra.setFocusPolicy(
+            QtCore.Qt.FocusPolicy.NoFocus
+        )
+
+        # Efecto de desenfoque para suavizar la sombra.
+        self.efecto_desenfoque = QtWidgets.QGraphicsBlurEffect(
+            self.capa_sombra
+        )
+
+        self.efecto_desenfoque.setBlurRadius(
+            11
+        )
+
+        self.capa_sombra.setGraphicsEffect(
+            self.efecto_desenfoque
+        )
+
+        self.actualizar_estilo_sombra()
+
+        self.capa_sombra.setGeometry(
+            self.obtener_geometria_sombra_normal()
+        )
+
+        self.capa_sombra.show()
+        self.capa_sombra.stackUnder(
+            self.boton
+        )
+
+        # Animación de la geometría del botón.
+        self.animacion_boton = QtCore.QPropertyAnimation(
+            self.boton,
             b"geometry",
             self
         )
 
-        self.animacion.setDuration(
-            self.duracion
+        # Animación de la geometría de la sombra.
+        self.animacion_sombra = QtCore.QPropertyAnimation(
+            self.capa_sombra,
+            b"geometry",
+            self
         )
 
-        self.animacion.setEasingCurve(
-            QtCore.QEasingCurve.Type.OutCubic
+        # Animación del desenfoque.
+        self.animacion_desenfoque = QtCore.QPropertyAnimation(
+            self.efecto_desenfoque,
+            b"blurRadius",
+            self
+        )
+
+        self.grupo_animacion = QtCore.QParallelAnimationGroup(
+            self
+        )
+
+        self.grupo_animacion.addAnimation(
+            self.animacion_boton
+        )
+
+        self.grupo_animacion.addAnimation(
+            self.animacion_sombra
+        )
+
+        self.grupo_animacion.addAnimation(
+            self.animacion_desenfoque
         )
 
         self.boton.installEventFilter(
             self
         )
 
-    def obtener_geometria_grande(self):
+        self.actualizar_estado_habilitado()
+
+    def actualizar_estilo_sombra(self):
         """
-        Calcula una geometría más grande manteniendo
-        el botón centrado.
+        Cambia la intensidad de la sombra según
+        el estado habilitado del botón.
+        """
+
+        if self.boton.isEnabled():
+            opacidad = 135
+        else:
+            opacidad = 55
+
+        radio = max(
+            6,
+            round(self.geometria_normal.height() * 0.06)
+        )
+
+        self.capa_sombra.setStyleSheet(
+            f"""
+            QFrame {{
+                background-color: rgba(
+                    0,
+                    0,
+                    0,
+                    {opacidad}
+                );
+
+                border: none;
+                border-radius: {radio}px;
+            }}
+            """
+        )
+
+    def crear_geometria_boton(
+        self,
+        factor,
+        elevacion=0
+    ):
+        """
+        Agranda el botón conservando su centro.
         """
 
         rectangulo = self.geometria_normal
 
-        ancho_nuevo = round(
-            rectangulo.width() * self.factor
+        ancho_nuevo = max(
+            1,
+            round(rectangulo.width() * factor)
         )
 
-        alto_nuevo = round(
-            rectangulo.height() * self.factor
+        alto_nuevo = max(
+            1,
+            round(rectangulo.height() * factor)
         )
 
-        diferencia_ancho = (
-            ancho_nuevo - rectangulo.width()
+        centro = rectangulo.center()
+
+        x_nuevo = (
+            centro.x()
+            - ancho_nuevo // 2
         )
 
-        diferencia_alto = (
-            alto_nuevo - rectangulo.height()
+        y_nuevo = (
+            centro.y()
+            - alto_nuevo // 2
+            - elevacion
         )
 
         return QtCore.QRect(
-            rectangulo.x() - diferencia_ancho // 2,
-            rectangulo.y() - diferencia_alto // 2,
+            x_nuevo,
+            y_nuevo,
             ancho_nuevo,
             alto_nuevo
         )
 
-    def animar_hacia(self, geometria_destino):
+    def crear_geometria_sombra(
+        self,
+        geometria_boton,
+        desplazamiento_y,
+        reduccion=4
+    ):
         """
-        Ejecuta la animación desde el tamaño actual
-        hasta la geometría indicada.
+        Crea una sombra ligeramente más pequeña que
+        el botón y desplazada hacia abajo.
         """
 
-        self.animacion.stop()
+        reduccion_real = max(
+            1,
+            reduccion
+        )
 
-        self.animacion.setStartValue(
+        sombra = geometria_boton.adjusted(
+            reduccion_real,
+            reduccion_real,
+            -reduccion_real,
+            -reduccion_real
+        )
+
+        sombra.translate(
+            0,
+            desplazamiento_y
+        )
+
+        return sombra
+
+    def obtener_geometria_sombra_normal(self):
+        return self.crear_geometria_sombra(
+            self.geometria_normal,
+            desplazamiento_y=5,
+            reduccion=4
+        )
+
+    def colocar_capas_correctamente(self):
+        """
+        Mantiene la sombra detrás de su botón.
+        """
+
+        self.capa_sombra.raise_()
+        self.boton.raise_()
+
+        self.capa_sombra.stackUnder(
+            self.boton
+        )
+
+    def ejecutar_animacion(
+        self,
+        geometria_boton,
+        geometria_sombra,
+        desenfoque,
+        duracion,
+        curva
+    ):
+        self.grupo_animacion.stop()
+
+        self.animacion_boton.setDuration(
+            duracion
+        )
+
+        self.animacion_boton.setEasingCurve(
+            curva
+        )
+
+        self.animacion_boton.setStartValue(
             self.boton.geometry()
         )
 
-        self.animacion.setEndValue(
-            geometria_destino
+        self.animacion_boton.setEndValue(
+            geometria_boton
         )
 
-        self.animacion.start()
+        self.animacion_sombra.setDuration(
+            duracion
+        )
 
-    def preparar_ajuste_responsivo(self):
-        """
-        Detiene la animación antes de que
-        BotonesResponsivos cambie la geometría.
-        """
+        self.animacion_sombra.setEasingCurve(
+            curva
+        )
 
-        self.animacion.stop()
+        self.animacion_sombra.setStartValue(
+            self.capa_sombra.geometry()
+        )
 
-        if self.cursor_encima:
-            self.boton.setGeometry(
-                self.geometria_normal
-            )
+        self.animacion_sombra.setEndValue(
+            geometria_sombra
+        )
 
-    def actualizar_geometria_base(self):
-        """
-        Guarda la posición y tamaño establecidos
-        por BotonesResponsivos.
-        """
+        self.animacion_desenfoque.setDuration(
+            duracion
+        )
 
-        self.animacion.stop()
+        self.animacion_desenfoque.setEasingCurve(
+            QtCore.QEasingCurve.Type.OutCubic
+        )
 
-        self.geometria_normal = QtCore.QRect(
-            self.boton.geometry()
+        self.animacion_desenfoque.setStartValue(
+            self.efecto_desenfoque.blurRadius()
+        )
+
+        self.animacion_desenfoque.setEndValue(
+            desenfoque
+        )
+
+        self.colocar_capas_correctamente()
+
+        self.grupo_animacion.start()
+
+    def mostrar_hover(self):
+        if not self.boton.isEnabled():
+            return
+
+        self.cursor_encima = True
+        self.presionado = False
+
+        geometria_hover = self.crear_geometria_boton(
+            factor=self.factor_hover,
+            elevacion=self.elevacion
+        )
+
+        geometria_sombra = self.crear_geometria_sombra(
+            geometria_hover,
+            desplazamiento_y=8,
+            reduccion=4
+        )
+
+        self.ejecutar_animacion(
+            geometria_boton=geometria_hover,
+            geometria_sombra=geometria_sombra,
+            desenfoque=19,
+            duracion=165,
+            curva=QtCore.QEasingCurve.Type.OutCubic
+        )
+
+    def mostrar_presionado(self):
+        if not self.boton.isEnabled():
+            return
+
+        self.presionado = True
+
+        geometria_presionada = self.crear_geometria_boton(
+            factor=self.factor_presionado,
+            elevacion=0
+        )
+
+        geometria_sombra = self.crear_geometria_sombra(
+            geometria_presionada,
+            desplazamiento_y=3,
+            reduccion=4
+        )
+
+        self.ejecutar_animacion(
+            geometria_boton=geometria_presionada,
+            geometria_sombra=geometria_sombra,
+            desenfoque=8,
+            duracion=75,
+            curva=QtCore.QEasingCurve.Type.OutCubic
+        )
+
+    def mostrar_normal(self):
+        self.cursor_encima = False
+        self.presionado = False
+
+        self.ejecutar_animacion(
+            geometria_boton=self.geometria_normal,
+            geometria_sombra=(
+                self.obtener_geometria_sombra_normal()
+            ),
+            desenfoque=11,
+            duracion=140,
+            curva=QtCore.QEasingCurve.Type.OutCubic
+        )
+
+    def restaurar_despues_de_presionar(self):
+        self.presionado = False
+
+        posicion_cursor = self.boton.mapFromGlobal(
+            QtGui.QCursor.pos()
+        )
+
+        cursor_dentro = self.boton.rect().contains(
+            posicion_cursor
         )
 
         if (
-            self.cursor_encima
+            cursor_dentro
             and self.boton.isEnabled()
         ):
-            self.boton.setGeometry(
-                self.obtener_geometria_grande()
-            )
+            self.mostrar_hover()
+        else:
+            self.mostrar_normal()
 
     def restaurar_inmediatamente(self):
-        """
-        Devuelve el botón a su tamaño normal sin animación.
-        Se utiliza cuando el botón queda deshabilitado.
-        """
+        self.grupo_animacion.stop()
 
         self.cursor_encima = False
-        self.animacion.stop()
+        self.presionado = False
 
         self.boton.setGeometry(
             self.geometria_normal
         )
 
+        self.capa_sombra.setGeometry(
+            self.obtener_geometria_sombra_normal()
+        )
+
+        self.efecto_desenfoque.setBlurRadius(
+            11 if self.boton.isEnabled() else 7
+        )
+
+        self.colocar_capas_correctamente()
+
+    def actualizar_estado_habilitado(self):
+        if self.boton.isEnabled():
+            self.boton.setCursor(
+                QtGui.QCursor(
+                    QtCore.Qt.CursorShape.PointingHandCursor
+                )
+            )
+        else:
+            self.boton.setCursor(
+                QtGui.QCursor(
+                    QtCore.Qt.CursorShape.ArrowCursor
+                )
+            )
+
+        self.actualizar_estilo_sombra()
+        self.restaurar_inmediatamente()
+
+    def preparar_ajuste_responsivo(self):
+        """
+        Restaura los controles antes de ejecutar
+        BotonesResponsivos.
+        """
+
+        self.grupo_animacion.stop()
+
+        self.boton.setGeometry(
+            self.geometria_normal
+        )
+
+        self.capa_sombra.setGeometry(
+            self.obtener_geometria_sombra_normal()
+        )
+
+    def actualizar_geometria_base(self):
+        """
+        Guarda la nueva geometría asignada por
+        BotonesResponsivos.
+        """
+
+        self.grupo_animacion.stop()
+
+        self.geometria_normal = QtCore.QRect(
+            self.boton.geometry()
+        )
+
+        self.actualizar_estilo_sombra()
+
+        self.capa_sombra.setGeometry(
+            self.obtener_geometria_sombra_normal()
+        )
+
+        self.efecto_desenfoque.setBlurRadius(
+            11 if self.boton.isEnabled() else 7
+        )
+
+        self.colocar_capas_correctamente()
+
     def eventFilter(self, objeto, evento):
         if objeto is self.boton:
+            tipo_evento = evento.type()
 
-            if (
-                evento.type()
-                == QtCore.QEvent.Type.Enter
-                and self.boton.isEnabled()
-            ):
-                self.cursor_encima = True
+            if tipo_evento == QtCore.QEvent.Type.Enter:
+                self.mostrar_hover()
 
-                # Coloca el botón por encima de los demás.
-                self.boton.raise_()
-
-                self.animar_hacia(
-                    self.obtener_geometria_grande()
-                )
+            elif tipo_evento == QtCore.QEvent.Type.Leave:
+                self.mostrar_normal()
 
             elif (
-                evento.type()
-                == QtCore.QEvent.Type.Leave
+                tipo_evento
+                == QtCore.QEvent.Type.MouseButtonPress
             ):
-                if self.cursor_encima:
-                    self.cursor_encima = False
-
-                    self.animar_hacia(
-                        self.geometria_normal
-                    )
+                if (
+                    evento.button()
+                    == QtCore.Qt.MouseButton.LeftButton
+                ):
+                    self.mostrar_presionado()
 
             elif (
-                evento.type()
+                tipo_evento
+                == QtCore.QEvent.Type.MouseButtonRelease
+            ):
+                if (
+                    evento.button()
+                    == QtCore.Qt.MouseButton.LeftButton
+                ):
+                    self.restaurar_despues_de_presionar()
+
+            elif (
+                tipo_evento
                 == QtCore.QEvent.Type.EnabledChange
             ):
-                if not self.boton.isEnabled():
-                    self.restaurar_inmediatamente()
+                self.actualizar_estado_habilitado()
+
+            elif tipo_evento == QtCore.QEvent.Type.Show:
+                self.capa_sombra.show()
+
+                QtCore.QTimer.singleShot(
+                    0,
+                    self.actualizar_geometria_base
+                )
+
+            elif tipo_evento == QtCore.QEvent.Type.Hide:
+                self.capa_sombra.hide()
 
         return super().eventFilter(
             objeto,
@@ -287,19 +629,16 @@ class Lecciones(QtWidgets.QWidget):
                 f"No se encontró el logo:\n{ruta_logo}"
             )
 
-        # Carga el formulario creado en Qt Designer.
         uic.loadUi(
             str(ruta_ui),
             self
         )
 
-        # Resolución base del diseño.
         self.resize(
             1920,
             1080
         )
 
-        # Permite maximizar y adaptar la ventana.
         self.setMinimumSize(
             0,
             0
@@ -310,13 +649,11 @@ class Lecciones(QtWidgets.QWidget):
             16777215
         )
 
-        # Fondo adaptable.
         self.fondo = FondoImagen(
             self,
             ruta_imagen
         )
 
-        # Logo adaptable.
         self.logo_reutilizable = LogoReutilizable(
             self,
             ruta_logo
@@ -324,7 +661,6 @@ class Lecciones(QtWidgets.QWidget):
 
         self.lbl_logo.raise_()
 
-        # Botones de selección de lenguaje.
         self.botones_lenguaje = [
             self.btnPython,
             self.btnJava,
@@ -332,7 +668,6 @@ class Lecciones(QtWidgets.QWidget):
             self.btnMySQL,
         ]
 
-        # Todos los botones que tendrán efecto hover.
         self.botones_interactivos = [
             self.btnPython,
             self.btnJava,
@@ -342,7 +677,12 @@ class Lecciones(QtWidgets.QWidget):
             self.btn_volver,
         ]
 
-        # Hace responsivos todos los botones.
+        # Conserva permanentemente un efecto gris
+        # para cada botón de lenguaje.
+        self.efectos_grises = {}
+
+        self.crear_efectos_grises()
+
         self.botones_responsivos = BotonesResponsivos(
             ventana=self,
             botones=self.botones_interactivos,
@@ -354,32 +694,59 @@ class Lecciones(QtWidgets.QWidget):
 
         self.configurar_botones()
 
-        # Crea el efecto hover para todos los botones.
         self.efectos_hover = [
             EfectoHoverBoton(
                 boton=boton,
-                factor=1.04,
-                duracion=120,
+                factor_hover=1.045,
+                factor_presionado=1.018,
+                elevacion=3,
                 parent=self
             )
             for boton in self.botones_interactivos
         ]
 
-        # Espera a que Qt termine de colocar los controles
-        # antes de guardar sus posiciones originales.
         QtCore.QTimer.singleShot(
             0,
-            self.actualizar_hover_botones
+            self.actualizar_interfaz
         )
 
         self.conectar_eventos()
 
-    def configurar_botones(self):
+    def crear_efectos_grises(self):
         """
-        Configura el cursor, la escala de grises inicial
-        y el estado del botón Comenzar.
+        Crea una sola vez el efecto gris de cada lenguaje.
+
+        Los efectos no se eliminan ni se reemplazan al hacer
+        clic, evitando cierres nativos de Qt.
         """
 
+        for boton in self.botones_lenguaje:
+            efecto_gris = QtWidgets.QGraphicsColorizeEffect(
+                boton
+            )
+
+            efecto_gris.setColor(
+                QtGui.QColor(
+                    115,
+                    115,
+                    115
+                )
+            )
+
+            efecto_gris.setStrength(
+                1.0
+            )
+
+            # El efecto queda colocado una sola vez.
+            boton.setGraphicsEffect(
+                efecto_gris
+            )
+
+            self.efectos_grises[boton] = (
+                efecto_gris
+            )
+
+    def configurar_botones(self):
         for boton in self.botones_interactivos:
             boton.setCursor(
                 QtGui.QCursor(
@@ -387,25 +754,17 @@ class Lecciones(QtWidgets.QWidget):
                 )
             )
 
-        # Todos los lenguajes comienzan en gris.
         for boton in self.botones_lenguaje:
             self.aplicar_escala_grises(
                 boton,
                 activar=True
             )
 
-        # No se puede comenzar hasta seleccionar
-        # un lenguaje.
         self.btnComenzar.setEnabled(
             False
         )
 
     def actualizar_hover_botones(self):
-        """
-        Actualiza las posiciones normales utilizadas
-        por las animaciones.
-        """
-
         for efecto in getattr(
             self,
             "efectos_hover",
@@ -414,11 +773,6 @@ class Lecciones(QtWidgets.QWidget):
             efecto.actualizar_geometria_base()
 
     def preparar_hover_para_resize(self):
-        """
-        Restaura temporalmente los botones antes
-        de aplicar el ajuste responsivo.
-        """
-
         for efecto in getattr(
             self,
             "efectos_hover",
@@ -469,10 +823,14 @@ class Lecciones(QtWidgets.QWidget):
             "MySQL": self.btnMySQL,
         }
 
-        # Coloca nuevamente todos los botones en gris.
-        self.limpiar_estilos_lenguajes()
+        # Coloca todos los lenguajes en gris.
+        for boton in self.botones_lenguaje:
+            self.aplicar_escala_grises(
+                boton,
+                activar=True
+            )
 
-        # Recupera el color del lenguaje seleccionado.
+        # Recupera los colores del lenguaje seleccionado.
         boton_seleccionado = botones.get(
             lenguaje
         )
@@ -483,22 +841,52 @@ class Lecciones(QtWidgets.QWidget):
                 activar=False
             )
 
-        # Habilita el botón Comenzar.
+        # Habilita Comenzar aventura.
         self.btnComenzar.setEnabled(
             True
         )
 
-    def limpiar_estilos_lenguajes(self):
-        """
-        Coloca todos los botones de lenguajes
-        nuevamente en escala de grises.
-        """
+        self.btnComenzar.setCursor(
+            QtGui.QCursor(
+                QtCore.Qt.CursorShape.PointingHandCursor
+            )
+        )
 
+    def limpiar_estilos_lenguajes(self):
         for boton in self.botones_lenguaje:
             self.aplicar_escala_grises(
                 boton,
                 activar=True
             )
+
+    def aplicar_escala_grises(
+            self,
+            boton,
+            activar=True
+    ):
+        """
+        Activa o desactiva el efecto gris existente.
+
+        No elimina ni reemplaza efectos gráficos,
+        evitando que Qt se cierre al hacer clic.
+        """
+
+        efecto_gris = self.efectos_grises.get(
+            boton
+        )
+
+        if efecto_gris is None:
+            return
+
+        efecto_gris.setStrength(
+            1.0
+        )
+
+        efecto_gris.setEnabled(
+            activar
+        )
+
+        boton.update()
 
     def comenzar_aventura(self):
         if self.lenguaje_seleccionado is None:
@@ -554,10 +942,7 @@ class Lecciones(QtWidgets.QWidget):
                 Alertas.mostrar(
                     self,
                     "Lenguaje no válido",
-                    (
-                        "El lenguaje seleccionado "
-                        "no es válido."
-                    ),
+                    "El lenguaje seleccionado no es válido.",
                     "advertencia"
                 )
                 return
@@ -572,8 +957,7 @@ class Lecciones(QtWidgets.QWidget):
                 self,
                 "Error al abrir niveles",
                 (
-                    "No se pudo abrir la ventana "
-                    "de niveles."
+                    "No se pudo abrir la ventana de niveles."
                     f"\n\nDetalles:\n{error}"
                 ),
                 "error"
@@ -583,11 +967,6 @@ class Lecciones(QtWidgets.QWidget):
         self,
         clase_niveles
     ):
-        """
-        Intenta crear la ventana enviando el jugador
-        y esta ventana como ventana anterior.
-        """
-
         try:
             return clase_niveles(
                 jugador=self.jugador,
@@ -607,7 +986,6 @@ class Lecciones(QtWidgets.QWidget):
         try:
             app = QtWidgets.QApplication.instance()
 
-            # Primero utiliza el historial universal.
             if (
                 hasattr(app, "historial_forms")
                 and len(app.historial_forms) > 0
@@ -617,8 +995,6 @@ class Lecciones(QtWidgets.QWidget):
                 )
                 return
 
-            # Si se recibió una ventana anterior,
-            # regresa directamente a ella.
             if self.ventana_anterior is not None:
                 FormTransicion(
                     self,
@@ -627,8 +1003,6 @@ class Lecciones(QtWidgets.QWidget):
                 )
                 return
 
-            # Si no existe historial ni ventana anterior,
-            # determina el menú correspondiente.
             if self.es_administrador():
                 from MenuAdministrador import MenuAdministrador
 
@@ -638,9 +1012,7 @@ class Lecciones(QtWidgets.QWidget):
                     )
 
                 except TypeError:
-                    self.ventana_menu = (
-                        MenuAdministrador()
-                    )
+                    self.ventana_menu = MenuAdministrador()
 
             else:
                 from MenuUsuario import MenuUsuario
@@ -664,23 +1036,16 @@ class Lecciones(QtWidgets.QWidget):
                 self,
                 "Error",
                 (
-                    "No se pudo volver a la pantalla "
-                    "anterior."
+                    "No se pudo volver a la pantalla anterior."
                     f"\n\nDetalles:\n{error}"
                 ),
                 "error"
             )
 
     def es_administrador(self):
-        """
-        Determina si la información recibida
-        corresponde a un administrador.
-        """
-
         if self.jugador is None:
             return False
 
-        # Cuando los datos vienen como diccionario.
         if isinstance(
             self.jugador,
             dict
@@ -706,7 +1071,6 @@ class Lecciones(QtWidgets.QWidget):
 
             return False
 
-        # Cuando los datos vienen como objeto.
         if hasattr(
             self.jugador,
             "id_admin"
@@ -727,112 +1091,8 @@ class Lecciones(QtWidgets.QWidget):
 
         return False
 
-    def volver_menu_administrador(self):
-        """
-        Método conservado por compatibilidad con otras
-        partes del proyecto que puedan llamarlo.
-        """
-
-        try:
-            app = QtWidgets.QApplication.instance()
-
-            if (
-                hasattr(app, "historial_forms")
-                and len(app.historial_forms) > 0
-            ):
-                FormAnterior(
-                    self
-                )
-                return
-
-            if self.ventana_anterior is not None:
-                FormTransicion(
-                    self,
-                    self.ventana_anterior,
-                    guardar_actual=False
-                )
-                return
-
-            from MenuAdministrador import MenuAdministrador
-
-            try:
-                self.ventana_menu = MenuAdministrador(
-                    self.jugador
-                )
-
-            except TypeError:
-                self.ventana_menu = MenuAdministrador()
-
-            FormTransicion(
-                self,
-                self.ventana_menu,
-                guardar_actual=False
-            )
-
-        except Exception as error:
-            Alertas.mostrar(
-                self,
-                "Error",
-                (
-                    "No se pudo volver al Menú "
-                    "Administrador."
-                    f"\n\nDetalles:\n{error}"
-                ),
-                "error"
-            )
-
-    def aplicar_escala_grises(
-        self,
-        boton,
-        activar=True
-    ):
-        """
-        Coloca el botón en escala de grises o recupera
-        sus colores originales.
-        """
-
-        if activar:
-            efecto_gris = (
-                QtWidgets.QGraphicsColorizeEffect(
-                    boton
-                )
-            )
-
-            efecto_gris.setColor(
-                QtGui.QColor(
-                    115,
-                    115,
-                    115
-                )
-            )
-
-            # 1.0 significa completamente gris.
-            efecto_gris.setStrength(
-                1.0
-            )
-
-            boton.setGraphicsEffect(
-                efecto_gris
-            )
-
-        else:
-            # Quita el efecto y recupera
-            # la imagen con sus colores.
-            boton.setGraphicsEffect(
-                None
-            )
-
     def resizeEvent(self, event):
-        """
-        Ajusta el fondo, frame, logo, botones responsivos
-        y geometrías utilizadas por el efecto hover.
-        """
-
-        # Ajusta el fondo.
-        if hasattr(
-            self,
-            "fondo"
-        ):
+        if hasattr(self, "fondo"):
             self.fondo.actualizar_tamano(
                 self.width(),
                 self.height()
@@ -840,11 +1100,7 @@ class Lecciones(QtWidgets.QWidget):
 
             self.fondo.lower()
 
-        # El frame principal ocupa toda la ventana.
-        if hasattr(
-            self,
-            "Lecciones"
-        ):
+        if hasattr(self, "Lecciones"):
             self.Lecciones.setGeometry(
                 0,
                 0,
@@ -854,51 +1110,29 @@ class Lecciones(QtWidgets.QWidget):
 
             self.Lecciones.raise_()
 
-        # Mantiene el logo por encima del fondo y el frame.
-        if hasattr(
-            self,
-            "lbl_logo"
-        ):
+        if hasattr(self, "lbl_logo"):
             self.lbl_logo.raise_()
 
-        if hasattr(
-            self,
-            "logo_reutilizable"
-        ):
+        if hasattr(self, "logo_reutilizable"):
             self.logo_reutilizable.actualizar()
 
-        # Restaura temporalmente los botones antes
-        # de aplicar las nuevas posiciones responsivas.
-        if hasattr(
-            self,
-            "efectos_hover"
-        ):
+        if hasattr(self, "efectos_hover"):
             self.preparar_hover_para_resize()
 
-        # Ajusta los botones a la resolución actual.
-        if hasattr(
-            self,
-            "botones_responsivos"
-        ):
+        if hasattr(self, "botones_responsivos"):
             self.botones_responsivos.ajustar()
 
-        # Guarda las nuevas posiciones normales.
-        if hasattr(
-            self,
-            "efectos_hover"
-        ):
-            self.actualizar_hover_botones()
+        if hasattr(self, "efectos_hover"):
+            QtCore.QTimer.singleShot(
+                0,
+                self.actualizar_hover_botones
+            )
 
         super().resizeEvent(
             event
         )
 
     def showEvent(self, event):
-        """
-        Actualiza la interfaz cuando se muestra
-        la ventana.
-        """
-
         super().showEvent(
             event
         )
@@ -908,34 +1142,22 @@ class Lecciones(QtWidgets.QWidget):
             self.actualizar_interfaz
         )
 
-    def actualizar_interfaz(self):
-        """
-        Realiza un ajuste final después de que
-        la ventana termina de mostrarse.
-        """
+        QtCore.QTimer.singleShot(
+            100,
+            self.actualizar_interfaz
+        )
 
-        if hasattr(
-            self,
-            "efectos_hover"
-        ):
+    def actualizar_interfaz(self):
+        if hasattr(self, "efectos_hover"):
             self.preparar_hover_para_resize()
 
-        if hasattr(
-            self,
-            "botones_responsivos"
-        ):
+        if hasattr(self, "botones_responsivos"):
             self.botones_responsivos.ajustar()
 
-        if hasattr(
-            self,
-            "efectos_hover"
-        ):
+        if hasattr(self, "efectos_hover"):
             self.actualizar_hover_botones()
 
-        if hasattr(
-            self,
-            "lbl_logo"
-        ):
+        if hasattr(self, "lbl_logo"):
             self.lbl_logo.raise_()
 
 
@@ -945,7 +1167,6 @@ if __name__ == "__main__":
     )
 
     ventana = Lecciones()
-
     ventana.showMaximized()
 
     sys.exit(
