@@ -596,10 +596,6 @@ def construir_paginas_leccion(leccion, nombre_lenguaje):
     teoria = normalizar_texto(leccion.get("contenido_teoria"))
     codigo = normalizar_texto(leccion.get("codigo_ejemplo"))
 
-    contenido_final = normalizar_texto(
-        leccion.get("contenido_final")
-    )
-
     contenido_final = normalizar_texto(leccion.get("contenido_final"))
 
 
@@ -631,14 +627,15 @@ def construir_paginas_leccion(leccion, nombre_lenguaje):
         for linea in lineas_codigo:
             posible = bloque + linea + "\n"
 
-    if (
-        len(posible) > 115
-        and bloque.strip() != "Ejemplo:"
-    ):
-        paginas.append(bloque.rstrip())
-        bloque = "Ejemplo:\n" + linea + "\n"
-    else:
-        bloque = posible
+            if (
+                len(posible) > 115
+                and bloque.strip() != "Ejemplo:"
+            ):
+                paginas.append(bloque.rstrip())
+                bloque = "Ejemplo:\n" + linea + "\n"
+            else:
+                bloque = posible
+
         if bloque.strip():
             paginas.append(bloque.rstrip())
 
@@ -1018,9 +1015,6 @@ class ConexionEduCore:
             SELECT id_leccion, id_lenguaje, titulo, contenido_teoria,
                    codigo_ejemplo, contenido_final,
                    orden, puntos, estado
-
-            SELECT leccion.*
-
             FROM leccion
             WHERE id_lenguaje = %s
               AND orden = %s
@@ -1039,9 +1033,6 @@ class ConexionEduCore:
             SELECT id_leccion, id_lenguaje, titulo, contenido_teoria,
                    codigo_ejemplo, contenido_final,
                    orden, puntos, estado
-
-            SELECT leccion.*
-
             FROM leccion
             WHERE id_lenguaje = %s
               AND estado = 'Activa'
@@ -1066,9 +1057,6 @@ class ConexionEduCore:
             SELECT id_leccion, id_lenguaje, titulo, contenido_teoria,
                    codigo_ejemplo, contenido_final,
                    orden, puntos, estado
-
-            SELECT leccion.*
-
             FROM leccion
             WHERE id_lenguaje = %s
               AND orden = %s
@@ -2844,6 +2832,7 @@ class JuegoEduCore:
         self.npcs = []
         self.npc = None
         self.npc_activo = None
+        self.enemigos = []
         self.cartel_final = None
 
         self.en_pausa = False
@@ -3792,14 +3781,31 @@ class JuegoEduCore:
         # Mantiene sincronizado el alias usado por código antiguo.
         self.invulnerable_puas_hasta = self.invulnerable_danio_hasta
 
-        nombres = {
-            "puas": ("Daño por púas", "Tocó un obstáculo de púas"),
-            "laser": ("Daño por láser", "Tocó un obstáculo láser"),
-        }
-        evento, detalle = nombres.get(
-            obstaculo.tipo,
-            ("Daño por obstáculo", "Tocó un obstáculo de daño"),
-        )
+        if getattr(obstaculo, "es_enemigo", False):
+            nombre_enemigo = str(obstaculo.tipo).replace(
+                "_",
+                " ",
+            ).title()
+            evento = f"Daño por enemigo: {nombre_enemigo}"
+            detalle = f"Tocó al enemigo {nombre_enemigo}"
+        else:
+            nombres = {
+                "puas": (
+                    "Daño por púas",
+                    "Tocó un obstáculo de púas",
+                ),
+                "laser": (
+                    "Daño por láser",
+                    "Tocó un obstáculo láser",
+                ),
+            }
+            evento, detalle = nombres.get(
+                obstaculo.tipo,
+                (
+                    "Daño por obstáculo",
+                    "Tocó un obstáculo de daño",
+                ),
+            )
 
         self._restar_vida(
             evento=evento,
@@ -3828,6 +3834,10 @@ class JuegoEduCore:
             )
 
         return True
+
+    def recibir_dano_enemigo(self, enemigo):
+        """Reutiliza vidas, invulnerabilidad y rebote del motor."""
+        return self.recibir_dano_obstaculo(enemigo)
 
     def recibir_dano_puas(self, obstaculo):
         """Compatibilidad con llamadas antiguas del motor."""
@@ -4415,6 +4425,18 @@ class JuegoEduCore:
             ):
                 self.camara_x = camara_anterior
 
+            actualizar_enemigos = getattr(
+                self,
+                "actualizar_enemigos",
+                None,
+            )
+            if callable(actualizar_enemigos):
+                actualizar_enemigos(
+                    dt,
+                    y_anterior,
+                    x_mundo_anterior,
+                )
+
             # El piso se revisa al final para recuperar al personaje si una
             # colisión vertical lo dejó dentro de la superficie.
             self.revisar_colision_piso(y_anterior)
@@ -4483,6 +4505,20 @@ class JuegoEduCore:
                 (255, 140, 0),
                 obstaculo.obtener_rect_pantalla(self.camara_x),
                 2
+            )
+
+        for enemigo in getattr(self, "enemigos", ()):
+            if not enemigo.vivo:
+                continue
+
+            pygame.draw.rect(
+                pantalla,
+                (255, 40, 40),
+                enemigo.obtener_rect_pantalla(
+                    self.camara_x,
+                    usar_hitbox=True,
+                ),
+                2,
             )
 
         objeto_activo = self.obtener_practica_activa()
@@ -5641,6 +5677,14 @@ class JuegoEduCore:
             rect = obstaculo.obtener_rect_pantalla(camara_px)
             if rect.right >= -margen and rect.left <= ANCHO + margen:
                 obstaculo.dibujar(surface, camara_px)
+
+        for enemigo in getattr(self, "enemigos", ()):
+            if not enemigo.vivo:
+                continue
+
+            rect = enemigo.obtener_rect_pantalla(camara_px)
+            if rect.right >= -margen and rect.left <= ANCHO + margen:
+                enemigo.dibujar(surface, camara_px)
 
         objeto_activo = self.obtener_practica_activa()
 

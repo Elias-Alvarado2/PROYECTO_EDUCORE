@@ -2,7 +2,15 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+import pygame
+
 from juego.core import motor
+from juego.core.enemigos import (
+    COLISION_DANO,
+    COLISION_PISADO,
+    clasificar_colision_jugador,
+    crear_enemigos_desde_configuraciones,
+)
 from juego.interfaz.practica_codigo import PantallaPracticaCodigo
 from juego.interfaz.practica_eleccion_multiple import (
     PantallaPracticaEleccionMultiple,
@@ -83,6 +91,12 @@ class JuegoBase(motor.JuegoEduCore):
        
     )
 
+    # Enemigos animados declarados por cada nivel.
+    # Horizontal: x_inicial y x_limite.
+    # Vertical: movimiento="vertical", x fija, y_inicial y y_limite.
+    # Las posiciones Y son relativas al suelo: negativo = hacia arriba.
+    ENEMIGOS = ()
+
     # Espacio horizontal predeterminado entre copias de una fila. Se expresa
     # en las mismas unidades pequenas usadas por x y ancho en cada nivel.
     SEPARACION_OBSTACULOS_FILA = 10
@@ -151,6 +165,9 @@ class JuegoBase(motor.JuegoEduCore):
         super().reiniciar()
         self.colocar_jugador_en_inicio()
 
+        for enemigo in self.enemigos:
+            enemigo.reiniciar()
+
     # ========================================================
     # CREACIÓN DEL MUNDO
     # ========================================================
@@ -198,6 +215,8 @@ class JuegoBase(motor.JuegoEduCore):
             self._crear_obstaculo(config)
             for config in self._expandir_configuraciones_obstaculos()
         ]
+
+        self.cargar_enemigos_desde_nivel()
 
         self.colocar_jugador_en_inicio()
 
@@ -373,6 +392,61 @@ class JuegoBase(motor.JuegoEduCore):
                 alto - reducir_alto,
             ),
         )
+
+    # ========================================================
+    # ENEMIGOS DEL NIVEL
+    # ========================================================
+
+    def cargar_enemigos_desde_nivel(self):
+        self.enemigos = crear_enemigos_desde_configuraciones(
+            self.ENEMIGOS,
+            suelo_y=self.obtener_piso_colision_nivel(),
+            escala_juego=motor.ESCALA_JUEGO,
+        )
+
+    def actualizar_enemigos(
+        self,
+        dt,
+        y_anterior,
+        x_mundo_anterior,
+    ):
+        if self.en_dialogo or self.game_over:
+            return
+
+        for enemigo in self.enemigos:
+            enemigo.actualizar(dt)
+
+        hitbox_local = self.jugador.obtener_hitbox_local()
+        jugador_anterior = pygame.Rect(
+            round(x_mundo_anterior + hitbox_local.x),
+            round(y_anterior + hitbox_local.y),
+            hitbox_local.width,
+            hitbox_local.height,
+        )
+        jugador_actual = self.jugador.obtener_rect_mundo(
+            self.camara_x
+        )
+
+        for enemigo in self.enemigos:
+            tipo_colision = clasificar_colision_jugador(
+                enemigo,
+                jugador_actual,
+                jugador_anterior,
+                self.jugador.velocidad_y,
+            )
+
+            if tipo_colision == COLISION_PISADO:
+                enemigo.eliminar()
+                self.jugador.y = (
+                    enemigo.rect.top - hitbox_local.bottom
+                )
+                self.jugador.velocidad_y = enemigo.rebote_al_pisar
+                self.jugador.en_suelo = False
+                return
+
+            if tipo_colision == COLISION_DANO:
+                self.recibir_dano_enemigo(enemigo)
+                return
 
     # ========================================================
     # FONDOS DEL MUNDO
