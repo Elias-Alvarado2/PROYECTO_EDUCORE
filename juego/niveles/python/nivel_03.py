@@ -336,7 +336,7 @@ class NivelPython03(JuegoBase):
     {
         "tipo": "puas",
         "imagen": "python/puas_obstaculo.png",
-        "x": 2495,
+        "x": 2550,
         "cantidad": 1,
         "separacion": 0,
         "ancho": 100,
@@ -516,7 +516,7 @@ class NivelPython03(JuegoBase):
         "x": 4050,
         "ancho": 100,
         "alto": 50,
-        "ajuste_y": -12,
+        "ajuste_y": -5,
 
         "hitbox_offset_x": 4,
         "hitbox_offset_y": 3,
@@ -531,8 +531,8 @@ class NivelPython03(JuegoBase):
         "tipo": "columnas",
         "imagen": "python/columnas.png",
         "x": 4230,
-        "ancho": 50,
-        "alto": 100,
+        "ancho": 60,
+        "alto": 130,
         "ajuste_y": -2,
 
         "hitbox_offset_x": 6,
@@ -564,26 +564,52 @@ class NivelPython03(JuegoBase):
     {
         "tipo": "fragmento",
         "imagen": "python/obstaculo_fragmento2.png",
-        "x": 4490,
+        "x": 4650,
         "ancho": 110,
         "alto": 50,
-        "ajuste_y": -220,
+        "ajuste_y": -150,
 
         "hitbox_offset_x": 4,
         "hitbox_offset_y": 3,
         "hitbox_reducir_ancho": 8,
         "hitbox_reducir_alto": 8,
     },
+       {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento2.png",
+        "x": 4800,
+        "ancho": 110,
+        "alto": 50,
+        "ajuste_y": -90,
 
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+          {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento2.png",
+        "x": 4960,
+        "ancho": 110,
+        "alto": 50,
+        "ajuste_y": -30,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+    
     # =========================================================
     # COLUMNA 3 - tercera columna vertical
     # =========================================================
     {
         "tipo": "columnas",
         "imagen": "python/columnas.png",
-        "x": 4650,
-        "ancho": 85,
-        "alto": 225,
+        "x": 4550,
+        "ancho": 60,
+        "alto": 130,
         "ajuste_y": -2,
 
         "hitbox_offset_x": 7,
@@ -591,13 +617,52 @@ class NivelPython03(JuegoBase):
         "hitbox_reducir_ancho": 14,
         "hitbox_reducir_alto": 8,
     },
+        {
+    "tipo": "huesos",
+    "imagen": "python/huesos.png",
+    "x": 4320,
+    "ancho": 55,
+    "alto": 50,
+    "ajuste_y": -2,
+
+    "hitbox_offset_x": 7,
+    "hitbox_offset_y": 4,
+    "hitbox_reducir_ancho": 14,
+    "hitbox_reducir_alto": 8,
+},
+{
+    "tipo": "huesos",
+    "imagen": "python/huesos.png",
+    "x": 4480,
+    "ancho": 55,
+    "alto": 50,
+    "ajuste_y": -2,
+
+    "hitbox_offset_x": 7,
+    "hitbox_offset_y": 4,
+    "hitbox_reducir_ancho": 14,
+    "hitbox_reducir_alto": 8,
+},
     
 )
 
     PRACTICAS = (
-        {
+        
+       {
         "x": 1375,
         "y": 400,
+        "tipo": "verdadero_falso",
+        "pregunta": (
+            "¿El ciclo while repite sus instrucciones mientras "
+            "su condición sea verdadera?"
+        ),
+        "respuesta_correcta": True,
+        "nombre": "practica_codigo_python_08",
+    },
+    {
+        #2745
+        "x": 2745,
+        "y": 450,
 
            "tipo": "seleccion_multiple",
         "pregunta": (
@@ -614,17 +679,6 @@ class NivelPython03(JuegoBase):
         ],
         "respuesta_correcta": 3,
         "nombre": "practica_codigo_python_07",
-    },
-       {
-        "x": 2745,
-        "y": 450,
-        "tipo": "verdadero_falso",
-        "pregunta": (
-            "¿El ciclo while repite sus instrucciones mientras "
-            "su condición sea verdadera?"
-        ),
-        "respuesta_correcta": True,
-        "nombre": "practica_codigo_python_08",
     },
         {
         "x": 3580,
