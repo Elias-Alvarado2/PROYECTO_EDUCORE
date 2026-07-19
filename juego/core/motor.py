@@ -189,7 +189,7 @@ MARGEN_COLISION_VERTICAL = round(20 * ESCALA_JUEGO)
 VIDAS_MAXIMAS = 5
 
 TIPOS_OBSTACULOS_SOLIDOS = frozenset({"caja", "fragmento", "arena","tronco","cofre","bloque","piedra", "bloque", "columnas"})
-TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser", "cactus", "huesos"})
+TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser", "cactus"})
 
 
 
@@ -1018,9 +1018,6 @@ class ConexionEduCore:
             SELECT id_leccion, id_lenguaje, titulo, contenido_teoria,
                    codigo_ejemplo, contenido_final,
                    orden, puntos, estado
-
-            SELECT leccion.*
-
             FROM leccion
             WHERE id_lenguaje = %s
               AND orden = %s
@@ -1039,9 +1036,6 @@ class ConexionEduCore:
             SELECT id_leccion, id_lenguaje, titulo, contenido_teoria,
                    codigo_ejemplo, contenido_final,
                    orden, puntos, estado
-
-            SELECT leccion.*
-
             FROM leccion
             WHERE id_lenguaje = %s
               AND estado = 'Activa'
@@ -1066,9 +1060,6 @@ class ConexionEduCore:
             SELECT id_leccion, id_lenguaje, titulo, contenido_teoria,
                    codigo_ejemplo, contenido_final,
                    orden, puntos, estado
-
-            SELECT leccion.*
-
             FROM leccion
             WHERE id_lenguaje = %s
               AND orden = %s
@@ -1482,6 +1473,7 @@ class Obstaculo:
         ruta_normalizada = str(ruta_imagen).lower().replace("\\", "/")
         self.deshabilitado = (
             self.tipo in TIPOS_OBSTACULOS_DESHABILITADOS
+            
         )
 
         if self.deshabilitado:

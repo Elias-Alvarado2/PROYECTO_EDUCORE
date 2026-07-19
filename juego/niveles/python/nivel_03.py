@@ -152,7 +152,7 @@ class NivelPython03(JuegoBase):
     {
         "tipo": "puas",
         "imagen": "python/puas_obstaculo.png",
-        "x": 960,
+        "x": 1000,
         "cantidad": 1,
         "separacion": 0,
         "ancho": 100,
@@ -171,7 +171,7 @@ class NivelPython03(JuegoBase):
     {
         "tipo": "puas",
         "imagen": "python/puas_obstaculo.png",
-        "x": 1145,
+        "x": 1200,
         "cantidad": 1,
         "separacion": 0,
         "ancho": 100,
@@ -190,7 +190,7 @@ class NivelPython03(JuegoBase):
     {
         "tipo": "puas",
         "imagen": "python/puas_obstaculo.png",
-        "x": 1315,
+        "x": 1350,
         "cantidad": 1,
         "separacion": 0,
         "ancho": 100,
@@ -487,9 +487,9 @@ class NivelPython03(JuegoBase):
      {
         "tipo": "puas",
         "imagen": "python/cactus.png",
-        "x": 3360,
-        "cantidad": 1,
-        "separacion": 0,
+        "x": 3330,
+        "cantidad": 2,
+        "separacion": 60,
         "ancho": 70,
         "alto": 50,
         "ajuste_y": -2,
@@ -498,6 +498,98 @@ class NivelPython03(JuegoBase):
         "hitbox_offset_y": 20,
         "hitbox_reducir_ancho": 24,
         "hitbox_reducir_alto": 22,
+    },
+    #========================
+    # despues del npc 3
+        # =========================================================
+    # ESPACIO VACÍO
+    # Desde el último obstáculo anterior hasta x = 4050
+    # =========================================================
+
+
+    # =========================================================
+    # FRAGMENTO 1 - rectángulo horizontal inferior
+    # =========================================================
+    {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento2.png",
+        "x": 4050,
+        "ancho": 100,
+        "alto": 50,
+        "ajuste_y": -12,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+
+    # =========================================================
+    # COLUMNA 1 - primera columna vertical
+    # =========================================================
+    {
+        "tipo": "columnas",
+        "imagen": "python/columnas.png",
+        "x": 4230,
+        "ancho": 50,
+        "alto": 100,
+        "ajuste_y": -2,
+
+        "hitbox_offset_x": 6,
+        "hitbox_offset_y": 4,
+        "hitbox_reducir_ancho": 12,
+        "hitbox_reducir_alto": 8,
+    },
+
+    # =========================================================
+    # COLUMNA 2 - segunda columna vertical
+    # =========================================================
+    {
+        "tipo": "columnas",
+        "imagen": "python/columnas.png",
+        "x": 4400,
+        "ancho": 60,
+        "alto": 130,
+        "ajuste_y": -2,
+
+        "hitbox_offset_x": 7,
+        "hitbox_offset_y": 4,
+        "hitbox_reducir_ancho": 14,
+        "hitbox_reducir_alto": 8,
+    },
+
+    # =========================================================
+    # FRAGMENTO 2 - rectángulo horizontal superior
+    # =========================================================
+    {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento2.png",
+        "x": 4490,
+        "ancho": 110,
+        "alto": 50,
+        "ajuste_y": -220,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+
+    # =========================================================
+    # COLUMNA 3 - tercera columna vertical
+    # =========================================================
+    {
+        "tipo": "columnas",
+        "imagen": "python/columnas.png",
+        "x": 4650,
+        "ancho": 85,
+        "alto": 225,
+        "ajuste_y": -2,
+
+        "hitbox_offset_x": 7,
+        "hitbox_offset_y": 4,
+        "hitbox_reducir_ancho": 14,
+        "hitbox_reducir_alto": 8,
     },
     
 )
