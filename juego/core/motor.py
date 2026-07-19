@@ -119,9 +119,6 @@ RUTA_FUENTE_PIXEL = FUENTES_DIR / "PixelOperator-Bold.ttf"
 RUTA_BURBUJA_DIALOGO = UI_DIR / "BurbujaDialogo.png"
 RUTA_CUADRO_AVISO = UI_DIR / "cuadro_aviso.png"
 RUTA_MONEDA_PRACTICA = UI_DIR / "moneda_practica.png"
-# Imagen opcional. Si no existe, cartel_final.py dibuja un cartel pixel art.
-RUTA_CARTEL_FINAL = UI_DIR / "cartel_final.png"
-
 RUTA_BOTON_REANUDAR = UI_DIR / "reanudar.png"
 RUTA_BOTON_REANUDAR_CLICK = UI_DIR / "reanudar_click.png"
 RUTA_BOTON_CONFIGURACION = UI_DIR / "configuracion.png"
@@ -169,6 +166,7 @@ PISO_COLISION_Y = PISO_Y + AJUSTE_Y_SUELO
 CONFIGURACION_NPC = -8
 MOSTRAR_HITBOXES = False
 MOSTRAR_FPS = True
+MOSTRAR_POSICION_JUGADOR = False
 
 VELOCIDAD_CAMINAR = round(330 * ESCALA_JUEGO)
 VELOCIDAD_AIRE = round(420 * ESCALA_JUEGO)
@@ -314,9 +312,9 @@ PERSONAJES_CONFIG = {
         _FRAMES_GATO_SALTAR,
         escala=4.3,
 
-        hitbox_izquierda=30,
-        hitbox_derecha=30,
-        hitbox_arriba=110,
+        hitbox_izquierda=40,
+        hitbox_derecha=40,
+        hitbox_arriba=130,
         hitbox_abajo=20,
     ),
 
@@ -328,7 +326,7 @@ PERSONAJES_CONFIG = {
 
         hitbox_izquierda=35,
         hitbox_derecha=35,
-        hitbox_arriba=40,
+        hitbox_arriba=70,
         hitbox_abajo=25,
     ),
 
@@ -2803,6 +2801,7 @@ class JuegoEduCore:
         self.sonido_muerte = None
 
         self.mostrar_hitboxes = MOSTRAR_HITBOXES
+        self.mostrar_posicion_jugador = MOSTRAR_POSICION_JUGADOR
         self.salto_presionado_anterior = False
         self.en_dialogo = False
 
@@ -3134,17 +3133,71 @@ class JuegoEduCore:
         if not self.npcs:
             print("[NPCS] No se creó ningún pingüino válido.")
 
+    def obtener_practicas_asociadas_npc(self, npc):
+        """Devuelve las practicas validas que pertenecen a un pinguino."""
+        numeros_practica = getattr(
+            npc,
+            "numeros_practica",
+            None,
+        )
+
+        if numeros_practica is None:
+            numero_practica = int(
+                getattr(npc, "numero_practica", 0) or 0
+            )
+            numeros_practica = (
+                (numero_practica,)
+                if numero_practica > 0
+                else ()
+            )
+
+        practicas = []
+
+        for numero_practica in numeros_practica:
+            try:
+                indice_practica = int(numero_practica) - 1
+            except (TypeError, ValueError):
+                continue
+
+            if 0 <= indice_practica < len(self.objetos_practica):
+                practicas.append(
+                    self.objetos_practica[indice_practica]
+                )
+
+        return practicas
+
+    def leccion_npc_completada(self, npc):
+        """Exige leer al NPC y completar todas sus practicas asociadas."""
+        if not getattr(npc, "dialogo_terminado", False):
+            return False
+
+        return all(
+            practica.completado
+            for practica in self.obtener_practicas_asociadas_npc(npc)
+        )
+
+    def npc_esta_desbloqueado(self, npc):
+        indice = getattr(npc, "indice_npc", 0)
+
+        if (
+            indice <= 0
+            or not getattr(npc, "requiere_anterior", False)
+        ):
+            return True
+
+        if indice >= len(self.npcs):
+            return False
+
+        return self.leccion_npc_completada(
+            self.npcs[indice - 1]
+        )
+
     def obtener_zona_interaccion_npc(self, npc):
         if npc is None:
             return None
 
-        indice = getattr(npc, "indice_npc", 0)
-
-        if getattr(npc, "requiere_anterior", False) and indice > 0:
-            npc_anterior = self.npcs[indice - 1]
-
-            if not getattr(npc_anterior, "dialogo_terminado", False):
-                return None
+        if not self.npc_esta_desbloqueado(npc):
+            return None
 
         if (
             not getattr(npc, "repetible", True)
@@ -3288,83 +3341,14 @@ class JuegoEduCore:
             self.objetos_practica.append(objeto)
 
     def cargar_cartel_final_desde_nivel(self):
-        """Crea el cartel final usando la configuración CARTEL_FINAL del nivel.
-
-        Ejemplo dentro de nivel_01.py:
-
-            CARTEL_FINAL = {
-                "x": 4400,
-                "ajuste_y": 0,
-                "mostrar_bloqueado": True,
-            }
-
-        Las coordenadas usan las mismas medidas pequeñas de NPCS, PRACTICAS
-        y OBSTACULOS. El motor aplica ESCALA_JUEGO automáticamente.
-        """
-        configuracion = getattr(self, "CARTEL_FINAL", {}) or {}
-
-        if not isinstance(configuracion, dict):
-            print(
-                "[CARTEL_FINAL] La configuración debe ser un diccionario. "
-                "Se usará la configuración automática."
-            )
-            configuracion = {}
-
-        longitud_nivel = float(
-            getattr(self, "LONGITUD_NIVEL", 5000)
-        )
-
-        x_config = configuracion.get(
-            "x",
-            max(700, longitud_nivel - 250),
-        )
-        x_mundo = round(float(x_config) * ESCALA_JUEGO)
-
-        ajuste_y = round(
-            float(configuracion.get("ajuste_y", 0))
-            * ESCALA_JUEGO
-        )
-
-        obtener_piso_nivel = getattr(
+        """Crea el componente; su configuracion vive en interfaz."""
+        self.cartel_final = CartelFinal.desde_nivel(
             self,
-            "obtener_piso_colision_nivel",
-            None,
-        )
-
-        if callable(obtener_piso_nivel):
-            suelo_y = int(obtener_piso_nivel())
-        else:
-            suelo_y = PISO_COLISION_Y
-
-        nivel_actual = int(
-            getattr(
-                self,
-                "NIVEL_ACTUAL",
-                self.orden_leccion_solicitado or 1,
-            )
-        )
-        total_niveles = int(
-            getattr(self, "TOTAL_NIVELES", 6)
-        )
-
-        self.cartel_final = CartelFinal(
-            x_mundo=x_mundo,
-            suelo_y=suelo_y + ajuste_y,
             ancho_pantalla=ANCHO,
             alto_pantalla=ALTO,
             escala_juego=ESCALA_JUEGO,
-            ruta_imagen=RUTA_CARTEL_FINAL,
-            ruta_fuente=RUTA_FUENTE_PIXEL,
-            siguiente_disponible=(nivel_actual < total_niveles),
-            mostrar_bloqueado=bool(
-                configuracion.get("mostrar_bloqueado", True)
-            ),
+            suelo_predeterminado=PISO_COLISION_Y,
         )
-
-        # Útil al volver a abrir una lección ya completada dentro de la misma
-        # ejecución. Normalmente se desbloquea al finalizar las prácticas.
-        if self.leccion_ya_completada:
-            self.cartel_final.desbloquear()
 
     def hay_practica_visible(self):
         return bool(
@@ -4468,6 +4452,9 @@ class JuegoEduCore:
             )
 
         for npc in self.npcs:
+            if not self.npc_esta_desbloqueado(npc):
+                continue
+
             zona_npc = pygame.Rect(
                 int(npc.zona_dialogo.x - self.camara_x),
                 int(npc.zona_dialogo.y),
@@ -4515,6 +4502,104 @@ class JuegoEduCore:
         self.superficie_logica.blit(
             self._fps_superficie,
             (20, 20),
+        )
+
+    def dibujar_posicion_jugador(self):
+        """Muestra coordenadas utiles para configurar objetos del nivel."""
+        if not self.mostrar_posicion_jugador:
+            return
+
+        x_mundo = round(
+            self.jugador.x_pantalla + self.camara_x
+        )
+        y_mundo = round(self.jugador.y)
+        rect_hitbox = self.jugador.obtener_rect_mundo(
+            self.camara_x
+        )
+
+        obtener_piso_nivel = getattr(
+            self,
+            "obtener_piso_colision_nivel",
+            None,
+        )
+        piso_nivel = (
+            obtener_piso_nivel()
+            if callable(obtener_piso_nivel)
+            else PISO_COLISION_Y
+        )
+
+        # Los niveles guardan x, y y medidas antes de aplicar ESCALA_JUEGO.
+        # Los obstaculos usan un ajuste vertical desde el suelo del nivel,
+        # mientras que las practicas reciben una Y absoluta desde arriba.
+        x_nivel = round(x_mundo / ESCALA_JUEGO)
+        pie_x_nivel = round(rect_hitbox.centerx / ESCALA_JUEGO)
+        pie_y_nivel = round(rect_hitbox.bottom / ESCALA_JUEGO)
+        ajuste_y_obstaculos = round(
+            (rect_hitbox.bottom - piso_nivel) / ESCALA_JUEGO
+        )
+        altura_referencia_practica = round(48 * ESCALA_JUEGO)
+        separacion_practica = round(18 * ESCALA_JUEGO)
+        y_practicas = round(
+            (
+                rect_hitbox.bottom
+                - altura_referencia_practica
+                - separacion_practica
+            )
+            / ESCALA_JUEGO
+        )
+
+        lineas = (
+            ("POSICION DEL JUGADOR", (255, 224, 90)),
+            (
+                f"OBSTACULOS: x {x_nivel}  ajuste_y {ajuste_y_obstaculos}",
+                (255, 255, 255),
+            ),
+            (
+                f"PRACTICAS: x {x_nivel}  y {y_practicas}",
+                (255, 255, 255),
+            ),
+            (f"Pies: X {pie_x_nivel}  Y {pie_y_nivel}", (220, 235, 255)),
+            (f"Mundo px: X {x_mundo}  Y {y_mundo}", (155, 195, 225)),
+            ("P: ocultar", (105, 235, 220)),
+        )
+
+        fuente = self.fuente_ui_pequena
+        textos = [
+            fuente.render(texto, True, color)
+            for texto, color in lineas
+        ]
+        margen_x = 18
+        margen_y = 14
+        separacion = 7
+        ancho_panel = (
+            max(texto.get_width() for texto in textos)
+            + margen_x * 2
+        )
+        alto_panel = (
+            sum(texto.get_height() for texto in textos)
+            + separacion * (len(textos) - 1)
+            + margen_y * 2
+        )
+        panel = pygame.Surface(
+            (ancho_panel, alto_panel),
+            pygame.SRCALPHA,
+        )
+        panel.fill((7, 18, 35, 220))
+        pygame.draw.rect(
+            panel,
+            (60, 205, 225, 235),
+            panel.get_rect(),
+            2,
+        )
+
+        y_texto = margen_y
+        for texto in textos:
+            panel.blit(texto, (margen_x, y_texto))
+            y_texto += texto.get_height() + separacion
+
+        self.superficie_logica.blit(
+            panel,
+            (ANCHO - ancho_panel - 20, 20),
         )
 
     def obtener_imagen_escalada_ui(self, imagen, ancho, alto, suavizar=False):
@@ -5207,6 +5292,9 @@ class JuegoEduCore:
                 objeto_activo.dibujar(surface, camara_px)
 
         for npc in self.npcs:
+            if not self.npc_esta_desbloqueado(npc):
+                continue
+
             npc_x = round(npc.rect.x - camara_px)
 
             if (
@@ -5250,6 +5338,7 @@ class JuegoEduCore:
         self.dibujar_hitboxes_debug()
         self.dibujar_game_over()
         self.dibujar_fps()
+        self.dibujar_posicion_jugador()
 
         if self.practica:
             self.practica.dibujar(surface)
@@ -5349,6 +5438,11 @@ class JuegoEduCore:
 
         if evento.key == pygame.K_h:
             self.mostrar_hitboxes = not self.mostrar_hitboxes
+
+        if evento.key == pygame.K_p:
+            self.mostrar_posicion_jugador = (
+                not self.mostrar_posicion_jugador
+            )
 
         if evento.key == pygame.K_f:
             MOSTRAR_FPS = not MOSTRAR_FPS

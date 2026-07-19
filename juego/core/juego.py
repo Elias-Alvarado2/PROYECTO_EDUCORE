@@ -253,14 +253,15 @@ class JuegoBase(motor.JuegoEduCore):
     # ========================================================
 
     def _expandir_configuraciones_obstaculos(self) -> list[dict]:
-        """Convierte cada configuracion con cantidad en una fila horizontal."""
+        """Expande cantidades horizontales y columnas apiladas hacia arriba."""
         configuraciones_expandidas = []
 
         for config in deepcopy(self.OBSTACULOS):
             cantidad = int(config.get("cantidad", 1))
+            columnas = int(config.get("columnas", 1))
 
-            # cantidad=0 permite desactivar temporalmente una fila completa.
-            if cantidad <= 0:
+            # Un valor 0 permite desactivar temporalmente el grupo completo.
+            if cantidad <= 0 or columnas <= 0:
                 continue
 
             x_inicial = config["x"]
@@ -268,25 +269,56 @@ class JuegoBase(motor.JuegoEduCore):
                 "separacion",
                 self.SEPARACION_OBSTACULOS_FILA,
             )
+            separacion_y = config.get(
+                "separacion_y",
+                config.get(
+                    "separacion_Y",
+                    config.get("separacion_vertical", 0),
+                ),
+            )
 
             # Cuando no existe un ancho personalizado, _crear_obstaculo usa
             # TAMANO_OBSTACULO. Se convierte a unidades del nivel para que el
-            # calculo de la siguiente x ocurra antes de aplicar la escala.
-            ancho_fila = config.get("ancho")
-            if ancho_fila is None:
-                ancho_fila = (
+            # calculo de las siguientes coordenadas ocurra antes de escalar.
+            ancho_obstaculo = config.get("ancho")
+            if ancho_obstaculo is None:
+                ancho_obstaculo = (
                     motor.TAMANO_OBSTACULO
                     / motor.ESCALA_JUEGO
                 )
 
-            paso_x = float(ancho_fila) + float(separacion)
+            alto_obstaculo = config.get("alto")
+            if alto_obstaculo is None:
+                alto_obstaculo = (
+                    motor.TAMANO_OBSTACULO
+                    / motor.ESCALA_JUEGO
+                )
 
-            for indice in range(cantidad):
-                copia = dict(config)
-                copia.pop("cantidad", None)
-                copia.pop("separacion", None)
-                copia["x"] = x_inicial + indice * paso_x
-                configuraciones_expandidas.append(copia)
+            paso_x = float(ancho_obstaculo) + float(separacion)
+            paso_y = float(alto_obstaculo) + float(separacion_y)
+            ajuste_y_inicial = float(config.get("ajuste_y", 0))
+
+            for indice_horizontal in range(cantidad):
+                for indice_vertical in range(columnas):
+                    copia = dict(config)
+
+                    for clave_grupo in (
+                        "cantidad",
+                        "columnas",
+                        "separacion",
+                        "separacion_y",
+                        "separacion_Y",
+                        "separacion_vertical",
+                    ):
+                        copia.pop(clave_grupo, None)
+
+                    copia["x"] = (
+                        x_inicial + indice_horizontal * paso_x
+                    )
+                    copia["ajuste_y"] = (
+                        ajuste_y_inicial - indice_vertical * paso_y
+                    )
+                    configuraciones_expandidas.append(copia)
 
         return configuraciones_expandidas
 
