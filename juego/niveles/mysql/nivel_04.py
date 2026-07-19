@@ -17,12 +17,18 @@ class NivelMySQL04(JuegoBase):
     # Negativo = sube.
     # Positivo = baja.
     AJUSTE_Y_JUGADOR = 0
-    LONGITUD_NIVEL = 6500
+    LONGITUD_NIVEL = 6900
     NPC_X = 825
     AJUSTE_Y_NPC = -8
     AJUSTE_Y_SPRITE_MONTANAS = 0
     AJUSTE_Y_SPRITE_SUELO = 0
     AJUSTE_Y_SPRITE_PLANTAS = 0
+    CARTEL_FINAL = {
+    "x": 5700,
+    "ajuste_y": -10,
+    "tamano":0.40,
+    "mostrar_bloqueado": True,
+}
     PISOS = (
         (0, LONGITUD_NIVEL),
     )
@@ -367,7 +373,7 @@ class NivelMySQL04(JuegoBase):
         {
             'tipo': 'fragmento',
             'imagen': 'mysql/plataforma.png',
-            'x': 4480,
+            'x': 4460,
             'ajuste_y': -125,
             'ancho': 120,
             'alto': 36,
@@ -381,8 +387,8 @@ class NivelMySQL04(JuegoBase):
         {
             'tipo': 'cofre',
             'imagen': 'mysql/cofre.png',
-            'x': 4360,
-            'ajuste_y': -195,
+            'x': 4250,
+            'ajuste_y': -210,
             'ancho': 40,
             'alto': 25,
             'hitbox_offset_x': 10,
@@ -442,7 +448,7 @@ class NivelMySQL04(JuegoBase):
             'tipo': 'fragmento',
             'imagen': 'mysql/plataforma.png',
             'x': 5280,
-            'ajuste_y': -75,
+            'ajuste_y': -60,
             'ancho': 120,
             'alto': 36,
             'hitbox_offset_x': 10,

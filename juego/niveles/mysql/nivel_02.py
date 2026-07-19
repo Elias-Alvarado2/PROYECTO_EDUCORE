@@ -23,6 +23,12 @@ class NivelMySQL02(JuegoBase):
     AJUSTE_Y_SPRITE_MONTANAS = 0
     AJUSTE_Y_SPRITE_SUELO = 0
     AJUSTE_Y_SPRITE_PLANTAS = 0
+    CARTEL_FINAL = {
+    "x": 4400,
+    "ajuste_y": -10,
+    "tamano":0.40,
+    "mostrar_bloqueado": True,
+}
     PISOS = (
         (0, LONGITUD_NIVEL),
     )

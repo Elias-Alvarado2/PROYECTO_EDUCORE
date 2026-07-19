@@ -12,12 +12,13 @@ class NivelMySQL01(JuegoBase):
     NIVEL_ACTUAL = NIVEL_ACTUAL
     FONDO_ACTUAL = FONDO_ACTUAL
     JUGADOR_X_INICIAL = 170
-    '''
+    
     CARTEL_FINAL = {
     "x": 4000,
     "ajuste_y": -10,
+    "tamano":0.40,
     "mostrar_bloqueado": True,
-}'''
+}
     # Usa valores pequeños.
     # Negativo = sube.
     # Positivo = baja.

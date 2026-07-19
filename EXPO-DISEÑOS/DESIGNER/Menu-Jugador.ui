@@ -139,10 +139,10 @@
    <widget class="QPushButton" name="btn_personaje">
     <property name="geometry">
      <rect>
-      <x>1360</x>
-      <y>710</y>
-      <width>450</width>
-      <height>120</height>
+      <x>1370</x>
+      <y>680</y>
+      <width>351</width>
+      <height>51</height>
      </rect>
     </property>
     <property name="cursor">
@@ -165,10 +165,10 @@
    <widget class="QLabel" name="lbl_imagenpersonaje">
     <property name="geometry">
      <rect>
-      <x>1460</x>
-      <y>400</y>
+      <x>1420</x>
+      <y>430</y>
       <width>261</width>
-      <height>281</height>
+      <height>231</height>
      </rect>
     </property>
     <property name="text">

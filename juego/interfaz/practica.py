@@ -930,11 +930,19 @@ class PantallaPractica:
         if self.boton_presionado == nombre and encima:
             return "clic"
 
-        if nombre == "falso" and self.seleccion is False:
-            return "clic"
+        if (
+            not self.respondido
+            and nombre == "falso"
+            and self.seleccion is False
+        ):
+            return "hover"
 
-        if nombre == "verdadero" and self.seleccion is True:
-            return "clic"
+        if (
+            not self.respondido
+            and nombre == "verdadero"
+            and self.seleccion is True
+        ):
+            return "hover"
 
         if encima:
             return "hover"
