@@ -43,6 +43,13 @@ background-color: transparent;
       <height>71</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+    background-color: transparent;
+    border: none;
+}
+</string>
+    </property>
     <property name="text">
      <string/>
     </property>
@@ -85,6 +92,13 @@ background-color: transparent;
       <height>201</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+    background-color: transparent;
+    border: none;
+}
+</string>
+    </property>
     <property name="text">
      <string/>
     </property>
@@ -98,6 +112,13 @@ background-color: transparent;
       <height>201</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+    background-color: transparent;
+    border: none;
+}
+</string>
+    </property>
     <property name="text">
      <string/>
     </property>
@@ -110,6 +131,13 @@ background-color: transparent;
       <width>171</width>
       <height>201</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+    background-color: transparent;
+    border: none;
+}
+</string>
     </property>
     <property name="text">
      <string/>
@@ -136,6 +164,13 @@ background-color: transparent;
       <width>281</width>
       <height>61</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+    background-color: transparent;
+    border: none;
+}
+</string>
     </property>
     <property name="text">
      <string/>
@@ -238,6 +273,25 @@ background-color: transparent;
     </property>
     <property name="text">
      <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lbl_personaje_seleccionado">
+    <property name="geometry">
+     <rect>
+      <x>780</x>
+      <y>320</y>
+      <width>361</width>
+      <height>321</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="scaledContents">
+     <bool>false</bool>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignmentFlag::AlignCenter</set>
     </property>
    </widget>
   </widget>
