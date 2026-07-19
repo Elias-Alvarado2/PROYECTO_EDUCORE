@@ -100,13 +100,32 @@ background-color: transparent;
     <property name="geometry">
      <rect>
       <x>540</x>
-      <y>510</y>
-      <width>31</width>
-      <height>26</height>
+      <y>515</y>
+      <width>41</width>
+      <height>31</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton#btn_silenciar {
+    border: none;
+    background-color: transparent;
+    border-image: url(&quot;../Botones/otros/boton_mute.png&quot;);
+}
+
+QPushButton#btn_silenciar:checked {
+    border: none;
+    background-color: transparent;
+    border-image: url(&quot;../Botones/otros/boton_sonido.png&quot;);
+}</string>
     </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
     </property>
    </widget>
    <widget class="QLabel" name="lbl_sonidogeneral">
@@ -132,7 +151,7 @@ background-color: transparent;
     <property name="geometry">
      <rect>
       <x>818</x>
-      <y>578</y>
+      <y>587</y>
       <width>250</width>
       <height>67</height>
      </rect>
@@ -163,14 +182,33 @@ background-color: transparent;
    <widget class="QPushButton" name="btn_muteefectos">
     <property name="geometry">
      <rect>
-      <x>550</x>
-      <y>710</y>
-      <width>31</width>
-      <height>26</height>
+      <x>540</x>
+      <y>704</y>
+      <width>41</width>
+      <height>31</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton#btn_muteefectos {
+    border: none;
+    background-color: transparent;
+    border-image: url(&quot;../Botones/otros/boton_mute.png&quot;);
+}
+
+QPushButton#btn_muteefectos:checked {
+    border: none;
+    background-color: transparent;
+    border-image: url(&quot;../Botones/otros/boton_sonido.png&quot;);
+}</string>
     </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
     </property>
    </widget>
   </widget>
