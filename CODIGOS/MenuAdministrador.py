@@ -38,6 +38,182 @@ class FondoImagen(QtWidgets.QLabel):
         )
 
 
+class EfectoHoverBoton(QtCore.QObject):
+    """
+    Agranda ligeramente un botón y aumenta su sombra
+    cuando el cursor pasa sobre él.
+    """
+
+    def __init__(
+        self,
+        boton,
+        factor=1.035,
+        duracion=120,
+        parent=None
+    ):
+        super().__init__(
+            parent if parent is not None else boton
+        )
+
+        self.boton = boton
+        self.factor = factor
+        self.duracion = duracion
+        self.cursor_encima = False
+
+        # Se actualizará después de que BotonesResponsivos
+        # coloque el botón en su posición correcta.
+        self.geometria_normal = QtCore.QRect(
+            boton.geometry()
+        )
+
+        # Animación para agrandar o restaurar el botón.
+        self.animacion_geometria = QtCore.QPropertyAnimation(
+            boton,
+            b"geometry",
+            self
+        )
+        self.animacion_geometria.setDuration(
+            self.duracion
+        )
+        self.animacion_geometria.setEasingCurve(
+            QtCore.QEasingCurve.Type.OutCubic
+        )
+
+        # Sombra del botón.
+        self.sombra = QtWidgets.QGraphicsDropShadowEffect(
+            boton
+        )
+        self.sombra.setColor(
+            QtGui.QColor(0, 0, 0, 180)
+        )
+        self.sombra.setBlurRadius(10)
+        self.sombra.setOffset(0, 3)
+
+        boton.setGraphicsEffect(self.sombra)
+
+        # Animación de la sombra.
+        self.animacion_sombra = QtCore.QPropertyAnimation(
+            self.sombra,
+            b"blurRadius",
+            self
+        )
+        self.animacion_sombra.setDuration(
+            self.duracion
+        )
+        self.animacion_sombra.setEasingCurve(
+            QtCore.QEasingCurve.Type.OutCubic
+        )
+
+        boton.setCursor(
+            QtCore.Qt.CursorShape.PointingHandCursor
+        )
+
+        boton.installEventFilter(self)
+
+    def obtener_geometria_grande(self):
+        rectangulo = self.geometria_normal
+
+        ancho_nuevo = round(
+            rectangulo.width() * self.factor
+        )
+        alto_nuevo = round(
+            rectangulo.height() * self.factor
+        )
+
+        diferencia_ancho = (
+            ancho_nuevo - rectangulo.width()
+        )
+        diferencia_alto = (
+            alto_nuevo - rectangulo.height()
+        )
+
+        return QtCore.QRect(
+            rectangulo.x() - diferencia_ancho // 2,
+            rectangulo.y() - diferencia_alto // 2,
+            ancho_nuevo,
+            alto_nuevo
+        )
+
+    def animar_geometria(self, destino):
+        self.animacion_geometria.stop()
+
+        self.animacion_geometria.setStartValue(
+            self.boton.geometry()
+        )
+        self.animacion_geometria.setEndValue(
+            destino
+        )
+
+        self.animacion_geometria.start()
+
+    def animar_sombra(self, radio):
+        self.animacion_sombra.stop()
+
+        self.animacion_sombra.setStartValue(
+            self.sombra.blurRadius()
+        )
+        self.animacion_sombra.setEndValue(
+            radio
+        )
+
+        self.animacion_sombra.start()
+
+    def actualizar_geometria_base(self):
+        """
+        Se ejecuta después de redimensionar la ventana para
+        conservar la nueva posición responsiva del botón.
+        """
+
+        self.animacion_geometria.stop()
+
+        self.geometria_normal = QtCore.QRect(
+            self.boton.geometry()
+        )
+
+        if self.cursor_encima:
+            self.boton.setGeometry(
+                self.obtener_geometria_grande()
+            )
+
+    def eventFilter(self, objeto, evento):
+        if objeto is self.boton:
+
+            if (
+                evento.type()
+                == QtCore.QEvent.Type.Enter
+                and self.boton.isEnabled()
+            ):
+                self.cursor_encima = True
+
+                # Guarda la posición actual establecida
+                # por BotonesResponsivos.
+                self.geometria_normal = QtCore.QRect(
+                    self.boton.geometry()
+                )
+
+                # Evita que el botón agrandado quede detrás
+                # de los demás.
+                self.boton.raise_()
+
+                self.animar_geometria(
+                    self.obtener_geometria_grande()
+                )
+                self.animar_sombra(28)
+
+            elif evento.type() == QtCore.QEvent.Type.Leave:
+                self.cursor_encima = False
+
+                self.animar_geometria(
+                    self.geometria_normal
+                )
+                self.animar_sombra(10)
+
+        return super().eventFilter(
+            objeto,
+            evento
+        )
+
+
 class MenuAdministrador(QtWidgets.QWidget):
     def __init__(self, admin=None):
         super().__init__()
@@ -132,19 +308,41 @@ class MenuAdministrador(QtWidgets.QWidget):
         self.lbl_logo.raise_()
 
         # Hace responsivos todos los botones del menú.
+        # Lista reutilizable de botones del menú.
+        self.botones_menu = [
+            self.btnAjustes,
+            self.btnCerrarSesion,
+            self.btnGestionUsuarios,
+            self.btnJugar,
+            self.btnPerfil,
+        ]
+
+        # Hace responsivos todos los botones del menú.
         self.botones_responsivos = BotonesResponsivos(
             ventana=self,
-            botones=[
-                self.btnAjustes,
-                self.btnCerrarSesion,
-                self.btnGestionUsuarios,
-                self.btnJugar,
-                self.btnPerfil,
-            ],
+            botones=self.botones_menu,
             ancho_base=1920,
             alto_base=1080,
             escalar_iconos=True,
             escalar_fuentes=False,
+        )
+
+        # Efecto al pasar el cursor sobre los botones.
+        self.efectos_hover = [
+            EfectoHoverBoton(
+                boton=boton,
+                factor=1.035,
+                duracion=120,
+                parent=self
+            )
+            for boton in self.botones_menu
+        ]
+
+        # Espera a que Qt termine de colocar los botones
+        # antes de guardar sus posiciones iniciales.
+        QtCore.QTimer.singleShot(
+            0,
+            self.actualizar_hover_botones
         )
 
         self.conectar_eventos()
@@ -255,6 +453,19 @@ class MenuAdministrador(QtWidgets.QWidget):
                 "error"
             )
 
+    def actualizar_hover_botones(self):
+        """
+        Actualiza las posiciones originales utilizadas
+        por las animaciones hover.
+        """
+
+        for efecto in getattr(
+            self,
+            "efectos_hover",
+            []
+        ):
+            efecto.actualizar_geometria_base()
+
     def resizeEvent(self, event):
         # Ajusta el fondo a la ventana.
         if hasattr(self, "fondo"):
@@ -286,6 +497,12 @@ class MenuAdministrador(QtWidgets.QWidget):
         # el tamaño del QFrame.
         if hasattr(self, "botones_responsivos"):
             self.botones_responsivos.ajustar()
+
+        if hasattr(self, "efectos_hover"):
+            QtCore.QTimer.singleShot(
+                0,
+                self.actualizar_hover_botones
+            )
 
         super().resizeEvent(event)
 
