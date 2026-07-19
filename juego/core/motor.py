@@ -188,8 +188,8 @@ MARGEN_COLISION_VERTICAL = round(20 * ESCALA_JUEGO)
 
 VIDAS_MAXIMAS = 5
 
-TIPOS_OBSTACULOS_SOLIDOS = frozenset({"caja", "fragmento", "arena","tronco","cofre","bloque","piedra", "bloque"})
-TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser", "cactus"})
+TIPOS_OBSTACULOS_SOLIDOS = frozenset({"caja", "fragmento", "arena","tronco","cofre","bloque","piedra", "bloque", "columnas"})
+TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser", "cactus", "huesos"})
 
 
 
@@ -1470,8 +1470,6 @@ class Obstaculo:
         ruta_normalizada = str(ruta_imagen).lower().replace("\\", "/")
         self.deshabilitado = (
             self.tipo in TIPOS_OBSTACULOS_DESHABILITADOS
-            or "cactus" in self.tipo
-            or "cactus" in ruta_normalizada
         )
 
         if self.deshabilitado:

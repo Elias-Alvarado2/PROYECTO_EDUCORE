@@ -26,6 +26,36 @@ class NivelPython06(JuegoBase):
     PISOS = (
         (0, LONGITUD_NIVEL),
     )
+    NPCS = (
+    {
+        "nombre": "pinguino_1",
+        "x": 720,
+        "ajuste_y": -8,
+        "orden_leccion": 4,
+        "requiere_anterior": False,
+        "repetible": True,
+        "practica": 1,
+    },
+     {
+        "nombre": "pinguino_1",
+        "x": 3225,
+        "ajuste_y": -115,
+        "orden_leccion": 5,
+        "requiere_anterior": False,
+        "repetible": True,
+        "practica": 2,
+    },
+      {
+        "nombre": "pinguino_1",
+        "x": 4200,
+        "ajuste_y": -8,
+        "orden_leccion": 6,
+        "requiere_anterior": False,
+        "repetible": True,
+        "practica": 3,
+    },
+    
+)
 
     OBSTACULOS = (
         {

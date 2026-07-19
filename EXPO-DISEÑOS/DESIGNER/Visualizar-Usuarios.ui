@@ -147,11 +147,17 @@ QTableView::item:selected:hover {
    <widget class="QPushButton" name="btn_anterior">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>970</y>
-      <width>241</width>
-      <height>51</height>
+      <x>70</x>
+      <y>630</y>
+      <width>101</width>
+      <height>101</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+    background-color: transparent;
+    border: none;
+}</string>
     </property>
     <property name="text">
      <string/>
@@ -162,19 +168,25 @@ QTableView::item:selected:hover {
     </property>
     <property name="iconSize">
      <size>
-      <width>245</width>
-      <height>245</height>
+      <width>100</width>
+      <height>100</height>
      </size>
     </property>
    </widget>
    <widget class="QPushButton" name="btn_siguiente">
     <property name="geometry">
      <rect>
-      <x>1620</x>
-      <y>980</y>
-      <width>251</width>
-      <height>51</height>
+      <x>1740</x>
+      <y>630</y>
+      <width>101</width>
+      <height>101</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+    background-color: transparent;
+    border: none;
+}</string>
     </property>
     <property name="text">
      <string/>
@@ -185,8 +197,8 @@ QTableView::item:selected:hover {
     </property>
     <property name="iconSize">
      <size>
-      <width>245</width>
-      <height>245</height>
+      <width>101</width>
+      <height>101</height>
      </size>
     </property>
    </widget>
