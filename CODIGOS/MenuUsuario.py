@@ -10,6 +10,8 @@ from LogoReutilizable import LogoReutilizable
 from Ajustes import Ajustes
 from ConexionBD import ConexionBD
 
+VELOCIDAD_ANIMACION_PERSONAJE = 130
+
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
         super().__init__(ventana)
@@ -276,6 +278,21 @@ class MenuUsuario(QtWidgets.QWidget):
         self.lbl_nombre_personaje_actual = None
         self.lbl_imagen_personaje_actual = None
 
+        # Animación del personaje en el menú.
+        self.frames_personaje_menu = []
+        self.indice_frame_personaje = 0
+        self.personaje_animado_actual = None
+
+        self.timer_animacion_personaje = QtCore.QTimer(
+            self
+        )
+        self.timer_animacion_personaje.setInterval(
+            VELOCIDAD_ANIMACION_PERSONAJE
+        )
+        self.timer_animacion_personaje.timeout.connect(
+            self.actualizar_animacion_personaje
+        )
+
         ruta_ui = (
             PROYECTO_DIR
             / "EXPO-DISEÑOS"
@@ -449,18 +466,15 @@ class MenuUsuario(QtWidgets.QWidget):
         """
         Localiza y configura los QLabel creados en Qt Designer.
 
-        Nombres recomendados:
-            lbl_personaje
-            lbl_foto_personaje
+        ObjectName usados en tu formulario:
+            lbl_nombrepersonaje
+            lbl_imagenpersonaje
         """
 
         self.lbl_nombre_personaje_actual = (
             self.buscar_label_por_nombres(
                 (
-                    # Nombre exacto usado en tu Menu-Jugador.ui.
                     "lbl_nombrepersonaje",
-
-                    # Nombres alternativos compatibles.
                     "lbl_personaje",
                     "lbl_nombre_personaje",
                     "lblNombrePersonaje",
@@ -473,10 +487,7 @@ class MenuUsuario(QtWidgets.QWidget):
         self.lbl_imagen_personaje_actual = (
             self.buscar_label_por_nombres(
                 (
-                    # Nombre exacto usado en tu Menu-Jugador.ui.
                     "lbl_imagenpersonaje",
-
-                    # Nombres alternativos compatibles.
                     "lbl_foto_personaje",
                     "lbl_personaje_seleccionado",
                     "lblFotoPersonaje",
@@ -489,12 +500,15 @@ class MenuUsuario(QtWidgets.QWidget):
 
         if self.lbl_nombre_personaje_actual is None:
             print(
-                "ADVERTENCIA: No se encontró el QLabel del nombre "
-                "del personaje. Usa el objectName lbl_nombrepersonaje."
+                "ADVERTENCIA: No se encontró lbl_nombrepersonaje."
             )
         else:
             self.lbl_nombre_personaje_actual.setAlignment(
                 QtCore.Qt.AlignmentFlag.AlignCenter
+            )
+
+            self.lbl_nombre_personaje_actual.setWordWrap(
+                False
             )
 
             self.lbl_nombre_personaje_actual.setStyleSheet(
@@ -503,15 +517,15 @@ class MenuUsuario(QtWidgets.QWidget):
                     color: #000000;
                     background: transparent;
                     border: none;
-                    font-weight: bold;
+                    font-size: 28px;
+                    font-weight: 900;
                 }
                 """
             )
 
         if self.lbl_imagen_personaje_actual is None:
             print(
-                "ADVERTENCIA: No se encontró el QLabel de la imagen "
-                "del personaje. Usa el objectName lbl_imagenpersonaje."
+                "ADVERTENCIA: No se encontró lbl_imagenpersonaje."
             )
         else:
             self.lbl_imagen_personaje_actual.setAlignment(
@@ -531,6 +545,60 @@ class MenuUsuario(QtWidgets.QWidget):
                 }
                 """
             )
+
+        self.centrar_nombre_personaje()
+
+    def centrar_nombre_personaje(self):
+        """
+        Hace que la etiqueta del nombre tenga el mismo ancho
+        y centro horizontal que la etiqueta de la imagen.
+        """
+
+        etiqueta_nombre = self.lbl_nombre_personaje_actual
+        etiqueta_imagen = self.lbl_imagen_personaje_actual
+
+        if (
+            etiqueta_nombre is None
+            or etiqueta_imagen is None
+        ):
+            return
+
+        etiqueta_nombre.setAlignment(
+            QtCore.Qt.AlignmentFlag.AlignCenter
+        )
+
+        # Cuando ambos QLabel pertenecen al mismo contenedor,
+        # el nombre se alinea exactamente con la imagen.
+        if (
+            etiqueta_nombre.parentWidget()
+            is etiqueta_imagen.parentWidget()
+        ):
+            geometria_nombre = etiqueta_nombre.geometry()
+            geometria_imagen = etiqueta_imagen.geometry()
+
+            etiqueta_nombre.setGeometry(
+                geometria_imagen.x(),
+                geometria_nombre.y(),
+                geometria_imagen.width(),
+                max(50, geometria_nombre.height())
+            )
+
+        # Ajusta el tamaño de fuente según el tamaño del label.
+        fuente = etiqueta_nombre.font()
+        fuente.setBold(True)
+
+        tamano = max(
+            18,
+            min(
+                30,
+                round(
+                    etiqueta_nombre.height() * 0.46
+                )
+            )
+        )
+
+        fuente.setPointSize(tamano)
+        etiqueta_nombre.setFont(fuente)
 
     def obtener_id_jugador(self):
         """Obtiene el ID del jugador de la sesión actual."""
@@ -617,7 +685,7 @@ class MenuUsuario(QtWidgets.QWidget):
 
     def mostrar_personaje_usuario(self):
         """
-        Muestra el nombre y el primer frame del personaje
+        Muestra el nombre y reproduce la animación del personaje
         seleccionado por el usuario.
         """
 
@@ -636,23 +704,41 @@ class MenuUsuario(QtWidgets.QWidget):
         }
 
         if personaje not in nombres_visibles:
+            self.timer_animacion_personaje.stop()
+            self.frames_personaje_menu = []
+            self.personaje_animado_actual = None
+            self.pixmap_personaje_original = None
+
             self.lbl_nombre_personaje_actual.setText(
                 "SIN PERSONAJE"
             )
-
             self.lbl_imagen_personaje_actual.clear()
-            self.pixmap_personaje_original = None
             return
 
         self.lbl_nombre_personaje_actual.setText(
             nombres_visibles[personaje]
         )
 
-        ruta_imagen = self.buscar_imagen_personaje(
-            personaje
-        )
+        self.centrar_nombre_personaje()
 
-        if ruta_imagen is None:
+        # Solo vuelve a cargar los archivos cuando cambia
+        # el personaje de la sesión.
+        if (
+            personaje != self.personaje_animado_actual
+            or not self.frames_personaje_menu
+        ):
+            self.timer_animacion_personaje.stop()
+
+            self.frames_personaje_menu = (
+                self.cargar_frames_personaje_menu(
+                    personaje
+                )
+            )
+
+            self.personaje_animado_actual = personaje
+            self.indice_frame_personaje = 0
+
+        if not self.frames_personaje_menu:
             self.pixmap_personaje_original = None
             self.lbl_imagen_personaje_actual.clear()
             self.lbl_imagen_personaje_actual.setText(
@@ -660,37 +746,105 @@ class MenuUsuario(QtWidgets.QWidget):
             )
 
             print(
-                "No se encontró la imagen del personaje:",
+                "No se encontraron frames para:",
                 personaje
             )
             return
 
-        pixmap = QtGui.QPixmap(
-            str(ruta_imagen)
+        self.lbl_imagen_personaje_actual.setText("")
+
+        self.pixmap_personaje_original = (
+            self.frames_personaje_menu[
+                self.indice_frame_personaje
+            ]
         )
 
-        if pixmap.isNull():
-            self.pixmap_personaje_original = None
-            self.lbl_imagen_personaje_actual.clear()
-            self.lbl_imagen_personaje_actual.setText(
-                "NO SE PUDO CARGAR"
-            )
-            return
-
-        self.pixmap_personaje_original = pixmap
-        self.lbl_imagen_personaje_actual.setText("")
         self.actualizar_imagen_personaje()
+
+        if len(self.frames_personaje_menu) > 1:
+            self.timer_animacion_personaje.start()
+        else:
+            self.timer_animacion_personaje.stop()
 
         self.lbl_nombre_personaje_actual.raise_()
         self.lbl_imagen_personaje_actual.raise_()
 
-    def buscar_imagen_personaje(self, personaje):
+    def obtener_configuracion_frames_personaje(
+        self,
+        personaje
+    ):
         """
-        Busca el primer frame del personaje en las carpetas
-        que utiliza la ventana Personajes.py.
+        Devuelve las carpetas y los frames en el orden
+        correcto para cada personaje.
         """
 
-        raices_personajes = (
+        configuraciones = {
+            "cerdo": {
+                "carpetas": (
+                    "cerdo",
+                    "cerdito",
+                    "jugador",
+                ),
+                "frames": (
+                    ("jugador_caminar1.png",),
+                    ("jugador_caminar2.png",),
+                    ("jugador_caminar3.png",),
+                    ("jugador_caminar4.png",),
+                ),
+            },
+
+            "gato": {
+                "carpetas": (
+                    "gato",
+                    "banano",
+                ),
+                "frames": (
+                    ("gato_caminar2.png",),
+                    ("gato_caminar3.png",),
+                    ("gato_caminar4.png",),
+                    ("gato_caminar5.png",),
+                    ("gato_caminar6.png",),
+                    ("gato_caminar7.png",),
+                    ("gato_caminar8.png",),
+                ),
+            },
+
+            "pato": {
+                "carpetas": (
+                    "pato",
+                    "patito",
+                ),
+                "frames": (
+                    (
+                        "Pato_Caminar1.png",
+                        "pato_caminar1.png",
+                    ),
+                    (
+                        "Pato_Caminar2.png",
+                        "pato_caminar2.png",
+                    ),
+                    (
+                        "Pato_Caminar3.png",
+                        "pato_caminar3.png",
+                    ),
+                    (
+                        "Pato_Caminar4.png",
+                        "pato_caminar4.png",
+                    ),
+                    (
+                        "Pato_Caminar5.png",
+                        "pato_caminar5.png",
+                    ),
+                ),
+            },
+        }
+
+        return configuraciones.get(
+            personaje
+        )
+
+    def obtener_raices_personajes_menu(self):
+        return (
             self.proyecto_dir
             / "assets"
             / "personajes",
@@ -710,80 +864,117 @@ class MenuUsuario(QtWidgets.QWidget):
             / "PERSONAJES",
         )
 
-        configuracion = {
-            "cerdo": {
-                "carpetas": (
-                    "cerdo",
-                    "cerdito",
-                    "jugador",
-                ),
-                "archivos": (
-                    "jugador_caminar1.png",
-                ),
-            },
+    def buscar_frame_personaje_menu(
+        self,
+        nombres_carpetas,
+        nombres_archivo
+    ):
+        """
+        Busca un frame de animación en todas las ubicaciones
+        compatibles con el proyecto.
+        """
 
-            "gato": {
-                "carpetas": (
-                    "gato",
-                    "banano",
-                ),
-                "archivos": (
-                    "gato_caminar2.png",
-                    "gato_caminar1.png",
-                ),
-            },
-
-            "pato": {
-                "carpetas": (
-                    "pato",
-                    "patito",
-                ),
-                "archivos": (
-                    "Pato_Caminar1.png",
-                    "pato_caminar1.png",
-                ),
-            },
-        }
-
-        datos = configuracion.get(
-            personaje
-        )
-
-        if datos is None:
-            return None
-
-        for raiz in raices_personajes:
+        for raiz in self.obtener_raices_personajes_menu():
             if not raiz.exists():
                 continue
 
-            for nombre_carpeta in datos["carpetas"]:
+            for nombre_carpeta in nombres_carpetas:
                 carpeta = raiz / nombre_carpeta
 
                 if not carpeta.exists():
                     continue
 
-                for nombre_archivo in datos["archivos"]:
+                for nombre_archivo in nombres_archivo:
                     ruta = carpeta / nombre_archivo
 
                     if ruta.exists():
                         return ruta
 
-                for nombre_archivo in datos["archivos"]:
-                    resultados = list(
+                for nombre_archivo in nombres_archivo:
+                    encontrados = list(
                         carpeta.rglob(
                             nombre_archivo
                         )
                     )
 
-                    if resultados:
-                        return resultados[0]
+                    if encontrados:
+                        return encontrados[0]
 
         return None
 
+    def cargar_frames_personaje_menu(
+        self,
+        personaje
+    ):
+        """
+        Carga todos los frames del personaje como QPixmap.
+        """
+
+        configuracion = (
+            self.obtener_configuracion_frames_personaje(
+                personaje
+            )
+        )
+
+        if configuracion is None:
+            return []
+
+        frames_cargados = []
+
+        for opciones_archivo in configuracion["frames"]:
+            ruta_frame = self.buscar_frame_personaje_menu(
+                configuracion["carpetas"],
+                opciones_archivo
+            )
+
+            if ruta_frame is None:
+                print(
+                    "No se encontró uno de los frames de",
+                    personaje,
+                    opciones_archivo
+                )
+                continue
+
+            pixmap = QtGui.QPixmap(
+                str(ruta_frame)
+            )
+
+            if not pixmap.isNull():
+                frames_cargados.append(
+                    pixmap
+                )
+
+        return frames_cargados
+
+    def actualizar_animacion_personaje(self):
+        """
+        Avanza al siguiente frame del personaje.
+        """
+
+        if not self.frames_personaje_menu:
+            self.timer_animacion_personaje.stop()
+            return
+
+        self.indice_frame_personaje += 1
+
+        if (
+            self.indice_frame_personaje
+            >= len(self.frames_personaje_menu)
+        ):
+            self.indice_frame_personaje = 0
+
+        self.pixmap_personaje_original = (
+            self.frames_personaje_menu[
+                self.indice_frame_personaje
+            ]
+        )
+
+        self.actualizar_imagen_personaje()
+
     def actualizar_imagen_personaje(self):
         """
-        Escala el personaje sin deformarlo y lo mantiene
-        centrado dentro de lbl_foto_personaje.
+        Escala el frame actual sin deformarlo y lo mantiene
+        centrado dentro de lbl_imagenpersonaje.
         """
 
         if self.lbl_imagen_personaje_actual is None:
@@ -1110,6 +1301,15 @@ class MenuUsuario(QtWidgets.QWidget):
             self.actualizar_tarjeta_personaje
         )
 
+    def hideEvent(self, event):
+        if hasattr(
+            self,
+            "timer_animacion_personaje"
+        ):
+            self.timer_animacion_personaje.stop()
+
+        super().hideEvent(event)
+
     def resizeEvent(self, event):
         # Ajustar el fondo.
         if hasattr(self, "fondo"):
@@ -1154,6 +1354,8 @@ class MenuUsuario(QtWidgets.QWidget):
             "pixmap_personaje_original"
         ):
             self.actualizar_imagen_personaje()
+
+        self.centrar_nombre_personaje()
 
         if self.lbl_nombre_personaje_actual is not None:
             self.lbl_nombre_personaje_actual.raise_()
