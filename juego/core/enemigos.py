@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 from pathlib import Path
 
 import pygame
@@ -189,6 +190,44 @@ def _ajustar_frames_uniformemente(
     return frames, cuerpos_ajustados
 
 
+@lru_cache(maxsize=32)
+def _cargar_recursos_enemigo(
+    tipo: str,
+    ancho_cuerpo: int,
+    alto_cuerpo: int,
+):
+    """Comparte frames procesados entre enemigos visualmente iguales."""
+    carpeta = _resolver_carpeta(tipo)
+    rutas = sorted(
+        (
+            ruta
+            for ruta in carpeta.iterdir()
+            if ruta.is_file() and ruta.suffix.casefold() == ".png"
+        ),
+        key=_clave_orden_natural,
+    )
+
+    if not rutas:
+        raise FileNotFoundError(
+            f"El enemigo {tipo!r} no tiene frames PNG en {carpeta}"
+        )
+
+    imagenes = [
+        pygame.image.load(str(ruta)).convert_alpha()
+        for ruta in rutas
+    ]
+    frames, cuerpos = _ajustar_frames_uniformemente(
+        imagenes,
+        ancho_cuerpo,
+        alto_cuerpo,
+    )
+    reflejados = tuple(
+        pygame.transform.flip(frame, True, False)
+        for frame in frames
+    )
+    return tuple(frames), tuple(cuerpos), reflejados
+
+
 class Enemigo:
     """Enemigo animado que patrulla en un recorrido horizontal o vertical."""
 
@@ -240,12 +279,16 @@ class Enemigo:
         self.frame_actual = 0
         self.tiempo_animacion = 0.0
         self.vivo = True
-        self.frames, self.rects_cuerpo = self._cargar_frames()
+        (
+            self.frames,
+            self.rects_cuerpo,
+            self.frames_reflejados,
+        ) = _cargar_recursos_enemigo(
+            self.tipo,
+            self.ancho_cuerpo,
+            self.alto_cuerpo,
+        )
         self.ancho, self.alto = self.frames[0].get_size()
-        self.frames_reflejados = [
-            pygame.transform.flip(frame, True, False)
-            for frame in self.frames
-        ]
         self.hitboxes_locales = self._calcular_hitboxes(
             hitbox_reducir_ancho,
             hitbox_reducir_alto,
@@ -368,30 +411,12 @@ class Enemigo:
     def _cargar_frames(
         self,
     ) -> tuple[list[pygame.Surface], list[pygame.Rect]]:
-        carpeta = _resolver_carpeta(self.tipo)
-        rutas = sorted(
-            (
-                ruta
-                for ruta in carpeta.iterdir()
-                if ruta.is_file() and ruta.suffix.casefold() == ".png"
-            ),
-            key=_clave_orden_natural,
-        )
-
-        if not rutas:
-            raise FileNotFoundError(
-                f"El enemigo {self.tipo!r} no tiene frames PNG en {carpeta}"
-            )
-
-        imagenes = [
-            pygame.image.load(str(ruta)).convert_alpha()
-            for ruta in rutas
-        ]
-        return _ajustar_frames_uniformemente(
-            imagenes,
+        frames, cuerpos, _ = _cargar_recursos_enemigo(
+            self.tipo,
             self.ancho_cuerpo,
             self.alto_cuerpo,
         )
+        return frames, cuerpos
 
     def _calcular_hitboxes(
         self,
