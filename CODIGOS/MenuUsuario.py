@@ -10,6 +10,10 @@ from LogoReutilizable import LogoReutilizable
 from Ajustes import Ajustes
 
 
+# ==========================================================
+# FONDO RESPONSIVO
+# ==========================================================
+
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
         super().__init__(ventana)
@@ -20,6 +24,12 @@ class FondoImagen(QtWidgets.QLabel):
             str(self.ruta_imagen)
         )
 
+        if self.pixmap_original.isNull():
+            raise FileNotFoundError(
+                f"No se pudo cargar el fondo:\n"
+                f"{self.ruta_imagen}"
+            )
+
         self.setScaledContents(True)
 
         self.setGeometry(
@@ -29,7 +39,16 @@ class FondoImagen(QtWidgets.QLabel):
             ventana.height()
         )
 
-        self.setPixmap(self.pixmap_original)
+        self.setPixmap(
+            self.pixmap_original
+        )
+
+        # Evita que el fondo bloquee clics.
+        self.setAttribute(
+            QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents,
+            True
+        )
+
         self.lower()
 
     def actualizar_tamano(self, ancho, alto):
@@ -40,6 +59,10 @@ class FondoImagen(QtWidgets.QLabel):
             alto
         )
 
+
+# ==========================================================
+# EFECTO HOVER PARA LOS BOTONES
+# ==========================================================
 
 class EfectoHoverBoton(QtCore.QObject):
     """
@@ -67,10 +90,13 @@ class EfectoHoverBoton(QtCore.QObject):
             self.boton.geometry()
         )
 
-        self.animacion_geometria = QtCore.QPropertyAnimation(
-            self.boton,
-            b"geometry",
-            self
+        # Animación para agrandar/reducir el botón.
+        self.animacion_geometria = (
+            QtCore.QPropertyAnimation(
+                self.boton,
+                b"geometry",
+                self
+            )
         )
 
         self.animacion_geometria.setDuration(
@@ -81,8 +107,11 @@ class EfectoHoverBoton(QtCore.QObject):
             QtCore.QEasingCurve.Type.OutCubic
         )
 
-        self.sombra = QtWidgets.QGraphicsDropShadowEffect(
-            self.boton
+        # Sombra del botón.
+        self.sombra = (
+            QtWidgets.QGraphicsDropShadowEffect(
+                self.boton
+            )
         )
 
         self.sombra.setColor(
@@ -96,10 +125,13 @@ class EfectoHoverBoton(QtCore.QObject):
             self.sombra
         )
 
-        self.animacion_sombra = QtCore.QPropertyAnimation(
-            self.sombra,
-            b"blurRadius",
-            self
+        # Animación de la sombra.
+        self.animacion_sombra = (
+            QtCore.QPropertyAnimation(
+                self.sombra,
+                b"blurRadius",
+                self
+            )
         )
 
         self.animacion_sombra.setDuration(
@@ -114,7 +146,9 @@ class EfectoHoverBoton(QtCore.QObject):
             QtCore.Qt.CursorShape.PointingHandCursor
         )
 
-        self.boton.installEventFilter(self)
+        self.boton.installEventFilter(
+            self
+        )
 
     def obtener_geometria_grande(self):
         rectangulo = self.geometria_normal
@@ -136,8 +170,12 @@ class EfectoHoverBoton(QtCore.QObject):
         )
 
         return QtCore.QRect(
-            rectangulo.x() - diferencia_ancho // 2,
-            rectangulo.y() - diferencia_alto // 2,
+            rectangulo.x()
+            - diferencia_ancho // 2,
+
+            rectangulo.y()
+            - diferencia_alto // 2,
+
             ancho_nuevo,
             alto_nuevo
         )
@@ -170,7 +208,8 @@ class EfectoHoverBoton(QtCore.QObject):
 
     def actualizar_geometria_base(self):
         """
-        Guarda la posición asignada por BotonesResponsivos.
+        Guarda la posición asignada por
+        BotonesResponsivos.
         """
 
         self.animacion_geometria.stop()
@@ -188,7 +227,8 @@ class EfectoHoverBoton(QtCore.QObject):
         if objeto is self.boton:
 
             if (
-                evento.type() == QtCore.QEvent.Type.Enter
+                evento.type()
+                == QtCore.QEvent.Type.Enter
                 and self.boton.isEnabled()
             ):
                 self.cursor_encima = True
@@ -201,7 +241,10 @@ class EfectoHoverBoton(QtCore.QObject):
 
                 self.animar_sombra(28)
 
-            elif evento.type() == QtCore.QEvent.Type.Leave:
+            elif (
+                evento.type()
+                == QtCore.QEvent.Type.Leave
+            ):
                 self.cursor_encima = False
 
                 self.animar_geometria(
@@ -216,6 +259,10 @@ class EfectoHoverBoton(QtCore.QObject):
         )
 
 
+# ==========================================================
+# MENÚ PRINCIPAL DEL JUGADOR
+# ==========================================================
+
 class MenuUsuario(QtWidgets.QWidget):
     def __init__(self, jugador=None):
         super().__init__()
@@ -224,10 +271,18 @@ class MenuUsuario(QtWidgets.QWidget):
 
         self.jugador = jugador
 
+        # Ventanas y transiciones.
         self.ventana_lecciones = None
         self.ventana_login = None
+
         self.form_ajustes = None
         self.transicion_ajustes = None
+
+        self.transicion_personajes = None
+
+        # --------------------------------------------------
+        # RUTAS
+        # --------------------------------------------------
 
         BASE_DIR = Path(__file__).resolve().parent
         PROYECTO_DIR = BASE_DIR.parent
@@ -259,14 +314,20 @@ class MenuUsuario(QtWidgets.QWidget):
             / "Botones"
         )
 
+        # --------------------------------------------------
+        # COMPROBAR RUTAS
+        # --------------------------------------------------
+
         if not ruta_ui.exists():
             raise FileNotFoundError(
-                f"No se encontró el archivo UI:\n{ruta_ui}"
+                f"No se encontró el archivo UI:\n"
+                f"{ruta_ui}"
             )
 
         if not ruta_imagen.exists():
             raise FileNotFoundError(
-                f"No se encontró la imagen:\n{ruta_imagen}"
+                f"No se encontró la imagen:\n"
+                f"{ruta_imagen}"
             )
 
         if not ruta_botones.exists():
@@ -277,14 +338,20 @@ class MenuUsuario(QtWidgets.QWidget):
 
         if not ruta_logo.exists():
             raise FileNotFoundError(
-                f"No se encontró el logo:\n{ruta_logo}"
+                f"No se encontró el logo:\n"
+                f"{ruta_logo}"
             )
+
+        # --------------------------------------------------
+        # CARGAR FORMULARIO
+        # --------------------------------------------------
 
         uic.loadUi(
             str(ruta_ui),
             self
         )
 
+        # Corregir las rutas relativas de Qt Designer.
         self.corregir_rutas_stylesheet(
             ruta_botones
         )
@@ -304,38 +371,60 @@ class MenuUsuario(QtWidgets.QWidget):
             16777215
         )
 
+        # --------------------------------------------------
+        # FONDO
+        # --------------------------------------------------
+
         self.fondo = FondoImagen(
             self,
             ruta_imagen
         )
 
-        self.logo_reutilizable = LogoReutilizable(
-            self,
-            ruta_logo
+        # --------------------------------------------------
+        # LOGO
+        # --------------------------------------------------
+
+        self.logo_reutilizable = (
+            LogoReutilizable(
+                self,
+                ruta_logo
+            )
         )
 
-        self.lbl_logo.raise_()
+        if hasattr(self, "lbl_logo"):
+            self.lbl_logo.raise_()
 
-        # Lista compartida de botones.
+        # --------------------------------------------------
+        # BOTONES RESPONSIVOS
+        # --------------------------------------------------
+
         self.botones_menu = [
-            self.btnAjustes,
-            self.btnCerrarSesion,
             self.btnJugar,
+            self.btnAjustes,
             self.btnPerfil,
+            self.btnCerrarSesion,
+
+            # Botón para abrir Personajes.py.
+            self.btn_personaje,
         ]
 
-        self.botones_responsivos = BotonesResponsivos(
-            ventana=self,
-            botones=self.botones_menu,
-            ancho_base=1920,
-            alto_base=1080,
-            escalar_iconos=True,
-            escalar_fuentes=False,
+        self.botones_responsivos = (
+            BotonesResponsivos(
+                ventana=self,
+                botones=self.botones_menu,
+                ancho_base=1920,
+                alto_base=1080,
+                escalar_iconos=True,
+                escalar_fuentes=False,
+            )
         )
 
         self.configurar_botones()
 
-        # Crea el efecto de agrandamiento y sombra.
+        # --------------------------------------------------
+        # EFECTOS HOVER
+        # --------------------------------------------------
+
         self.efectos_hover = [
             EfectoHoverBoton(
                 boton=boton,
@@ -347,15 +436,26 @@ class MenuUsuario(QtWidgets.QWidget):
         ]
 
         # Espera a que BotonesResponsivos coloque
-        # correctamente todos los botones.
+        # correctamente los botones.
         QtCore.QTimer.singleShot(
             0,
             self.actualizar_hover_botones
         )
 
+        # --------------------------------------------------
+        # EVENTOS
+        # --------------------------------------------------
+
         self.conectar_eventos()
 
-    def corregir_rutas_stylesheet(self, ruta_botones):
+    # ======================================================
+    # CORREGIR RUTAS DEL STYLESHEET
+    # ======================================================
+
+    def corregir_rutas_stylesheet(
+        self,
+        ruta_botones
+    ):
         ruta_absoluta = (
             ruta_botones
             .resolve()
@@ -370,45 +470,61 @@ class MenuUsuario(QtWidgets.QWidget):
         ]
 
         for control in controles:
-            estilo_original = control.styleSheet()
+            estilo_original = (
+                control.styleSheet()
+            )
 
             if not estilo_original:
                 continue
 
             estilo_corregido = estilo_original
 
-            estilo_corregido = estilo_corregido.replace(
-                'url("../Botones/',
-                f'url("{ruta_absoluta}/'
+            estilo_corregido = (
+                estilo_corregido.replace(
+                    'url("../Botones/',
+                    f'url("{ruta_absoluta}/'
+                )
             )
 
-            estilo_corregido = estilo_corregido.replace(
-                "url('../Botones/",
-                f"url('{ruta_absoluta}/"
+            estilo_corregido = (
+                estilo_corregido.replace(
+                    "url('../Botones/",
+                    f"url('{ruta_absoluta}/"
+                )
             )
 
-            estilo_corregido = estilo_corregido.replace(
-                "url(../Botones/",
-                f"url({ruta_absoluta}/"
+            estilo_corregido = (
+                estilo_corregido.replace(
+                    "url(../Botones/",
+                    f"url({ruta_absoluta}/"
+                )
             )
 
-            if estilo_corregido != estilo_original:
+            if (
+                estilo_corregido
+                != estilo_original
+            ):
                 control.setStyleSheet(
                     estilo_corregido
                 )
+
+    # ======================================================
+    # CONFIGURAR BOTONES
+    # ======================================================
 
     def configurar_botones(self):
         for boton in self.botones_menu:
             boton.setCursor(
                 QtGui.QCursor(
-                    QtCore.Qt.CursorShape.PointingHandCursor
+                    QtCore.Qt.CursorShape
+                    .PointingHandCursor
                 )
             )
 
     def actualizar_hover_botones(self):
         """
-        Actualiza las posiciones originales de los botones
-        después de ajustar el tamaño de la ventana.
+        Actualiza las posiciones originales
+        utilizadas por las animaciones hover.
         """
 
         for efecto in getattr(
@@ -417,6 +533,10 @@ class MenuUsuario(QtWidgets.QWidget):
             []
         ):
             efecto.actualizar_geometria_base()
+
+    # ======================================================
+    # CONECTAR BOTONES
+    # ======================================================
 
     def conectar_eventos(self):
         self.btnJugar.clicked.connect(
@@ -431,15 +551,63 @@ class MenuUsuario(QtWidgets.QWidget):
             self.cerrar_sesion
         )
 
+        self.btn_personaje.clicked.connect(
+            self.abrir_personajes
+        )
+
+    # ======================================================
+    # ABRIR PERSONAJES
+    # ======================================================
+
+    def abrir_personajes(self):
+        """
+        Abre Personajes.py conservando los datos
+        del jugador que inició sesión.
+        """
+
+        try:
+            # Importación local para evitar
+            # importaciones circulares.
+            from Personajes import Personajes
+
+            # La clase Personajes recuperará este jugador
+            # cuando FormTransicion cree la ventana.
+            Personajes.jugador_pendiente = (
+                self.jugador
+            )
+
+            # FormTransicion recibe la clase Personajes.
+            self.transicion_personajes = (
+                FormTransicion(
+                    self,
+                    Personajes
+                )
+            )
+
+        except Exception as error:
+            Alertas.mostrar(
+                self,
+                "Error al abrir personajes",
+                "No se pudo abrir la ventana "
+                "de personajes."
+                f"\n\nDetalles:\n{error}",
+                "error"
+            )
+
+    # ======================================================
+    # ABRIR AJUSTES
+    # ======================================================
+
     def abrir_ajustes(self):
         """
         Abre Ajustes desde el menú del jugador.
         """
 
-        # Si ya está abierta, solamente la lleva al frente.
+        # Si ya está abierta, solamente se lleva
+        # al frente.
         if (
-                self.form_ajustes is not None
-                and self.form_ajustes.isVisible()
+            self.form_ajustes is not None
+            and self.form_ajustes.isVisible()
         ):
             self.form_ajustes.raise_()
             self.form_ajustes.activateWindow()
@@ -452,9 +620,10 @@ class MenuUsuario(QtWidgets.QWidget):
                 desde_juego=False,
             )
 
-            # Permite liberar la ventana cuando se cierre.
+            # Libera la ventana cuando se cierre.
             self.form_ajustes.setAttribute(
-                QtCore.Qt.WidgetAttribute.WA_DeleteOnClose,
+                QtCore.Qt.WidgetAttribute
+                .WA_DeleteOnClose,
                 True
             )
 
@@ -462,30 +631,37 @@ class MenuUsuario(QtWidgets.QWidget):
                 self._limpiar_form_ajustes
             )
 
-            # Guarda la transición para evitar que Python
-            # la elimine antes de finalizar.
-            self.transicion_ajustes = FormTransicion(
-                self,
-                self.form_ajustes
+            # Guardar la transición evita que Python
+            # la elimine antes de terminar.
+            self.transicion_ajustes = (
+                FormTransicion(
+                    self,
+                    self.form_ajustes
+                )
             )
 
         except Exception as error:
             Alertas.mostrar(
                 self,
                 "Error al abrir ajustes",
-                f"No se pudo abrir la ventana de ajustes."
+                "No se pudo abrir la ventana "
+                "de ajustes."
                 f"\n\nDetalles:\n{error}",
                 "error"
             )
 
     def _limpiar_form_ajustes(self):
         """
-        Limpia las referencias para poder volver
-        a abrir Ajustes posteriormente.
+        Limpia las referencias para poder abrir
+        nuevamente la ventana de Ajustes.
         """
 
         self.form_ajustes = None
         self.transicion_ajustes = None
+
+    # ======================================================
+    # ABRIR LECCIONES
+    # ======================================================
 
     def abrir_lecciones(self):
         try:
@@ -507,26 +683,39 @@ class MenuUsuario(QtWidgets.QWidget):
 
                 except TypeError:
                     try:
-                        self.ventana_lecciones = Lecciones(
-                            self.jugador
+                        self.ventana_lecciones = (
+                            Lecciones(
+                                self.jugador
+                            )
                         )
 
                     except TypeError:
-                        self.ventana_lecciones = Lecciones()
+                        self.ventana_lecciones = (
+                            Lecciones()
+                        )
 
-            FormTransicion(
-                self,
-                self.ventana_lecciones
+            # Guardamos la transición dentro de la
+            # instancia para evitar que se elimine.
+            self.transicion_lecciones = (
+                FormTransicion(
+                    self,
+                    self.ventana_lecciones
+                )
             )
 
-        except Exception as e:
+        except Exception as error:
             Alertas.mostrar(
                 self,
                 "Error al abrir lecciones",
-                "No se pudo abrir la ventana de lecciones."
-                f"\n\nDetalles:\n{e}",
+                "No se pudo abrir la ventana "
+                "de lecciones."
+                f"\n\nDetalles:\n{error}",
                 "error"
             )
+
+    # ======================================================
+    # CERRAR SESIÓN
+    # ======================================================
 
     def cerrar_sesion(self):
         respuesta = Alertas.confirmar(
@@ -544,14 +733,23 @@ class MenuUsuario(QtWidgets.QWidget):
         try:
             from Login import LoginWindow
 
-            app = QtWidgets.QApplication.instance()
+            app = (
+                QtWidgets.QApplication.instance()
+            )
 
-            if hasattr(app, "historial_forms"):
+            if hasattr(
+                app,
+                "historial_forms"
+            ):
                 app.historial_forms.clear()
 
-            self.ventana_login = LoginWindow()
+            self.ventana_login = (
+                LoginWindow()
+            )
 
-            app.ventana_login = self.ventana_login
+            app.ventana_login = (
+                self.ventana_login
+            )
 
             self.ventana_login.resize(
                 1020,
@@ -559,17 +757,24 @@ class MenuUsuario(QtWidgets.QWidget):
             )
 
             self.ventana_login.showNormal()
+
             self.close()
 
-        except Exception as e:
+        except Exception as error:
             Alertas.mostrar(
                 self,
                 "Error al cerrar sesión",
-                f"No se pudo abrir el Login:\n{e}",
+                "No se pudo abrir el Login:"
+                f"\n{error}",
                 "error"
             )
 
+    # ======================================================
+    # REDIMENSIONAR VENTANA
+    # ======================================================
+
     def resizeEvent(self, event):
+        # Ajustar el fondo.
         if hasattr(self, "fondo"):
             self.fondo.actualizar_tamano(
                 self.width(),
@@ -578,6 +783,7 @@ class MenuUsuario(QtWidgets.QWidget):
 
             self.fondo.lower()
 
+        # Ajustar el frame principal.
         if hasattr(self, "MenuJugador"):
             self.MenuJugador.setGeometry(
                 0,
@@ -588,17 +794,31 @@ class MenuUsuario(QtWidgets.QWidget):
 
             self.MenuJugador.raise_()
 
+        # Asegurar que el botón de personajes
+        # permanezca visible.
+        if hasattr(self, "btn_personaje"):
+            self.btn_personaje.show()
+            self.btn_personaje.raise_()
+
+        # Mantener el logo sobre el fondo.
         if hasattr(self, "lbl_logo"):
             self.lbl_logo.raise_()
 
-        if hasattr(self, "logo_reutilizable"):
+        if hasattr(
+            self,
+            "logo_reutilizable"
+        ):
             self.logo_reutilizable.actualizar()
 
-        if hasattr(self, "botones_responsivos"):
+        # Escalar botones.
+        if hasattr(
+            self,
+            "botones_responsivos"
+        ):
             self.botones_responsivos.ajustar()
 
-        # Actualiza la geometría utilizada por el hover
-        # después del ajuste responsivo.
+        # Actualizar la geometría usada por
+        # las animaciones hover.
         if hasattr(self, "efectos_hover"):
             QtCore.QTimer.singleShot(
                 0,

@@ -1469,6 +1469,7 @@ class Obstaculo:
         ruta_normalizada = str(ruta_imagen).lower().replace("\\", "/")
         self.deshabilitado = (
             self.tipo in TIPOS_OBSTACULOS_DESHABILITADOS
+            
         )
 
         if self.deshabilitado:
@@ -2949,6 +2950,7 @@ class JuegoEduCore:
             )
         ]
         self.jugador.colocar_sobre_piso(PISO_COLISION_Y)
+        
 
         # Crea todos los pingüinos configurados por el nivel.
         self.cargar_npcs_desde_nivel()
@@ -3741,6 +3743,55 @@ class JuegoEduCore:
         )
         self.cierre_game_over_iniciado = True
 
+    def regresar_al_inicio_por_huesos(self):
+        """Devuelve al jugador al inicio después de tocar los huesos.
+
+        Primero utiliza el método del nivel concreto, cuando existe, para
+        respetar JUGADOR_X_INICIAL y el piso personalizado. El bloque de
+        respaldo permite que el motor también funcione por sí solo.
+        """
+        colocar_inicio = getattr(
+            self,
+            "colocar_jugador_en_inicio",
+            None,
+        )
+
+        if callable(colocar_inicio):
+            colocar_inicio()
+        else:
+            self.camara_x = 0
+
+            x_inicial = getattr(
+                self,
+                "JUGADOR_X_INICIAL",
+                170,
+            )
+            self.jugador.x_pantalla = round(
+                float(x_inicial) * ESCALA_JUEGO
+            )
+
+            obtener_piso_nivel = getattr(
+                self,
+                "obtener_piso_colision_nivel",
+                None,
+            )
+            piso_inicio = (
+                int(obtener_piso_nivel())
+                if callable(obtener_piso_nivel)
+                else PISO_COLISION_Y
+            )
+            self.jugador.colocar_sobre_piso(piso_inicio)
+
+        # Elimina cualquier movimiento pendiente del fotograma del golpe.
+        self.jugador.velocidad_y = 0
+        self.jugador.en_suelo = True
+
+        # Evita conservar avisos o referencias de interacción del lugar
+        # donde se tocaron los huesos.
+        self.en_dialogo = False
+        self.objeto_en_contacto = None
+        self.interaccion_actual = None
+
     def recibir_dano_obstaculo(self, obstaculo):
         """Quita exactamente una vida al tocar un obstáculo de daño."""
         if self.vidas_infinitas or self.game_over:
@@ -3774,6 +3825,10 @@ class JuegoEduCore:
                     "Daño por láser",
                     "Tocó un obstáculo láser",
                 ),
+                "huesos": (
+                    "Daño por huesos",
+                    "Tocó un obstáculo de huesos",
+                ),
             }
             evento, detalle = nombres.get(
                 obstaculo.tipo,
@@ -3791,6 +3846,12 @@ class JuegoEduCore:
 
         # Solo hay game over cuando la última vida llega a cero.
         if self.game_over:
+            return True
+
+        # Los huesos tienen un comportamiento especial: después de quitar
+        # exactamente una vida, el personaje vuelve al comienzo del nivel.
+        if obstaculo.tipo == "huesos":
+            self.regresar_al_inicio_por_huesos()
             return True
 
         # Rebote corto para separar al personaje y evitar contacto continuo.

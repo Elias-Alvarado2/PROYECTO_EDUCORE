@@ -30,9 +30,9 @@ class NivelPython04(JuegoBase):
     NPCS = (
     {
         "nombre": "pinguino_1",
-        "x": 720,
+        "x": 700,
         "ajuste_y": -8,
-        "orden_leccion": 4,
+        "orden_leccion": 10,
         "requiere_anterior": False,
         "repetible": True,
         "practica": 1,
@@ -41,7 +41,7 @@ class NivelPython04(JuegoBase):
         "nombre": "pinguino_1",
         "x": 3225,
         "ajuste_y": -115,
-        "orden_leccion": 5,
+        "orden_leccion": 11,
         "requiere_anterior": False,
         "repetible": True,
         "practica": 2,
@@ -50,7 +50,7 @@ class NivelPython04(JuegoBase):
         "nombre": "pinguino_1",
         "x": 4200,
         "ajuste_y": -8,
-        "orden_leccion": 6,
+        "orden_leccion": 12,
         "requiere_anterior": False,
         "repetible": True,
         "practica": 3,
@@ -59,47 +59,317 @@ class NivelPython04(JuegoBase):
 )
 
     OBSTACULOS = (
-        {
-            "tipo": "tronco",
-            "imagen": "tronco.png",
-            "x": 740,
-            "ajuste_y": 40,
-            "hitbox_offset_x": 10,
-            "hitbox_offset_y": 40,
-            "hitbox_reducir_ancho": 20,
-            "hitbox_reducir_alto": 70,
-        },
-        {
-            "tipo": "tronco",
-            "imagen": "tronco.png",
-            "x": 1690,
-            "ajuste_y": 40,
-            "hitbox_offset_x": 10,
-            "hitbox_offset_y": 40,
-            "hitbox_reducir_ancho": 20,
-            "hitbox_reducir_alto": 70,
-        },
-        {
-            "tipo": "tronco",
-            "imagen": "tronco.png",
-            "x": 2400,
-            "ajuste_y": 40,
-            "hitbox_offset_x": 10,
-            "hitbox_offset_y": 40,
-            "hitbox_reducir_ancho": 20,
-            "hitbox_reducir_alto": 70,
-        },
-    )
+    # =========================================================
+    # COLUMNA 1
+    # Primer rectángulo vertical
+    # =========================================================
+    {
+        "tipo": "arena",
+        "imagen": "python/arena.png",
+        "x": 850,
+        "ancho": 100,
+        "alto": 30,
+        "ajuste_y": -25,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+    {
+        "tipo": "columnas",
+        "imagen": "python/columnas.png",
+        "x": 950,
+        "ancho": 60,
+        "alto": 130,
+        "ajuste_y": -2,
+
+        "hitbox_offset_x": 6,
+        "hitbox_offset_y": 4,
+        "hitbox_reducir_ancho": 12,
+        "hitbox_reducir_alto": 8,
+    },
+
+    # =========================================================
+    # HUESOS 1
+    # Primer fuego de la referencia
+    # =========================================================
+    {
+        "tipo": "huesos",
+        "imagen": "python/huesos.png",
+        "x": 1045,
+        "ancho": 55,
+        "alto": 50,
+        "ajuste_y": -2,
+
+        "hitbox_offset_x": 10,
+        "hitbox_offset_y": 18,
+        "hitbox_reducir_ancho": 20,
+        "hitbox_reducir_alto": 20,
+    },
+      {
+        "tipo": "puas",
+        "imagen": "python/puas_obstaculo.png",
+        "x": 1145,
+        "ancho": 100,
+        "alto": 50,
+        "ajuste_y": -8,
+
+        "hitbox_offset_x": 10,
+        "hitbox_offset_y": 18,
+        "hitbox_reducir_ancho": 20,
+        "hitbox_reducir_alto": 20,
+    },
+     {
+        "tipo": "arena",
+        "imagen": "python/arena.png",
+        "x": 1030,
+        "ancho": 100,
+        "alto": 30,
+        "ajuste_y": -150,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+  
+
+    # =========================================================
+    # COLUMNA 2
+    # Segunda columna, un poco más alta
+    # =========================================================
+   
+
+    # =========================================================
+    # HUESOS 2
+    # Segundo fuego de la referencia
+    # =========================================================
+    {
+        "tipo": "huesos",
+        "imagen": "python/huesos.png",
+        "x": 1265,
+        "ancho": 55,
+        "alto": 50,
+        "ajuste_y": -2,
+
+        "hitbox_offset_x": 10,
+        "hitbox_offset_y": 18,
+        "hitbox_reducir_ancho": 20,
+        "hitbox_reducir_alto": 20,
+    },
+     {
+        "tipo": "arena",
+        "imagen": "python/arena.png",
+        "x": 1230,
+        "ancho": 100,
+        "alto": 30,
+        "ajuste_y": -150,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+
+    # =========================================================
+    # FRAGMENTO FLOTANTE
+    # Rectángulo horizontal
+    # =========================================================
+ 
+
+    # =========================================================
+    # COLUMNA 3
+    # Columna cercana al fragmento
+    # =========================================================
+    {
+        "tipo": "columnas",
+        "imagen": "python/columnas.png",
+        "x": 1345,
+        "ancho": 60,
+        "alto": 130,
+        "ajuste_y": -2,
+
+        "hitbox_offset_x": 6,
+        "hitbox_offset_y": 4,
+        "hitbox_reducir_ancho": 12,
+        "hitbox_reducir_alto": 8,
+    },
+     {
+        "tipo": "puas",
+        "imagen": "python/puas_obstaculo.png",
+        "x": 1427,
+        "ancho": 100,
+        "alto": 50,
+        "ajuste_y": -8,
+         "cantidad": 3,
+         "separacion": 20,
+        "hitbox_offset_x": 10,
+        "hitbox_offset_y": 18,
+        "hitbox_reducir_ancho": 20,
+        "hitbox_reducir_alto": 20,
+    },
+
+    # =========================================================
+    # PÚAS
+    # Círculo de la referencia
+    # =========================================================
+   {
+        "tipo": "columnas",
+        "imagen": "python/columnas.png",
+        "x": 1780,
+        "ancho": 60,
+        "alto": 130,
+        "ajuste_y": -2,
+
+        "hitbox_offset_x": 6,
+        "hitbox_offset_y": 4,
+        "hitbox_reducir_ancho": 12,
+        "hitbox_reducir_alto": 8,
+    },
+  
+    {
+        "tipo": "arena",
+        "imagen": "python/arena.png",
+        "x": 1430,
+        "ancho": 100,
+        "alto": 30,
+        "ajuste_y": -190,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+     {
+        "tipo": "arena",
+        "imagen": "python/arena.png",
+        "x": 1540,
+        "ancho": 100,
+        "alto": 30,
+        "ajuste_y": -160,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+       {
+        "tipo": "arena",
+        "imagen": "python/arena.png",
+        "x": 1660,
+        "ancho": 100,
+        "alto": 30,
+        "ajuste_y": -120,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+      {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento.png",
+        "x": 1850,
+        "ancho": 100,
+        "alto": 30,
+        "ajuste_y": -35,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+)
 
     PRACTICAS = (
-        {
-            "x": 1500,
-            "y": None,
-            "pregunta": 'En Python, una variable sirve para almacenar un dato que puede utilizarse después.',
-            "respuesta_correcta": True,
-            "nombre": "practica_python_04",
+    # ====================================================
+    # PRÁCTICA 1: VERDADERO O FALSO
+    # ====================================================
+    {
+        "x": 1700,
+        "y": 345,
+        "tipo": "verdadero_falso",
+        "pregunta": (
+            "Observa el siguiente código:\n\n"
+            "def saludar():\n"
+            '    print("Hola")\n\n'
+            "¿La palabra def se utiliza para crear una función?"
+        ),
+        "respuesta_correcta": True,
+        "nombre": "python_funciones_vf_01",
+    },
+
+    # ====================================================
+    # PRÁCTICA 2: SELECCIÓN MÚLTIPLE
+    # ====================================================
+    {
+        "x": 2700,
+        "y": None,
+        "tipo": "eleccion_multiple",
+        "pregunta": (
+            "¿Cuál de las siguientes instrucciones ejecuta correctamente "
+            "una función llamada saludar?"
+        ),
+        "opciones": [
+            "saludar()",
+            "def saludar",
+            "print saludar",
+        ],
+        "respuesta_correcta": 1,
+        "nombre": "python_funciones_multiple_02",
+    },
+
+    # ====================================================
+    # PRÁCTICA 3: COMPLETAR CÓDIGO
+    # ====================================================
+    {
+        "x": 4000,
+        "y": None,
+        "tipo": "codigo",
+        "pregunta": (
+            "Arrastra las opciones correctas para completar el código. "
+            "Crea y ejecuta una función que muestre el mensaje Hola."
+        ),
+        "nombre": "python_funciones_codigo_03",
+        "respuestas": {
+            "definicion": "def",
+            "funcion": "print",
+            "llamada": "saludar",
         },
-    )
+        "codigo": [
+            {
+                "indentacion": 0,
+                "segmentos": [
+                    {"hueco": "definicion"},
+                    {"texto": " saludar():"},
+                ],
+            },
+            {
+                "indentacion": 1,
+                "segmentos": [
+                    {"hueco": "funcion"},
+                    {"texto": '("Hola")'},
+                ],
+            },
+            {
+                "indentacion": 0,
+                "segmentos": [
+                    {"hueco": "llamada"},
+                    {"texto": "()"},
+                ],
+            },
+        ],
+        "opciones": [
+            "def",
+            "print",
+            "saludar",
+            "if",
+            "input",
+            "while",
+        ],
+    },
+)
 
 
 CLASE_NIVEL = NivelPython04

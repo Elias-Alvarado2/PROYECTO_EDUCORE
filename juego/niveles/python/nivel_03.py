@@ -152,7 +152,7 @@ class NivelPython03(JuegoBase):
     {
         "tipo": "puas",
         "imagen": "python/puas_obstaculo.png",
-        "x": 960,
+        "x": 1000,
         "cantidad": 1,
         "separacion": 0,
         "ancho": 100,
@@ -171,7 +171,7 @@ class NivelPython03(JuegoBase):
     {
         "tipo": "puas",
         "imagen": "python/puas_obstaculo.png",
-        "x": 1145,
+        "x": 1200,
         "cantidad": 1,
         "separacion": 0,
         "ancho": 100,
@@ -190,7 +190,7 @@ class NivelPython03(JuegoBase):
     {
         "tipo": "puas",
         "imagen": "python/puas_obstaculo.png",
-        "x": 1315,
+        "x": 1350,
         "cantidad": 1,
         "separacion": 0,
         "ancho": 100,
@@ -336,7 +336,7 @@ class NivelPython03(JuegoBase):
     {
         "tipo": "puas",
         "imagen": "python/puas_obstaculo.png",
-        "x": 2495,
+        "x": 2550,
         "cantidad": 1,
         "separacion": 0,
         "ancho": 100,
@@ -487,9 +487,9 @@ class NivelPython03(JuegoBase):
      {
         "tipo": "puas",
         "imagen": "python/cactus.png",
-        "x": 3360,
-        "cantidad": 1,
-        "separacion": 0,
+        "x": 3330,
+        "cantidad": 2,
+        "separacion": 60,
         "ancho": 70,
         "alto": 50,
         "ajuste_y": -2,
@@ -499,13 +499,170 @@ class NivelPython03(JuegoBase):
         "hitbox_reducir_ancho": 24,
         "hitbox_reducir_alto": 22,
     },
+    #========================
+    # despues del npc 3
+        # =========================================================
+    # ESPACIO VACÍO
+    # Desde el último obstáculo anterior hasta x = 4050
+    # =========================================================
+
+
+    # =========================================================
+    # FRAGMENTO 1 - rectángulo horizontal inferior
+    # =========================================================
+    {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento2.png",
+        "x": 4050,
+        "ancho": 100,
+        "alto": 50,
+        "ajuste_y": -5,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+
+    # =========================================================
+    # COLUMNA 1 - primera columna vertical
+    # =========================================================
+    {
+        "tipo": "columnas",
+        "imagen": "python/columnas.png",
+        "x": 4230,
+        "ancho": 60,
+        "alto": 130,
+        "ajuste_y": -2,
+
+        "hitbox_offset_x": 6,
+        "hitbox_offset_y": 4,
+        "hitbox_reducir_ancho": 12,
+        "hitbox_reducir_alto": 8,
+    },
+
+    # =========================================================
+    # COLUMNA 2 - segunda columna vertical
+    # =========================================================
+    {
+        "tipo": "columnas",
+        "imagen": "python/columnas.png",
+        "x": 4400,
+        "ancho": 60,
+        "alto": 130,
+        "ajuste_y": -2,
+
+        "hitbox_offset_x": 7,
+        "hitbox_offset_y": 4,
+        "hitbox_reducir_ancho": 14,
+        "hitbox_reducir_alto": 8,
+    },
+
+    # =========================================================
+    # FRAGMENTO 2 - rectángulo horizontal superior
+    # =========================================================
+    {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento2.png",
+        "x": 4650,
+        "ancho": 110,
+        "alto": 50,
+        "ajuste_y": -150,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+       {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento2.png",
+        "x": 4800,
+        "ancho": 110,
+        "alto": 50,
+        "ajuste_y": -90,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+          {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento2.png",
+        "x": 4960,
+        "ancho": 110,
+        "alto": 50,
+        "ajuste_y": -30,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+    
+    # =========================================================
+    # COLUMNA 3 - tercera columna vertical
+    # =========================================================
+    {
+        "tipo": "columnas",
+        "imagen": "python/columnas.png",
+        "x": 4550,
+        "ancho": 60,
+        "alto": 130,
+        "ajuste_y": -2,
+
+        "hitbox_offset_x": 7,
+        "hitbox_offset_y": 4,
+        "hitbox_reducir_ancho": 14,
+        "hitbox_reducir_alto": 8,
+    },
+        {
+    "tipo": "huesos",
+    "imagen": "python/huesos.png",
+    "x": 4320,
+    "ancho": 55,
+    "alto": 50,
+    "ajuste_y": -2,
+
+    "hitbox_offset_x": 7,
+    "hitbox_offset_y": 4,
+    "hitbox_reducir_ancho": 14,
+    "hitbox_reducir_alto": 8,
+},
+{
+    "tipo": "huesos",
+    "imagen": "python/huesos.png",
+    "x": 4480,
+    "ancho": 55,
+    "alto": 50,
+    "ajuste_y": -2,
+
+    "hitbox_offset_x": 7,
+    "hitbox_offset_y": 4,
+    "hitbox_reducir_ancho": 14,
+    "hitbox_reducir_alto": 8,
+},
     
 )
 
     PRACTICAS = (
-        {
+        
+       {
         "x": 1375,
         "y": 400,
+        "tipo": "verdadero_falso",
+        "pregunta": (
+            "¿El ciclo while repite sus instrucciones mientras "
+            "su condición sea verdadera?"
+        ),
+        "respuesta_correcta": True,
+        "nombre": "practica_codigo_python_08",
+    },
+    {
+        #2745
+        "x": 2745,
+        "y": 450,
 
            "tipo": "seleccion_multiple",
         "pregunta": (
@@ -522,17 +679,6 @@ class NivelPython03(JuegoBase):
         ],
         "respuesta_correcta": 3,
         "nombre": "practica_codigo_python_07",
-    },
-       {
-        "x": 2745,
-        "y": 450,
-        "tipo": "verdadero_falso",
-        "pregunta": (
-            "¿El ciclo while repite sus instrucciones mientras "
-            "su condición sea verdadera?"
-        ),
-        "respuesta_correcta": True,
-        "nombre": "practica_codigo_python_08",
     },
         {
         "x": 3580,
