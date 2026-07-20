@@ -111,6 +111,9 @@ def dividir_lineas_por_ancho(
 
 
 class PantallaPractica:
+    _assets_formulario_compartidos = None
+    _sombra_fondo_compartida = None
+
     def __init__(self):
         self.visible = False
 
@@ -174,8 +177,13 @@ class PantallaPractica:
         }
 
         self._cache_imagenes_escaladas = {}
-        self._sombra_fondo = pygame.Surface((ANCHO, ALTO), pygame.SRCALPHA)
-        self._sombra_fondo.fill((0, 0, 0, 75))
+
+        if PantallaPractica._sombra_fondo_compartida is None:
+            sombra = pygame.Surface((ANCHO, ALTO), pygame.SRCALPHA)
+            sombra.fill((0, 0, 0, 75))
+            PantallaPractica._sombra_fondo_compartida = sombra
+
+        self._sombra_fondo = PantallaPractica._sombra_fondo_compartida
 
         # Carga las piezas PNG. Si alguna no existe, el juego dibuja un respaldo
         # para que el archivo siga siendo ejecutable.
@@ -526,6 +534,19 @@ class PantallaPractica:
                 )
 
     def cargar_assets_formulario(self):
+        compartidos = PantallaPractica._assets_formulario_compartidos
+
+        if compartidos is not None:
+            self.img_formulario = compartidos["formulario"]
+            self.img_pregunta = compartidos["pregunta"]
+            self.img_titulo = compartidos["titulo"]
+            self.img_cerrar = dict(compartidos["cerrar"])
+            self.img_botones = {
+                nombre: dict(estados)
+                for nombre, estados in compartidos["botones"].items()
+            }
+            return
+
         # IMPORTANTE:
         # El diseno base siempre se queda en 1448x1086.
         # No usamos el tamano de los PNG para calcular posiciones,
@@ -551,6 +572,17 @@ class PantallaPractica:
         # El fondo beige no usa búsqueda flexible para evitar que se cargue por error
         # el cuadro celeste como fondo completo.
         self._cargar_estados_botones_formulario()
+
+        PantallaPractica._assets_formulario_compartidos = {
+            "formulario": self.img_formulario,
+            "pregunta": self.img_pregunta,
+            "titulo": self.img_titulo,
+            "cerrar": dict(self.img_cerrar),
+            "botones": {
+                nombre: dict(estados)
+                for nombre, estados in self.img_botones.items()
+            },
+        }
 
     # --------------------------------------------------------
     # RECTÁNGULOS Y ESCALADO

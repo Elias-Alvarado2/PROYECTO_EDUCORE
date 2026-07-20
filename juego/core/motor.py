@@ -447,32 +447,42 @@ def recortar_transparencia_png(superficie, margen=4):
     return recortada
 
 
+_CANALES_SIMILARES = bytes(
+    1 if abs(primero - segundo) <= 12 else 0
+    for primero in range(256)
+    for segundo in range(256)
+)
+
+
 def limpiar_transparencia_falsa(superficie):
     superficie = superficie.convert_alpha()
-    ancho = superficie.get_width()
-    alto = superficie.get_height()
+    tamano = superficie.get_size()
 
-    resultado = pygame.Surface((ancho, alto), pygame.SRCALPHA)
-    resultado.blit(superficie, (0, 0))
-    resultado.lock()
+    # get_at/set_at generaba millones de llamadas Python durante la carga.
+    # El buffer RGBA aplica exactamente la misma regla sin depender de NumPy.
+    datos = bytearray(
+        pygame.image.tobytes(superficie, "RGBA")
+    )
 
-    for y in range(alto):
-        for x in range(ancho):
-            r, g, b, _ = resultado.get_at((x, y))
-            es_gris_claro = (
-                abs(r - g) <= 12
-                and abs(g - b) <= 12
-                and r >= 155
-                and g >= 155
-                and b >= 155
-            )
+    for indice in range(0, len(datos), 4):
+        rojo = datos[indice]
+        verde = datos[indice + 1]
+        azul = datos[indice + 2]
 
-            if es_gris_claro:
-                resultado.set_at((x, y), (r, g, b, 0))
+        if (
+            rojo >= 155
+            and verde >= 155
+            and azul >= 155
+            and _CANALES_SIMILARES[(rojo << 8) | verde]
+            and _CANALES_SIMILARES[(verde << 8) | azul]
+        ):
+            datos[indice + 3] = 0
 
-
-    resultado.unlock()
-    return resultado
+    return pygame.image.frombytes(
+        bytes(datos),
+        tamano,
+        "RGBA",
+    ).convert_alpha()
 
 
 def recortar_arriba_transparente(superficie, y_inicio):
@@ -501,6 +511,177 @@ def asegurar_borde_inferior(superficie, color=COLOR_RELLENO_INFERIOR, alto_franj
     )
 
     return resultado
+
+
+# ============================================================
+# CACHE DE RECURSOS GRAFICOS INMUTABLES
+# ============================================================
+
+@lru_cache(maxsize=24)
+def _cargar_capa_procesada(
+    ruta_texto,
+    ancho,
+    alto,
+    limpiar_fondo_falso,
+    cortar_arriba_y,
+):
+    """Carga y procesa una capa una sola vez por archivo y configuracion."""
+    ruta_imagen = Path(ruta_texto)
+    cargada = pygame.image.load(str(ruta_imagen))
+    tiene_alpha = bool(cargada.get_masks()[3])
+    original = (
+        cargada.convert_alpha()
+        if tiene_alpha
+        else cargada.convert()
+    )
+
+    escalada = pygame.transform.scale(
+        original,
+        (max(1, int(ancho)), max(1, int(alto))),
+    )
+    escalada = (
+        escalada.convert_alpha()
+        if tiene_alpha
+        else escalada.convert()
+    )
+
+    if limpiar_fondo_falso:
+        escalada = limpiar_transparencia_falsa(escalada)
+        tiene_alpha = True
+
+    if cortar_arriba_y is not None:
+        escalada = recortar_arriba_transparente(
+            escalada,
+            cortar_arriba_y,
+        )
+        tiene_alpha = True
+
+    if (
+        cortar_arriba_y is not None
+        or "suelo" in ruta_imagen.name.lower()
+    ):
+        escalada = asegurar_borde_inferior(escalada)
+        tiene_alpha = True
+
+    offset_recorte_y = 0
+
+    if tiene_alpha:
+        visible = escalada.get_bounding_rect(min_alpha=1)
+
+        try:
+            componentes = pygame.mask.from_surface(
+                escalada,
+                threshold=1,
+            ).get_bounding_rects()
+            componentes = [
+                rect
+                for rect in componentes
+                if rect.width * rect.height >= 4
+            ]
+
+            if componentes:
+                y_superior = min(rect.top for rect in componentes)
+                y_inferior = max(rect.bottom for rect in componentes)
+                visible = pygame.Rect(
+                    0,
+                    y_superior,
+                    escalada.get_width(),
+                    y_inferior - y_superior,
+                )
+        except pygame.error:
+            pass
+
+        if (
+            visible.height > 0
+            and visible.height < escalada.get_height()
+        ):
+            recorte = pygame.Rect(
+                0,
+                visible.y,
+                escalada.get_width(),
+                visible.height,
+            )
+            escalada = (
+                escalada.subsurface(recorte)
+                .copy()
+                .convert_alpha()
+            )
+            offset_recorte_y = visible.y
+
+    return escalada, tiene_alpha, offset_recorte_y
+
+
+@lru_cache(maxsize=256)
+def _cargar_recurso_obstaculo(
+    ruta_texto,
+    ancho,
+    alto,
+):
+    """Comparte imagen y mascara entre obstaculos visualmente identicos."""
+    imagen = pygame.image.load(ruta_texto).convert_alpha()
+    imagen = recortar_transparencia_png(imagen, margen=0)
+    imagen = pygame.transform.scale(
+        imagen,
+        (max(1, int(ancho)), max(1, int(alto))),
+    )
+    mascara = pygame.mask.from_surface(
+        imagen,
+        threshold=127,
+    )
+    return imagen, mascara
+
+
+@lru_cache(maxsize=8)
+def _cargar_moneda_practica(
+    ruta_texto,
+    ancho,
+    alto,
+):
+    imagen = pygame.image.load(ruta_texto).convert_alpha()
+    imagen = recortar_transparencia_png(imagen, margen=0)
+    return pygame.transform.scale(
+        imagen,
+        (max(1, int(ancho)), max(1, int(alto))),
+    )
+
+
+@lru_cache(maxsize=16)
+def _cargar_frames_npc(escala, rutas_texto):
+    frames = []
+
+    for ruta_texto in rutas_texto:
+        ruta = Path(ruta_texto)
+
+        if not ruta.exists():
+            raise FileNotFoundError(
+                f"No se encontro el frame del NPC: {ruta}"
+            )
+
+        imagen = pygame.image.load(str(ruta)).convert_alpha()
+        ancho = int(imagen.get_width() * escala * 1.5)
+        alto = int(imagen.get_height() * escala * 1.5)
+        frames.append(
+            pygame.transform.scale(imagen, (ancho, alto))
+        )
+
+    return tuple(frames)
+
+
+@lru_cache(maxsize=8)
+def _cargar_burbuja_dialogo_escalada(
+    ruta_texto,
+    tamano,
+):
+    ruta = Path(ruta_texto)
+
+    if not ruta.exists():
+        return None
+
+    imagen = pygame.image.load(str(ruta)).convert_alpha()
+    return pygame.transform.scale(
+        imagen,
+        (max(1, int(tamano)), max(1, int(tamano))),
+    )
 
 
 def normalizar_texto(valor):
@@ -1302,90 +1483,29 @@ class CapaParallax:
                 f"No se encontro la imagen de fondo: {ruta_imagen}"
             )
 
-        cargada = pygame.image.load(str(ruta_imagen))
-        mascara_alpha = cargada.get_masks()[3]
-        self.tiene_alpha = bool(mascara_alpha)
-
-        if self.tiene_alpha:
-            self.original = cargada.convert_alpha()
-        else:
-            self.original = cargada.convert()
-
+        self.tiene_alpha = False
+        self.imagen = None
+        self.ancho = 0
+        self.alto = 0
         self.redimensionar(ancho, alto)
 
     def redimensionar(self, ancho, alto):
         ancho = max(1, int(ancho))
         alto = max(1, int(alto))
-
-        escalada = pygame.transform.scale(self.original, (ancho, alto))
-        escalada = (
-            escalada.convert_alpha()
-            if self.tiene_alpha
-            else escalada.convert()
+        (
+            self.imagen,
+            self.tiene_alpha,
+            offset_recorte_y,
+        ) = _cargar_capa_procesada(
+            str(self.ruta_imagen),
+            ancho,
+            alto,
+            bool(self.limpiar_fondo_falso),
+            self.cortar_arriba_y,
         )
-
-        if self.limpiar_fondo_falso:
-            escalada = limpiar_transparencia_falsa(escalada)
-            self.tiene_alpha = True
-
-        if self.cortar_arriba_y is not None:
-            escalada = recortar_arriba_transparente(
-                escalada,
-                self.cortar_arriba_y,
-            )
-            self.tiene_alpha = True
-
-        if self.cortar_arriba_y is not None or "suelo" in self.ruta_imagen.name.lower():
-            escalada = asegurar_borde_inferior(escalada)
-            self.tiene_alpha = True
-
-        # Conserva el ancho completo para que el patrón se repita sin saltos,
-        # pero elimina filas transparentes de arriba y abajo.
-        self.offset_dibujo_y = self.offset_y
-
-        if self.tiene_alpha:
-            visible = escalada.get_bounding_rect(min_alpha=1)
-
-            # Algunos PNG contienen uno o dos píxeles aislados en filas que
-            # deberían ser transparentes. Esos píxeles impedían el recorte y
-            # obligaban a mezclar una superficie 1920x1080 completa. Se toman
-            # solo componentes visibles de al menos 2x2 píxeles para calcular
-            # el recorte vertical, sin alterar el contenido dentro de él.
-            try:
-                componentes = pygame.mask.from_surface(
-                    escalada,
-                    threshold=1,
-                ).get_bounding_rects()
-                componentes = [
-                    rect
-                    for rect in componentes
-                    if rect.width * rect.height >= 4
-                ]
-
-                if componentes:
-                    y_superior = min(rect.top for rect in componentes)
-                    y_inferior = max(rect.bottom for rect in componentes)
-                    visible = pygame.Rect(
-                        0,
-                        y_superior,
-                        escalada.get_width(),
-                        y_inferior - y_superior,
-                    )
-            except pygame.error:
-                # El bounding rect normal sigue siendo una alternativa segura.
-                pass
-
-            if visible.height > 0 and visible.height < escalada.get_height():
-                recorte = pygame.Rect(
-                    0,
-                    visible.y,
-                    escalada.get_width(),
-                    visible.height,
-                )
-                escalada = escalada.subsurface(recorte).copy().convert_alpha()
-                self.offset_dibujo_y += visible.y
-
-        self.imagen = escalada
+        self.offset_dibujo_y = (
+            self.offset_y + offset_recorte_y
+        )
         self.ancho = self.imagen.get_width()
         self.alto = self.imagen.get_height()
 
@@ -1486,28 +1606,10 @@ class Obstaculo:
                 f"No se encontro la imagen del obstaculo: {ruta_imagen}"
             )
 
-        self.imagen = pygame.image.load(
-            str(ruta_imagen)
-        ).convert_alpha()
-
-        # Elimina el espacio transparente exterior sobrante del PNG.
-        self.imagen = recortar_transparencia_png(
-            self.imagen,
-            margen=0,
-        )
-
-        # Escala solamente la parte visible del obstáculo.
-        self.imagen = pygame.transform.scale(
-            self.imagen,
-            (int(ancho), int(alto)),
-        )
-
-        # Máscara que conserva únicamente los píxeles visibles.
-        # Se usa especialmente para que las púas no dañen desde
-        # las zonas transparentes de su PNG.
-        self.mascara = pygame.mask.from_surface(
-            self.imagen,
-            threshold=127,
+        self.imagen, self.mascara = _cargar_recurso_obstaculo(
+            str(ruta_imagen),
+            int(ancho),
+            int(alto),
         )
 
         # Rectángulo correspondiente a la posición visual exacta del PNG.
@@ -1643,33 +1745,18 @@ class ObjetoPractica:
         self.imagen = self.crear_imagen()
 
     def crear_imagen(self):
-        """Carga la imagen PNG utilizada por todas las prácticas."""
+        """Comparte la imagen PNG inmutable entre todas las practicas."""
         if not RUTA_MONEDA_PRACTICA.exists():
             raise FileNotFoundError(
-                "No se encontró la imagen de la moneda de práctica. "
-                f"Colócala en: {RUTA_MONEDA_PRACTICA}"
+                "No se encontro la imagen de la moneda de practica. "
+                f"Colocala en: {RUTA_MONEDA_PRACTICA}"
             )
 
-        imagen = pygame.image.load(
-            str(RUTA_MONEDA_PRACTICA)
-        ).convert_alpha()
-
-        # Elimina espacio transparente sobrante del archivo.
-        imagen = recortar_transparencia_png(
-            imagen,
-            margen=0,
+        return _cargar_moneda_practica(
+            str(RUTA_MONEDA_PRACTICA),
+            self.ancho,
+            self.alto,
         )
-
-        # Mantiene el aspecto pixel art al ajustar el tamaño.
-        imagen = pygame.transform.scale(
-            imagen,
-            (
-                self.ancho,
-                self.alto,
-            ),
-        )
-
-        return imagen
 
     def actualizar(self, dt):
         self.tiempo_animacion += dt
@@ -1996,20 +2083,10 @@ class NPC:
         self.x_mundo = x_mundo
         self.suelo_y = suelo_y
         self.escala = escala
-        self.frames = []
-
-        for ruta in RUTAS_NPC:
-            if not ruta.exists():
-                raise FileNotFoundError(f"No se encontro el frame del NPC: {ruta}")
-
-            imagen = pygame.image.load(str(ruta)).convert_alpha()
-
-            ancho = int(imagen.get_width() * escala * 1.5)
-            alto = int(imagen.get_height() * escala * 1.5)
-
-            imagen = pygame.transform.scale(imagen, (ancho, alto))
-
-            self.frames.append(imagen)
+        self.frames = _cargar_frames_npc(
+            float(escala),
+            tuple(str(ruta) for ruta in RUTAS_NPC),
+        )
 
         self.frame_actual = 0
         self.contador_animacion = 0
@@ -2022,15 +2099,13 @@ class NPC:
 
         self.zona_dialogo = pygame.Rect(0, 0, 1, 1)
         self.dialogo_terminado = False
-        self.burbuja_dialogo = cargar_imagen(RUTA_BURBUJA_DIALOGO)
-        self.burbuja_dialogo_escalada = None
-
-        if self.burbuja_dialogo is not None:
-            tamano_burbuja = round(70 * ESCALA_JUEGO)
-            self.burbuja_dialogo_escalada = pygame.transform.scale(
-                self.burbuja_dialogo,
-                (tamano_burbuja, tamano_burbuja),
+        tamano_burbuja = round(70 * ESCALA_JUEGO)
+        self.burbuja_dialogo_escalada = (
+            _cargar_burbuja_dialogo_escalada(
+                str(RUTA_BURBUJA_DIALOGO),
+                tamano_burbuja,
             )
+        )
 
         self.actualizar(self.suelo_y, 0)
 
@@ -4311,22 +4386,26 @@ class JuegoEduCore:
         )
 
         bloqueo_horizontal = False
+        jugador_rect_mundo = self.jugador.obtener_rect_mundo(
+            self.camara_x
+        )
+        rect_sprite_mundo = None
+        mascara_jugador = None
 
         for obstaculo in self.obstaculos:
-            jugador_rect_mundo = self.jugador.obtener_rect_mundo(
-                self.camara_x
-            )
-
             # Todos los obstáculos de daño usan colisión píxel a píxel.
             # Esto recorta en la práctica el espacio transparente sobrante
             # del cactus y evita que dañe antes de que el personaje lo toque.
             if obstaculo.es_danio():
-                rect_sprite_mundo = self.jugador.obtener_rect_sprite_mundo(
-                    self.camara_x
-                )
-                mascara_jugador = (
-                    self.jugador.obtener_mascara_sprite_actual()
-                )
+                if rect_sprite_mundo is None:
+                    rect_sprite_mundo = (
+                        self.jugador.obtener_rect_sprite_mundo(
+                            self.camara_x
+                        )
+                    )
+                    mascara_jugador = (
+                        self.jugador.obtener_mascara_sprite_actual()
+                    )
 
                 if obstaculo.toca_pixeles_visibles(
                     rect_sprite_mundo,
@@ -4361,6 +4440,11 @@ class JuegoEduCore:
 
             if cayo_encima:
                 self.jugador.colocar_sobre_piso(rect.top)
+                jugador_rect_mundo = self.jugador.obtener_rect_mundo(
+                    self.camara_x
+                )
+                rect_sprite_mundo = None
+                mascara_jugador = None
                 continue
 
             # Solo es golpe de techo si antes estaba completamente debajo del
@@ -4378,6 +4462,11 @@ class JuegoEduCore:
                 )
                 self.jugador.velocidad_y = 0
                 self.jugador.en_suelo = False
+                jugador_rect_mundo = self.jugador.obtener_rect_mundo(
+                    self.camara_x
+                )
+                rect_sprite_mundo = None
+                mascara_jugador = None
                 continue
 
             # El movimiento horizontal del nivel se representa desplazando la

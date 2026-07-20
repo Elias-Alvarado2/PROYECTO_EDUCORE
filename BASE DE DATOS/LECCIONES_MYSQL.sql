@@ -392,7 +392,7 @@ INSERT INTO leccion (
 )
 VALUES (
     4,
-    'Actualizar varios campos',
+    'Prueba Final',
     'UPDATE permite modificar más de un campo en una misma consulta. Después de SET se escribe cada campo junto con su nuevo valor. Cuando se modifican varios campos, cada asignación debe separarse utilizando una coma. La palabra SET solamente se escribe una vez. Al final se utiliza WHERE para indicar qué registro recibirá los cambios.',
     'UPDATE estudiantes
 SET nombre = ''Ana'',
