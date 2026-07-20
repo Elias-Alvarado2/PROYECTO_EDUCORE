@@ -10,18 +10,8 @@ from quitar_barra import quitar
 from Transicion import FormTransicion
 from juego.sistemas.audio import gestor_audio
 
-
-# =============================================================
-# RESOLUCIÓN BASE DEL DISEÑO
-# =============================================================
-
 ANCHO_BASE = 1920
 ALTO_BASE = 1080
-
-
-# =============================================================
-# FUNCIONES PARA ENCONTRAR ARCHIVOS
-# =============================================================
 
 def encontrar_raiz_proyecto(
     archivo_actual: Path,
@@ -75,7 +65,6 @@ def buscar_imagen(
         ".bmp",
     )
 
-    # Primero intenta las rutas directas.
     for carpeta in carpetas:
         for extension in extensiones:
             ruta = carpeta / f"{nombre_base}{extension}"
@@ -83,7 +72,6 @@ def buscar_imagen(
             if ruta.is_file():
                 return ruta
 
-    # Búsqueda de respaldo sin distinguir mayúsculas.
     for carpeta in carpetas:
         if not carpeta.is_dir():
             continue
@@ -138,9 +126,64 @@ def buscar_archivo_recursivamente(
     return None
 
 
-# =============================================================
-# FONDO RESPONSIVO
-# =============================================================
+def buscar_fuente_pixel_operator(
+    carpetas: list[Path],
+) -> Path | None:
+    """
+    Busca el archivo de la fuente Pixel Operator Bold.
+
+    Admite archivos .ttf y .otf, aunque el nombre use
+    espacios, guiones o guiones bajos.
+    """
+
+    extensiones = {
+        ".ttf",
+        ".otf",
+    }
+
+    carpetas_ignoradas = {
+        ".git",
+        ".venv",
+        "venv",
+        "__pycache__",
+        "node_modules",
+    }
+
+    for carpeta in carpetas:
+        if not carpeta.is_dir():
+            continue
+
+        try:
+            for archivo in carpeta.rglob("*"):
+                if not archivo.is_file():
+                    continue
+
+                if archivo.suffix.lower() not in extensiones:
+                    continue
+
+                if any(
+                    parte in carpetas_ignoradas
+                    for parte in archivo.parts
+                ):
+                    continue
+
+                nombre_normalizado = (
+                    archivo.stem
+                    .lower()
+                    .replace("_", " ")
+                    .replace("-", " ")
+                )
+
+                if (
+                    "pixel operator" in nombre_normalizado
+                    and "bold" in nombre_normalizado
+                ):
+                    return archivo
+
+        except (OSError, PermissionError):
+            continue
+
+    return None
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(
@@ -187,11 +230,6 @@ class FondoImagen(QtWidgets.QLabel):
             alto,
         )
 
-
-# =============================================================
-# FORMULARIO DE AJUSTES
-# =============================================================
-
 class Ajustes(QtWidgets.QWidget):
     def __init__(
         self,
@@ -211,25 +249,15 @@ class Ajustes(QtWidgets.QWidget):
         self._volviendo = False
         self._maximizado_inicial = False
 
-        # Pixmaps originales de los labels.
         self._pixmaps_labels = {}
 
-        # Geometrías originales para hacer responsivos
-        # sliders y labels.
         self._geometrias_base = {}
 
-        # Valores de respaldo.
         self._ultimo_volumen_sonido = 100
         self._ultimo_volumen_efectos = 100
 
-        # Estado local de efectos. Se utiliza aunque
-        # gestor_audio todavía no tenga métodos separados.
         self._volumen_efectos = 100
         self._efectos_silenciados = False
-
-        # -----------------------------------------------------
-        # Localizar carpetas
-        # -----------------------------------------------------
 
         archivo_actual = Path(__file__).resolve()
 
@@ -239,8 +267,6 @@ class Ajustes(QtWidgets.QWidget):
             archivo_actual
         )
 
-        # En tu proyecto EXPO-DISEÑOS está dentro de
-        # PROYECTO_EDUCORE.
         posibles_expo = [
             self.proyecto_dir
             / "EXPO-DISEÑOS",
@@ -267,10 +293,6 @@ class Ajustes(QtWidgets.QWidget):
             "[AJUSTES] EXPO-DISEÑOS:",
             self.expo_dir,
         )
-
-        # -----------------------------------------------------
-        # Localizar Ajustes.ui
-        # -----------------------------------------------------
 
         posibles_rutas_ui = [
             self.expo_dir
@@ -317,10 +339,6 @@ class Ajustes(QtWidgets.QWidget):
             ruta_ui,
         )
 
-        # -----------------------------------------------------
-        # Cargar el formulario
-        # -----------------------------------------------------
-
         uic.loadUi(
             str(ruta_ui),
             self,
@@ -351,10 +369,6 @@ class Ajustes(QtWidgets.QWidget):
                 True,
             )
 
-        # -----------------------------------------------------
-        # Obtener controles del formulario
-        # -----------------------------------------------------
-
         self.frame_ajustes = self.findChild(
             QtWidgets.QFrame,
             "Ajustes",
@@ -380,9 +394,14 @@ class Ajustes(QtWidgets.QWidget):
             "hzs_sonido",
         )
 
-        self.label = self.findChild(
+        self.lbl_vol_sonido = self.findChild(
             QtWidgets.QLabel,
-            "label",
+            "lbl_vol_sonido",
+        )
+
+        self.lbl_vol_efectos = self.findChild(
+            QtWidgets.QLabel,
+            "lbl_vol_efectos",
         )
 
         self.lbl_efectos = self.findChild(
@@ -411,7 +430,8 @@ class Ajustes(QtWidgets.QWidget):
             "btn_silenciar": self.btn_silenciar,
             "hsz_efectos": self.hsz_efectos,
             "hzs_sonido": self.hzs_sonido,
-            "label": self.label,
+            "lbl_vol_sonido": self.lbl_vol_sonido,
+            "lbl_vol_efectos": self.lbl_vol_efectos,
             "lbl_efectos": self.lbl_efectos,
             "lbl_logo": self.lbl_logo,
             "lbl_sonidogeneral": self.lbl_sonidogeneral,
@@ -431,9 +451,7 @@ class Ajustes(QtWidgets.QWidget):
                 + "\n".join(controles_faltantes)
             )
 
-        # -----------------------------------------------------
-        # Configurar frame principal
-        # -----------------------------------------------------
+        self._configurar_labels_porcentaje()
 
         self.frame_ajustes.setAttribute(
             QtCore.Qt.WidgetAttribute.WA_TranslucentBackground,
@@ -452,10 +470,6 @@ class Ajustes(QtWidgets.QWidget):
             }
             """
         )
-
-        # -----------------------------------------------------
-        # Fondo de Ajustes
-        # -----------------------------------------------------
 
         ruta_fondo = buscar_imagen(
             "Ajustes",
@@ -485,11 +499,7 @@ class Ajustes(QtWidgets.QWidget):
             self,
             ruta_fondo,
         )
-
-        # -----------------------------------------------------
-        # Rutas de imágenes indicadas
-        # -----------------------------------------------------
-
+        
         carpeta_logo = (
             self.expo_dir
             / "Logo"
@@ -559,10 +569,6 @@ class Ajustes(QtWidgets.QWidget):
                 + "\n".join(imagenes_faltantes)
             )
 
-        # -----------------------------------------------------
-        # Cargar pixmaps de los labels
-        # -----------------------------------------------------
-
         self._registrar_pixmap_label(
             self.lbl_logo,
             ruta_logo,
@@ -577,10 +583,6 @@ class Ajustes(QtWidgets.QWidget):
             self.lbl_efectos,
             ruta_titulo_efectos,
         )
-
-        # -----------------------------------------------------
-        # Preparar iconos de sonido
-        # -----------------------------------------------------
 
         self.icono_mute = QtGui.QIcon(
             str(self.ruta_boton_mute)
@@ -598,15 +600,7 @@ class Ajustes(QtWidgets.QWidget):
             self.btn_muteefectos
         )
 
-        # -----------------------------------------------------
-        # Guardar posiciones originales
-        # -----------------------------------------------------
-
         self._guardar_geometrias_base()
-
-        # -----------------------------------------------------
-        # Botones responsivos
-        # -----------------------------------------------------
 
         self.botones_responsivos = BotonesResponsivos(
             ventana=self,
@@ -620,10 +614,6 @@ class Ajustes(QtWidgets.QWidget):
             escalar_iconos=True,
             escalar_fuentes=False,
         )
-
-        # -----------------------------------------------------
-        # Configurar sliders y eventos
-        # -----------------------------------------------------
 
         self._configurar_controles()
         self._conectar_eventos()
@@ -646,9 +636,117 @@ class Ajustes(QtWidgets.QWidget):
             self._mostrar_maximizado,
         )
 
-    # =========================================================
-    # CONFIGURAR BOTÓN DE AUDIO
-    # =========================================================
+    def _cargar_fuente_pixel_operator(self) -> str:
+        """
+        Carga Pixel Operator Bold desde un archivo del
+        proyecto o usa la fuente instalada en Windows.
+        """
+
+        nombres_posibles = (
+            "Pixel Operator Bold",
+            "Pixel Operator - Bold",
+            "Pixel Operator",
+        )
+
+        familias_instaladas = {
+            familia.lower(): familia
+            for familia in QtGui.QFontDatabase.families()
+        }
+
+        for nombre in nombres_posibles:
+            familia = familias_instaladas.get(
+                nombre.lower()
+            )
+
+            if familia is not None:
+                return familia
+
+        ruta_fuente = buscar_fuente_pixel_operator(
+            [
+                self.proyecto_dir / "assets" / "FUENTES",
+                self.proyecto_dir / "assets" / "fuentes",
+                self.proyecto_dir / "FUENTES",
+                self.proyecto_dir / "fuentes",
+                self.expo_dir / "FUENTES",
+                self.expo_dir / "Fuentes",
+                self.expo_dir / "fuentes",
+                self.carpeta_actual,
+            ]
+        )
+
+        if ruta_fuente is not None:
+            identificador = (
+                QtGui.QFontDatabase.addApplicationFont(
+                    str(ruta_fuente)
+                )
+            )
+
+            if identificador >= 0:
+                familias = (
+                    QtGui.QFontDatabase
+                    .applicationFontFamilies(
+                        identificador
+                    )
+                )
+
+                if familias:
+                    print(
+                        "[AJUSTES] Fuente cargada:",
+                        ruta_fuente,
+                    )
+                    return familias[0]
+
+        print(
+            "[AJUSTES] No se encontró Pixel Operator "
+            "Bold. Se utilizará Courier New."
+        )
+
+        return "Courier New"
+
+    def _configurar_labels_porcentaje(self):
+        self._familia_porcentajes = (
+            self._cargar_fuente_pixel_operator()
+        )
+
+        for label in (
+            self.lbl_vol_sonido,
+            self.lbl_vol_efectos,
+        ):
+            fuente = QtGui.QFont(
+                self._familia_porcentajes
+            )
+            fuente.setPointSize(22)
+            fuente.setWeight(
+                QtGui.QFont.Weight.Bold
+            )
+
+            label.setFont(fuente)
+            label.setAlignment(
+                QtCore.Qt.AlignmentFlag.AlignCenter
+            )
+            label.setText("100%")
+
+            estilo_actual = label.styleSheet()
+
+            label.setStyleSheet(
+                estilo_actual
+                + f"""
+                QLabel#{label.objectName()} {{
+                    color: black;
+                    background-color: transparent;
+                    border: none;
+                }}
+                """
+            )
+
+    def _actualizar_textos_porcentaje(self):
+        self.lbl_vol_sonido.setText(
+            f"{self.hzs_sonido.value()}%"
+        )
+
+        self.lbl_vol_efectos.setText(
+            f"{self.hsz_efectos.value()}%"
+        )
 
     def _configurar_boton_audio(
         self,
@@ -664,8 +762,6 @@ class Ajustes(QtWidgets.QWidget):
 
         boton.setFlat(True)
 
-        # Quita cualquier border-image antiguo para que el
-        # icono dinámico pueda visualizarse.
         boton.setStyleSheet(
             """
             QPushButton {
@@ -685,10 +781,6 @@ class Ajustes(QtWidgets.QWidget):
             }
             """
         )
-
-    # =========================================================
-    # REGISTRAR PIXMAP DE UN LABEL
-    # =========================================================
 
     def _registrar_pixmap_label(
         self,
@@ -724,15 +816,12 @@ class Ajustes(QtWidgets.QWidget):
             """
         )
 
-    # =========================================================
-    # GUARDAR GEOMETRÍAS BASE
-    # =========================================================
-
     def _guardar_geometrias_base(self):
         controles = [
             self.hzs_sonido,
             self.hsz_efectos,
-            self.label,
+            self.lbl_vol_sonido,
+            self.lbl_vol_efectos,
             self.lbl_logo,
             self.lbl_sonidogeneral,
             self.lbl_efectos,
@@ -742,10 +831,6 @@ class Ajustes(QtWidgets.QWidget):
             self._geometrias_base[control] = QtCore.QRect(
                 control.geometry()
             )
-
-    # =========================================================
-    # CONFIGURAR CONTROLES
-    # =========================================================
 
     def _configurar_controles(self):
         for slider in (
@@ -771,19 +856,19 @@ class Ajustes(QtWidgets.QWidget):
                 )
             )
 
-        self.label.setAlignment(
-            QtCore.Qt.AlignmentFlag.AlignCenter
-        )
+        for label in (
+            self.lbl_vol_sonido,
+            self.lbl_vol_efectos,
+        ):
+            label.setAlignment(
+                QtCore.Qt.AlignmentFlag.AlignCenter
+            )
 
         self.pushButton.setCursor(
             QtGui.QCursor(
                 QtCore.Qt.CursorShape.PointingHandCursor
             )
         )
-
-    # =========================================================
-    # CONECTAR EVENTOS
-    # =========================================================
 
     def _conectar_eventos(self):
         self.hzs_sonido.valueChanged.connect(
@@ -838,10 +923,6 @@ class Ajustes(QtWidgets.QWidget):
                 self.actualizar_controles_audio
             )
 
-    # =========================================================
-    # CAMBIAR VOLUMEN GENERAL
-    # =========================================================
-
     def cambiar_volumen_sonido(
         self,
         valor: int,
@@ -854,8 +935,6 @@ class Ajustes(QtWidgets.QWidget):
         if valor > 0:
             self._ultimo_volumen_sonido = valor
 
-            # Mover el slider por encima de cero reactiva
-            # el sonido cuando estaba silenciado.
             if bool(
                 getattr(
                     gestor_audio,
@@ -869,15 +948,9 @@ class Ajustes(QtWidgets.QWidget):
             valor
         )
 
-        self.label.setText(
-            f"{valor}%"
-        )
+        self._actualizar_textos_porcentaje()
 
         self._actualizar_iconos_audio()
-
-    # =========================================================
-    # BOTÓN SILENCIAR SONIDO GENERAL
-    # =========================================================
 
     def cambiar_silencio_sonido(
         self,
@@ -893,7 +966,6 @@ class Ajustes(QtWidgets.QWidget):
             )
         )
 
-        # Si está en cero, restaura el último volumen.
         if porcentaje <= 0:
             volumen_restaurado = max(
                 1,
@@ -917,18 +989,12 @@ class Ajustes(QtWidgets.QWidget):
 
             del bloqueador
 
-            self.label.setText(
-                f"{volumen_restaurado}%"
-            )
+            self._actualizar_textos_porcentaje()
 
         else:
             gestor_audio.alternar_silencio()
 
         self.actualizar_controles_audio()
-
-    # =========================================================
-    # CAMBIAR VOLUMEN DE EFECTOS
-    # =========================================================
 
     def cambiar_volumen_efectos(
         self,
@@ -952,11 +1018,8 @@ class Ajustes(QtWidgets.QWidget):
             valor
         )
 
+        self._actualizar_textos_porcentaje()
         self._actualizar_iconos_audio()
-
-    # =========================================================
-    # BOTÓN SILENCIAR EFECTOS
-    # =========================================================
 
     def cambiar_silencio_efectos(
         self,
@@ -994,11 +1057,8 @@ class Ajustes(QtWidgets.QWidget):
 
             self._alternar_silencio_efectos_gestor()
 
+        self._actualizar_textos_porcentaje()
         self._actualizar_iconos_audio()
-
-    # =========================================================
-    # COMPATIBILIDAD CON GESTOR DE EFECTOS
-    # =========================================================
 
     def _establecer_volumen_efectos_gestor(
         self,
@@ -1061,10 +1121,6 @@ class Ajustes(QtWidgets.QWidget):
 
                 return
 
-    # =========================================================
-    # ACTUALIZAR CONTROLES DE AUDIO
-    # =========================================================
-
     def actualizar_controles_audio(
         self,
         *_args,
@@ -1095,7 +1151,7 @@ class Ajustes(QtWidgets.QWidget):
 
         del bloqueador
 
-        self.label.setText(
+        self.lbl_vol_sonido.setText(
             f"{porcentaje}%"
         )
 
@@ -1175,6 +1231,10 @@ class Ajustes(QtWidgets.QWidget):
 
         del bloqueador_efectos
 
+        self.lbl_vol_efectos.setText(
+            f"{porcentaje_efectos}%"
+        )
+
         if self._efectos_silenciados or porcentaje_efectos <= 0:
             texto_efectos = "Activar efectos"
         else:
@@ -1184,10 +1244,6 @@ class Ajustes(QtWidgets.QWidget):
         self.btn_muteefectos.setAccessibleName(texto_efectos)
 
         self._actualizar_iconos_audio()
-
-    # =========================================================
-    # CAMBIAR IMÁGENES MUTE/SONIDO
-    # =========================================================
 
     def _actualizar_iconos_audio(self):
         volumen_sonido = self.hzs_sonido.value()
@@ -1200,7 +1256,6 @@ class Ajustes(QtWidgets.QWidget):
             )
         )
 
-        # Sonido general.
         if (
             volumen_sonido <= 0
             or sonido_silenciado
@@ -1212,8 +1267,7 @@ class Ajustes(QtWidgets.QWidget):
             self.btn_silenciar.setIcon(
                 self.icono_sonido
             )
-
-        # Efectos.
+            
         if (
             self.hsz_efectos.value() <= 0
             or self._efectos_silenciados
@@ -1227,10 +1281,6 @@ class Ajustes(QtWidgets.QWidget):
             )
 
         self._ajustar_tamano_iconos()
-
-    # =========================================================
-    # AJUSTAR TAMAÑO DE ICONOS
-    # =========================================================
 
     def _ajustar_tamano_iconos(self):
         for boton in (
@@ -1254,10 +1304,6 @@ class Ajustes(QtWidgets.QWidget):
                 )
             )
 
-    # =========================================================
-    # AJUSTAR PIXMAPS DE LABELS
-    # =========================================================
-
     def _actualizar_pixmaps_labels(self):
         for label, pixmap_original in (
             self._pixmaps_labels.items()
@@ -1280,10 +1326,6 @@ class Ajustes(QtWidgets.QWidget):
 
             label.show()
             label.raise_()
-
-    # =========================================================
-    # AJUSTAR LABELS Y SLIDERS
-    # =========================================================
 
     def _ajustar_controles_responsivos(self):
         if not self._geometrias_base:
@@ -1316,9 +1358,26 @@ class Ajustes(QtWidgets.QWidget):
                 ),
             )
 
-    # =========================================================
-    # ACTUALIZAR CAPAS
-    # =========================================================
+        escala_fuente = min(
+            escala_x,
+            escala_y,
+        )
+
+        tamano_fuente = max(
+            10,
+            round(22 * escala_fuente),
+        )
+
+        for label in (
+            self.lbl_vol_sonido,
+            self.lbl_vol_efectos,
+        ):
+            fuente = label.font()
+            fuente.setPointSize(tamano_fuente)
+            fuente.setWeight(
+                QtGui.QFont.Weight.Bold
+            )
+            label.setFont(fuente)
 
     def _actualizar_capas(self):
         if hasattr(self, "fondo"):
@@ -1331,7 +1390,8 @@ class Ajustes(QtWidgets.QWidget):
             self.lbl_logo,
             self.lbl_sonidogeneral,
             self.lbl_efectos,
-            self.label,
+            self.lbl_vol_sonido,
+            self.lbl_vol_efectos,
             self.hzs_sonido,
             self.hsz_efectos,
             self.btn_silenciar,
@@ -1343,10 +1403,6 @@ class Ajustes(QtWidgets.QWidget):
             if control is not None:
                 control.show()
                 control.raise_()
-
-    # =========================================================
-    # ACTUALIZAR TODA LA INTERFAZ
-    # =========================================================
 
     def _actualizar_interfaz(self):
         self._ajustar_controles_responsivos()
@@ -1360,10 +1416,6 @@ class Ajustes(QtWidgets.QWidget):
         self._actualizar_pixmaps_labels()
         self._actualizar_iconos_audio()
         self._actualizar_capas()
-
-    # =========================================================
-    # MOSTRAR MAXIMIZADO
-    # =========================================================
 
     def _mostrar_maximizado(self):
         if self._maximizado_inicial:
@@ -1379,10 +1431,6 @@ class Ajustes(QtWidgets.QWidget):
             0,
             self._actualizar_interfaz,
         )
-
-    # =========================================================
-    # VOLVER
-    # =========================================================
 
     def volver(
         self,
@@ -1448,10 +1496,6 @@ class Ajustes(QtWidgets.QWidget):
 
         self.close()
 
-    # =========================================================
-    # EVENTO AL MOSTRAR
-    # =========================================================
-
     def showEvent(
         self,
         event: QtGui.QShowEvent,
@@ -1473,10 +1517,6 @@ class Ajustes(QtWidgets.QWidget):
             0,
             self._actualizar_interfaz,
         )
-
-    # =========================================================
-    # EVENTO AL CAMBIAR TAMAÑO
-    # =========================================================
 
     def resizeEvent(
         self,
@@ -1511,10 +1551,6 @@ class Ajustes(QtWidgets.QWidget):
 
         super().resizeEvent(event)
 
-    # =========================================================
-    # EVENTO AL CERRAR
-    # =========================================================
-
     def closeEvent(
         self,
         event: QtGui.QCloseEvent,
@@ -1548,11 +1584,6 @@ class Ajustes(QtWidgets.QWidget):
                     0,
                     aplicacion.quit,
                 )
-
-
-# =============================================================
-# EJECUCIÓN INDEPENDIENTE
-# =============================================================
 
 if __name__ == "__main__":
     desde_juego = (

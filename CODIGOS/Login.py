@@ -6,7 +6,6 @@ from ConexionBD import ConexionBD
 from Registro import RegistroWindow
 from pantalla_carga import PantallaCarga
 
-
 PERSONAJE_ADMIN_PREDETERMINADO = "pato"
 
 
