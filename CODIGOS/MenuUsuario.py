@@ -57,6 +57,177 @@ class FondoImagen(QtWidgets.QLabel):
             alto
         )
 
+
+class MarcoNombrePersonaje(QtWidgets.QWidget):
+    """
+    Dibuja un cuadro pixel art detrás del nombre del personaje.
+    El diseño está inspirado en el marco color crema y salmón
+    mostrado como referencia, sin depender de una imagen externa.
+    """
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setAttribute(
+            QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents,
+            True
+        )
+
+        self.setAttribute(
+            QtCore.Qt.WidgetAttribute.WA_TranslucentBackground,
+            True
+        )
+
+        self.setAutoFillBackground(False)
+
+    @staticmethod
+    def _crear_poligono_pixel(rectangulo, paso):
+        """Crea la silueta escalonada del marco."""
+
+        x = rectangulo.x()
+        y = rectangulo.y()
+        ancho = rectangulo.width()
+        alto = rectangulo.height()
+
+        derecha = x + ancho
+        abajo = y + alto
+        centro_x = x + ancho // 2
+
+        paso = max(2, paso)
+
+        puntos = (
+            (x + 4 * paso, y + 2 * paso),
+            (centro_x - 2 * paso, y + 2 * paso),
+            (centro_x - 2 * paso, y + paso),
+            (centro_x - paso, y + paso),
+            (centro_x - paso, y),
+            (centro_x + paso, y),
+            (centro_x + paso, y + paso),
+            (centro_x + 2 * paso, y + paso),
+            (centro_x + 2 * paso, y + 2 * paso),
+            (derecha - 4 * paso, y + 2 * paso),
+            (derecha - 4 * paso, y + 3 * paso),
+            (derecha - 2 * paso, y + 3 * paso),
+            (derecha - 2 * paso, y + 5 * paso),
+            (derecha - paso, y + 5 * paso),
+            (derecha - paso, abajo - 5 * paso),
+            (derecha - 2 * paso, abajo - 5 * paso),
+            (derecha - 2 * paso, abajo - 3 * paso),
+            (derecha - 4 * paso, abajo - 3 * paso),
+            (derecha - 4 * paso, abajo - 2 * paso),
+            (centro_x + 2 * paso, abajo - 2 * paso),
+            (centro_x + 2 * paso, abajo - paso),
+            (centro_x + paso, abajo - paso),
+            (centro_x + paso, abajo),
+            (centro_x - paso, abajo),
+            (centro_x - paso, abajo - paso),
+            (centro_x - 2 * paso, abajo - paso),
+            (centro_x - 2 * paso, abajo - 2 * paso),
+            (x + 4 * paso, abajo - 2 * paso),
+            (x + 4 * paso, abajo - 3 * paso),
+            (x + 2 * paso, abajo - 3 * paso),
+            (x + 2 * paso, abajo - 5 * paso),
+            (x + paso, abajo - 5 * paso),
+            (x + paso, y + 5 * paso),
+            (x + 2 * paso, y + 5 * paso),
+            (x + 2 * paso, y + 3 * paso),
+            (x + 4 * paso, y + 3 * paso),
+        )
+
+        return QtGui.QPolygon(
+            [QtCore.QPoint(px, py) for px, py in puntos]
+        )
+
+    def paintEvent(self, event):
+        super().paintEvent(event)
+
+        ancho = self.width()
+        alto = self.height()
+
+        if ancho < 40 or alto < 30:
+            return
+
+        pintor = QtGui.QPainter(self)
+        pintor.setRenderHint(
+            QtGui.QPainter.RenderHint.Antialiasing,
+            False
+        )
+
+        pintor.setPen(QtCore.Qt.PenStyle.NoPen)
+
+        paso = max(
+            3,
+            min(
+                ancho // 55,
+                alto // 13
+            )
+        )
+
+        rect_exterior = QtCore.QRect(
+            0,
+            0,
+            ancho - 1,
+            alto - 1
+        )
+
+        poligono_exterior = self._crear_poligono_pixel(
+            rect_exterior,
+            paso
+        )
+
+        pintor.setBrush(QtGui.QColor('#ff9f91'))
+        pintor.drawPolygon(poligono_exterior)
+
+        margen_medio = paso
+        rect_medio = rect_exterior.adjusted(
+            margen_medio,
+            margen_medio,
+            -margen_medio,
+            -margen_medio
+        )
+
+        poligono_medio = self._crear_poligono_pixel(
+            rect_medio,
+            max(2, paso - 1)
+        )
+
+        pintor.setBrush(QtGui.QColor('#ffd2c0'))
+        pintor.drawPolygon(poligono_medio)
+
+        margen_interior = paso * 2
+        rect_interior = rect_exterior.adjusted(
+            margen_interior,
+            margen_interior,
+            -margen_interior,
+            -margen_interior
+        )
+
+        poligono_interior = self._crear_poligono_pixel(
+            rect_interior,
+            max(2, paso - 1)
+        )
+
+        pintor.setBrush(QtGui.QColor('#ffe9c8'))
+        pintor.drawPolygon(poligono_interior)
+
+        # Brillos pixelados similares a la referencia.
+        pintor.setBrush(QtGui.QColor(255, 239, 211, 190))
+        pintor.drawRect(
+            paso * 5,
+            paso * 3,
+            max(1, ancho // 3),
+            paso
+        )
+
+        pintor.drawRect(
+            paso * 3,
+            paso * 5,
+            paso,
+            max(1, alto // 3)
+        )
+
+        pintor.end()
+
 class EfectoHoverBoton(QtCore.QObject):
     """
     Agranda ligeramente el botón y aumenta su sombra
@@ -285,6 +456,10 @@ class MenuUsuario(QtWidgets.QWidget):
         self.pixmap_personaje_original = None
         self.lbl_nombre_personaje_actual = None
         self.lbl_imagen_personaje_actual = None
+
+        # Marco pixel art que se dibuja detrás del nombre.
+        self.marco_nombre_personaje = None
+        self._geometria_nombre_personaje_base = None
 
         # Animación del personaje en el menú.
         self.frames_personaje_menu = []
@@ -600,11 +775,11 @@ class MenuUsuario(QtWidgets.QWidget):
             )
 
         tamano_pixel = max(
-            24,
+            22,
             min(
-                42,
+                40,
                 round(
-                    etiqueta.height() * 0.58
+                    etiqueta.height() * 0.36
                 )
             )
         )
@@ -672,6 +847,10 @@ class MenuUsuario(QtWidgets.QWidget):
                 "ADVERTENCIA: No se encontró lbl_nombrepersonaje."
             )
         else:
+            self._geometria_nombre_personaje_base = QtCore.QRect(
+                self.lbl_nombre_personaje_actual.geometry()
+            )
+
             self.lbl_nombre_personaje_actual.setAlignment(
                 QtCore.Qt.AlignmentFlag.AlignCenter
             )
@@ -680,14 +859,44 @@ class MenuUsuario(QtWidgets.QWidget):
                 False
             )
 
+            self.lbl_nombre_personaje_actual.setContentsMargins(
+                34,
+                8,
+                34,
+                8
+            )
+
             self.lbl_nombre_personaje_actual.setStyleSheet(
                 """
                 QLabel {
                     color: #000000;
-                    background: transparent;
+                    background-color: transparent;
                     border: none;
                 }
                 """
+            )
+
+            # Crea el cuadro pixel art detrás del QLabel del nombre.
+            padre_nombre = (
+                self.lbl_nombre_personaje_actual.parentWidget()
+                or self
+            )
+
+            self.marco_nombre_personaje = MarcoNombrePersonaje(
+                padre_nombre
+            )
+
+            self.marco_nombre_personaje.setObjectName(
+                "marco_nombre_personaje"
+            )
+
+            self.marco_nombre_personaje.setGeometry(
+                self.lbl_nombre_personaje_actual.geometry()
+            )
+
+            self.marco_nombre_personaje.show()
+            self.marco_nombre_personaje.stackUnder(
+                self.lbl_nombre_personaje_actual
             )
 
         if self.lbl_imagen_personaje_actual is None:
@@ -717,46 +926,120 @@ class MenuUsuario(QtWidgets.QWidget):
 
     def centrar_nombre_personaje(self):
         """
-        Hace que la etiqueta del nombre tenga el mismo ancho
-        y centro horizontal que la etiqueta de la imagen.
+        Centra el nombre sobre la tarjeta del personaje y coloca
+        detrás un cuadro pixel art inspirado en la referencia.
         """
 
         etiqueta_nombre = self.lbl_nombre_personaje_actual
         etiqueta_imagen = self.lbl_imagen_personaje_actual
 
-        if (
-            etiqueta_nombre is None
-            or etiqueta_imagen is None
-        ):
+        if etiqueta_nombre is None:
             return
 
         etiqueta_nombre.setAlignment(
             QtCore.Qt.AlignmentFlag.AlignCenter
         )
 
-        # Cuando ambos QLabel pertenecen al mismo contenedor,
-        # el nombre se alinea exactamente con la imagen.
-        if (
-            etiqueta_nombre.parentWidget()
-            is etiqueta_imagen.parentWidget()
-        ):
-            geometria_nombre = etiqueta_nombre.geometry()
-            geometria_imagen = etiqueta_imagen.geometry()
+        geometria_base = (
+            self._geometria_nombre_personaje_base
+            or etiqueta_nombre.geometry()
+        )
 
-            etiqueta_nombre.setGeometry(
-                geometria_imagen.x(),
-                geometria_nombre.y(),
-                geometria_imagen.width(),
-                max(50, geometria_nombre.height())
+        escala_x = max(
+            0.35,
+            self.width() / 1920
+        )
+
+        escala_y = max(
+            0.35,
+            self.height() / 1080
+        )
+
+        # El cuadro será más ancho que el QLabel original para
+        # que tenga la apariencia de la segunda imagen.
+        ancho_base = max(
+            380,
+            geometria_base.width()
+        )
+
+        alto_base = max(
+            92,
+            geometria_base.height()
+        )
+
+        ancho_cuadro = max(
+            230,
+            round(ancho_base * escala_x)
+        )
+
+        alto_cuadro = max(
+            62,
+            round(alto_base * escala_y)
+        )
+
+        padre = etiqueta_nombre.parentWidget()
+
+        if padre is None:
+            padre = self
+
+        # El centro horizontal se toma del QLabel de la imagen
+        # para que el nombre quede exactamente centrado respecto
+        # al personaje seleccionado.
+        if (
+            etiqueta_imagen is not None
+            and etiqueta_imagen.parentWidget() is padre
+        ):
+            centro_x = etiqueta_imagen.geometry().center().x()
+        else:
+            centro_x = geometria_base.center().x()
+
+        x = centro_x - ancho_cuadro // 2
+
+        # Conserva la altura definida en Qt Designer.
+        y = round(
+            geometria_base.y() * escala_y
+        )
+
+        x = max(
+            0,
+            min(
+                x,
+                max(0, padre.width() - ancho_cuadro)
+            )
+        )
+
+        y = max(
+            0,
+            min(
+                y,
+                max(0, padre.height() - alto_cuadro)
+            )
+        )
+
+        geometria_cuadro = QtCore.QRect(
+            x,
+            y,
+            ancho_cuadro,
+            alto_cuadro
+        )
+
+        etiqueta_nombre.setGeometry(
+            geometria_cuadro
+        )
+
+        if self.marco_nombre_personaje is not None:
+            self.marco_nombre_personaje.setGeometry(
+                geometria_cuadro
             )
 
-        # Aplica Pixel Operator Bold. Se crea nuevamente
-        # durante cada resize para conservar el tamaño correcto.
-        fuente = self.crear_fuente_nombre_personaje()
+            self.marco_nombre_personaje.show()
+            self.marco_nombre_personaje.raise_()
 
-        etiqueta_nombre.setFont(
-            fuente
-        )
+        fuente = self.crear_fuente_nombre_personaje()
+        etiqueta_nombre.setFont(fuente)
+
+        etiqueta_nombre.show()
+        etiqueta_nombre.raise_()
 
     def obtener_id_jugador(self):
         """Obtiene el ID del jugador de la sesión actual."""
@@ -818,15 +1101,21 @@ class MenuUsuario(QtWidgets.QWidget):
 
     def obtener_personaje_sesion(self):
         """
-        Obtiene el personaje del diccionario del jugador
-        y normaliza nombres antiguos.
+        Obtiene el personaje guardado para el jugador y normaliza
+        nombres antiguos. Funciona con diccionarios y objetos.
         """
 
-        if not hasattr(self.jugador, "get"):
-            return ""
+        if isinstance(self.jugador, dict):
+            valor_personaje = self.jugador.get("personaje")
+        else:
+            valor_personaje = getattr(
+                self.jugador,
+                "personaje",
+                None
+            )
 
         personaje = str(
-            self.jugador.get("personaje") or ""
+            valor_personaje or ""
         ).strip().lower()
 
         equivalencias = {
@@ -843,8 +1132,8 @@ class MenuUsuario(QtWidgets.QWidget):
 
     def mostrar_personaje_usuario(self):
         """
-        Muestra el nombre y reproduce la animación del personaje
-        seleccionado por el usuario.
+        Muestra en el cuadro el nombre del personaje guardado en
+        MySQL y reproduce su animación dentro del menú.
         """
 
         if (
@@ -861,7 +1150,7 @@ class MenuUsuario(QtWidgets.QWidget):
             "pato": "PATO",
         }
 
-        if personaje not in nombres_visibles:
+        if not personaje:
             self.timer_animacion_personaje.stop()
             self.frames_personaje_menu = []
             self.personaje_animado_actual = None
@@ -870,17 +1159,25 @@ class MenuUsuario(QtWidgets.QWidget):
             self.lbl_nombre_personaje_actual.setText(
                 "SIN PERSONAJE"
             )
+
             self.lbl_imagen_personaje_actual.clear()
+            self.centrar_nombre_personaje()
             return
 
+        # Para personajes conocidos usa su nombre definido. Si en
+        # el futuro agregas otro personaje, mostrará automáticamente
+        # el valor guardado en la base de datos en mayúsculas.
+        nombre_visible = nombres_visibles.get(
+            personaje,
+            personaje.replace("_", " ").upper()
+        )
+
         self.lbl_nombre_personaje_actual.setText(
-            nombres_visibles[personaje]
+            nombre_visible
         )
 
         self.centrar_nombre_personaje()
 
-        # Solo vuelve a cargar los archivos cuando cambia
-        # el personaje de la sesión.
         if (
             personaje != self.personaje_animado_actual
             or not self.frames_personaje_menu
@@ -907,6 +1204,12 @@ class MenuUsuario(QtWidgets.QWidget):
                 "No se encontraron frames para:",
                 personaje
             )
+
+            if self.marco_nombre_personaje is not None:
+                self.marco_nombre_personaje.raise_()
+
+            self.lbl_nombre_personaje_actual.raise_()
+            self.lbl_imagen_personaje_actual.raise_()
             return
 
         self.lbl_imagen_personaje_actual.setText("")
@@ -923,6 +1226,9 @@ class MenuUsuario(QtWidgets.QWidget):
             self.timer_animacion_personaje.start()
         else:
             self.timer_animacion_personaje.stop()
+
+        if self.marco_nombre_personaje is not None:
+            self.marco_nombre_personaje.raise_()
 
         self.lbl_nombre_personaje_actual.raise_()
         self.lbl_imagen_personaje_actual.raise_()
@@ -1514,6 +1820,10 @@ class MenuUsuario(QtWidgets.QWidget):
             self.actualizar_imagen_personaje()
 
         self.centrar_nombre_personaje()
+
+        if self.marco_nombre_personaje is not None:
+            self.marco_nombre_personaje.show()
+            self.marco_nombre_personaje.raise_()
 
         if self.lbl_nombre_personaje_actual is not None:
             self.lbl_nombre_personaje_actual.raise_()

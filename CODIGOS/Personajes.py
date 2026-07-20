@@ -11,7 +11,7 @@ from ConexionBD import ConexionBD
 ANCHO_BASE = 1366
 ALTO_BASE = 768
 
-VELOCIDAD_ANIMACION = 120  # Milisegundos entre cada frame
+VELOCIDAD_ANIMACION = 120  
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
         super().__init__(ventana)
@@ -49,6 +49,71 @@ class FondoImagen(QtWidgets.QLabel):
             ancho,
             alto
         )
+
+
+def recortar_pixmap_transparente(
+        pixmap,
+        margen=2,
+        alpha_minimo=5
+):
+    """
+    Elimina los bordes transparentes desiguales del sprite.
+
+    Algunos frames del gato y del pato tienen más espacio
+    transparente de un lado que del otro. QLabel centra el
+    archivo completo, incluyendo ese espacio invisible, por
+    eso el personaje se ve desplazado aunque AlignCenter esté
+    activado.
+
+    Esta función recorta únicamente el área visible y conserva
+    un pequeño margen para que ningún píxel quede pegado al
+    borde.
+    """
+
+    if pixmap is None or pixmap.isNull():
+        return pixmap
+
+    imagen = pixmap.toImage().convertToFormat(
+        QtGui.QImage.Format.Format_ARGB32
+    )
+
+    ancho = imagen.width()
+    alto = imagen.height()
+
+    minimo_x = ancho
+    minimo_y = alto
+    maximo_x = -1
+    maximo_y = -1
+
+    for y in range(alto):
+        for x in range(ancho):
+            if imagen.pixelColor(x, y).alpha() < alpha_minimo:
+                continue
+
+            minimo_x = min(minimo_x, x)
+            minimo_y = min(minimo_y, y)
+            maximo_x = max(maximo_x, x)
+            maximo_y = max(maximo_y, y)
+
+    if maximo_x < minimo_x or maximo_y < minimo_y:
+        return pixmap
+
+    margen = max(0, int(margen))
+
+    izquierda = max(0, minimo_x - margen)
+    arriba = max(0, minimo_y - margen)
+    derecha = min(ancho - 1, maximo_x + margen)
+    abajo = min(alto - 1, maximo_y + margen)
+
+    rectangulo_visible = QtCore.QRect(
+        izquierda,
+        arriba,
+        derecha - izquierda + 1,
+        abajo - arriba + 1
+    )
+
+    return pixmap.copy(rectangulo_visible)
+
 
 def crear_pixmap_apagado(pixmap):
     """
@@ -104,12 +169,17 @@ class TarjetaPersonaje(QtWidgets.QLabel):
 
         self.nombre = nombre
 
-        # Imagen original.
-        self.pixmap_original = pixmap_personaje
+        # Recorta los márgenes transparentes desiguales para
+        # que el gato, el pato y el cerdo queden centrados por
+        # su contenido visible, no por el tamaño del archivo.
+        self.pixmap_original = recortar_pixmap_transparente(
+            pixmap_personaje,
+            margen=2
+        )
 
-        # Imagen apagada.
+        # Imagen apagada creada a partir del sprite ya centrado.
         self.pixmap_apagado = crear_pixmap_apagado(
-            pixmap_personaje
+            self.pixmap_original
         )
 
         self.esta_seleccionado = False
@@ -117,6 +187,9 @@ class TarjetaPersonaje(QtWidgets.QLabel):
         self.setAlignment(
             QtCore.Qt.AlignmentFlag.AlignCenter
         )
+
+        self.setScaledContents(False)
+        self.setContentsMargins(0, 0, 0, 0)
 
         self.setCursor(
             QtCore.Qt.CursorShape.PointingHandCursor
@@ -882,6 +955,11 @@ class Personajes(QtWidgets.QWidget):
 
         self.configurar_botones_interfaz()
 
+        # Los nombres se crean desde Python para que no dependan
+        # de una imagen configurada con una ruta relativa en el
+        # stylesheet de Qt Designer.
+        self.configurar_nombres_personajes()
+
         self.botones_interactivos = [
             boton
             for boton in (
@@ -1009,7 +1087,17 @@ class Personajes(QtWidgets.QWidget):
                         f"{ruta_frame}"
                     )
 
-                frames_cargados.append(pixmap)
+                # Centra el contenido visible de cada frame.
+                # Esto corrige especialmente los márgenes
+                # transparentes desiguales del gato y del pato.
+                pixmap_centrado = recortar_pixmap_transparente(
+                    pixmap,
+                    margen=2
+                )
+
+                frames_cargados.append(
+                    pixmap_centrado
+                )
 
             personajes_cargados[nombre] = (
                 frames_cargados
@@ -1107,6 +1195,216 @@ class Personajes(QtWidgets.QWidget):
             self.btn_personaje3.clicked.connect(
                 lambda: self.seleccionar_personaje("pato")
             )
+
+    def configurar_nombres_personajes(self):
+        """
+        Crea una placa naranja dentro de cada botón de personaje.
+
+        No depende de las imágenes del stylesheet de Qt Designer,
+        por lo que CERDO, GATO y PATO siempre se muestran durante
+        la ejecución.
+        """
+
+        self.etiquetas_nombres_personajes = {}
+
+        configuracion = (
+            (
+                "cerdo",
+                self.btn_personaje1,
+                "CERDO",
+            ),
+            (
+                "gato",
+                self.btn_personaje2,
+                "GATO",
+            ),
+            (
+                "pato",
+                self.btn_personaje3,
+                "PATO",
+            ),
+        )
+
+        for nombre, boton, texto in configuracion:
+            if boton is None:
+                continue
+
+            # El botón completo sigue funcionando como zona de clic.
+            boton.setText("")
+            boton.setCursor(
+                QtGui.QCursor(
+                    QtCore.Qt.CursorShape.PointingHandCursor
+                )
+            )
+
+            etiqueta = QtWidgets.QLabel(
+                texto,
+                boton
+            )
+
+            etiqueta.setObjectName(
+                f"lbl_nombre_{nombre}"
+            )
+
+            etiqueta.setAlignment(
+                QtCore.Qt.AlignmentFlag.AlignCenter
+            )
+
+            # Permite que el clic atraviese la etiqueta y llegue
+            # al QPushButton que está debajo.
+            etiqueta.setAttribute(
+                QtCore.Qt.WidgetAttribute.WA_TransparentForMouseEvents,
+                True
+            )
+
+            etiqueta.setStyleSheet(
+                """
+                QLabel {
+                    color: white;
+                    background-color: #ff7900;
+                    border: 3px solid #082b63;
+                    border-radius: 7px;
+                    padding: 0px 4px;
+                    font-family: "Pixel Operator";
+                    font-weight: bold;
+                }
+                """
+            )
+
+            etiqueta.show()
+            etiqueta.raise_()
+
+            self.etiquetas_nombres_personajes[
+                nombre
+            ] = etiqueta
+
+        self.actualizar_nombres_personajes()
+
+
+    def actualizar_nombres_personajes(self):
+        """
+        Mantiene las placas centradas en la parte inferior de
+        cada tarjeta cuando cambia el tamaño de la ventana.
+        """
+
+        if not hasattr(
+                self,
+                "etiquetas_nombres_personajes"
+        ):
+            return
+
+        configuracion = (
+            (
+                "cerdo",
+                getattr(
+                    self,
+                    "btn_personaje1",
+                    None
+                ),
+            ),
+            (
+                "gato",
+                getattr(
+                    self,
+                    "btn_personaje2",
+                    None
+                ),
+            ),
+            (
+                "pato",
+                getattr(
+                    self,
+                    "btn_personaje3",
+                    None
+                ),
+            ),
+        )
+
+        for nombre, boton in configuracion:
+            etiqueta = (
+                self.etiquetas_nombres_personajes.get(
+                    nombre
+                )
+            )
+
+            if boton is None or etiqueta is None:
+                continue
+
+            ancho_boton = max(
+                1,
+                boton.width()
+            )
+
+            alto_boton = max(
+                1,
+                boton.height()
+            )
+
+            # La placa ocupa aproximadamente el mismo espacio
+            # que la imagen mostrada en Qt Designer.
+            ancho_placa = max(
+                54,
+                round(
+                    ancho_boton * 0.88
+                )
+            )
+
+            alto_placa = max(
+                24,
+                round(
+                    alto_boton * 0.16
+                )
+            )
+
+            margen_inferior = max(
+                0,
+                round(
+                    alto_boton * 0.01
+                )
+            )
+
+            x = (
+                ancho_boton - ancho_placa
+            ) // 2
+
+            y = (
+                alto_boton
+                - alto_placa
+                - margen_inferior
+            )
+
+            etiqueta.setGeometry(
+                x,
+                y,
+                ancho_placa,
+                alto_placa
+            )
+
+            fuente = QtGui.QFont(
+                "Pixel Operator"
+            )
+
+            fuente.setBold(True)
+            fuente.setWeight(
+                QtGui.QFont.Weight.Bold
+            )
+
+            fuente.setPixelSize(
+                max(
+                    10,
+                    round(
+                        alto_placa * 0.48
+                    )
+                )
+            )
+
+            etiqueta.setFont(
+                fuente
+            )
+
+            etiqueta.show()
+            etiqueta.raise_()
+
 
     def preparar_elementos_dinamicos(self):
         """
@@ -1364,6 +1662,7 @@ class Personajes(QtWidgets.QWidget):
         for tarjeta in self.tarjetas.values():
             tarjeta.actualizar_imagen()
 
+        self.actualizar_nombres_personajes()
         self.mostrar_frame_actual()
         self.actualizar_logo()
 
@@ -1771,7 +2070,13 @@ class Personajes(QtWidgets.QWidget):
             self.vista_personaje.clear()
             return
 
-        pixmap = frames[self.indice_frame]
+        # Los frames ya se recortaron al cargarse, pero se
+        # vuelve a garantizar aquí por compatibilidad con
+        # cualquier imagen añadida dinámicamente.
+        pixmap = recortar_pixmap_transparente(
+            frames[self.indice_frame],
+            margen=2
+        )
 
         ancho_disponible = max(
             1,
@@ -1808,7 +2113,12 @@ class Personajes(QtWidgets.QWidget):
             tarjeta.raise_()
 
         for boton in getattr(self, "botones_interactivos", []):
+            boton.show()
             boton.raise_()
+
+        # Los QLabel de los nombres son hijos de los botones y
+        # deben quedar por encima de cualquier imagen de tarjeta.
+        self.actualizar_nombres_personajes()
 
         for efecto in getattr(self, "efectos_hover", []):
             efecto.colocar_capas_correctamente()
