@@ -208,7 +208,7 @@ class ConexionBD:
                     nombre,
                     correo,
                     contrasena,
-                    "Jugador1",
+                    "pato",
                     5,
                     "Activo"
                 )
@@ -279,40 +279,6 @@ class ConexionBD:
 
         except Error as e:
             raise Exception(f"Error al obtener los jugadores:\n{e}")
-
-        finally:
-            if cursor:
-                cursor.close()
-            if conexion:
-                conexion.close()
-
-    def buscar_jugador_por_id(self, id_jugador):
-        conexion = None
-        cursor = None
-
-        try:
-            conexion = self.conectar()
-            cursor = conexion.cursor(dictionary=True)
-
-            consulta = """
-                SELECT
-                    id_jugador,
-                    nombre,
-                    correo,
-                    personaje,
-                    vidas,
-                    fecha_registro,
-                    estado
-                FROM jugador
-                WHERE id_jugador = %s
-                LIMIT 1;
-            """
-
-            cursor.execute(consulta, (id_jugador,))
-            return cursor.fetchone()
-
-        except Error as e:
-            raise Exception(f"Error al buscar el jugador:\n{e}")
 
         finally:
             if cursor:
@@ -496,5 +462,215 @@ class ConexionBD:
         finally:
             if cursor:
                 cursor.close()
+            if conexion:
+                conexion.close()
+
+    # ======================================================
+    # OBTENER DATOS DEL PERFIL
+    # ======================================================
+
+    def obtener_datos_perfil(self, id_jugador):
+        """
+        Obtiene nombre, personaje y vidas del jugador.
+        """
+
+        conexion = None
+        cursor = None
+
+        try:
+            conexion = self.conectar()
+
+            cursor = conexion.cursor(
+                dictionary=True
+            )
+
+            consulta = """
+                SELECT
+                    id_jugador,
+                    nombre,
+                    correo,
+                    personaje,
+                    vidas,
+                    estado
+                FROM jugador
+                WHERE id_jugador = %s
+                LIMIT 1;
+            """
+
+            cursor.execute(
+                consulta,
+                (id_jugador,)
+            )
+
+            return cursor.fetchone()
+
+        except Error as e:
+            raise Exception(
+                "Error al obtener los datos del perfil:\n"
+                f"{e}"
+            )
+
+        finally:
+            if cursor:
+                cursor.close()
+
+            if conexion:
+                conexion.close()
+
+
+    # ======================================================
+    # OBTENER PROGRESO DEL JUGADOR
+    # ======================================================
+
+    def obtener_progreso_perfil(self, id_jugador):
+        """
+        Obtiene el progreso del jugador en cada lenguaje.
+
+        Utiliza las columnas:
+        - leccion_actual
+        - lecciones_completadas
+        - porcentaje_avance
+        - prueba_completada
+        """
+
+        conexion = None
+        cursor = None
+
+        try:
+            conexion = self.conectar()
+
+            cursor = conexion.cursor(
+                dictionary=True
+            )
+
+            consulta = """
+                SELECT
+                    l.id_lenguaje,
+                    l.nombre AS lenguaje,
+
+                    COALESCE(
+                        MAX(pj.leccion_actual),
+                        0
+                    ) AS leccion_actual,
+
+                    COALESCE(
+                        MAX(pj.lecciones_completadas),
+                        0
+                    ) AS lecciones_completadas,
+
+                    COALESCE(
+                        MAX(pj.porcentaje_avance),
+                        0
+                    ) AS porcentaje_avance,
+
+                    COALESCE(
+                        MAX(pj.prueba_completada),
+                        0
+                    ) AS prueba_completada
+
+                FROM lenguaje AS l
+
+                LEFT JOIN progreso_jugador AS pj
+                    ON pj.id_lenguaje = l.id_lenguaje
+                    AND pj.id_jugador = %s
+
+                WHERE LOWER(TRIM(l.nombre)) IN (
+                    'python',
+                    'java',
+                    'c#',
+                    'csharp',
+                    'c sharp',
+                    'mysql'
+                )
+
+                GROUP BY
+                    l.id_lenguaje,
+                    l.nombre
+
+                ORDER BY
+                    l.id_lenguaje ASC;
+            """
+
+            cursor.execute(
+                consulta,
+                (id_jugador,)
+            )
+
+            return cursor.fetchall()
+
+        except Error as e:
+            raise Exception(
+                "Error al obtener el progreso del jugador:\n"
+                f"{e}"
+            )
+
+        finally:
+            if cursor:
+                cursor.close()
+
+            if conexion:
+                conexion.close()
+
+
+    # ======================================================
+    # OBTENER HISTORIAL DEL JUGADOR
+    # ======================================================
+
+    def obtener_historial_perfil(self, id_jugador):
+        """
+        Obtiene las acciones realizadas por el jugador.
+
+        Actualmente historial solamente contiene:
+        - id_jugador
+        - evento
+        - detalle
+        - fecha
+
+        Por eso lenguaje se muestra como General
+        y acción utiliza el nombre del evento.
+        """
+
+        conexion = None
+        cursor = None
+
+        try:
+            conexion = self.conectar()
+
+            cursor = conexion.cursor(
+                dictionary=True
+            )
+
+            consulta = """
+                SELECT
+                    fecha,
+                    evento,
+                    detalle,
+                    'General' AS lenguaje,
+                    evento AS accion
+
+                FROM historial
+
+                WHERE id_jugador = %s
+
+                ORDER BY fecha DESC;
+            """
+
+            cursor.execute(
+                consulta,
+                (id_jugador,)
+            )
+
+            return cursor.fetchall()
+
+        except Error as e:
+            raise Exception(
+                "Error al obtener el historial del jugador:\n"
+                f"{e}"
+            )
+
+        finally:
+            if cursor:
+                cursor.close()
+
             if conexion:
                 conexion.close()

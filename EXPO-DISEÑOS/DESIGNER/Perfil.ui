@@ -27,6 +27,10 @@
 border-image: url(&quot;../../assets/DISEÑOS/Perfil.png&quot;) 0 0 0 0 stretch stretch;
 background-color: transparent;
 }
+
+QProgressBar {
+    color: black;
+}
 </string>
    </property>
    <property name="frameShape">
@@ -70,6 +74,12 @@ background-color: transparent;
       <height>21</height>
      </rect>
     </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel {
+    color: black;
+    background: transparent;
+}</string>
+    </property>
     <property name="text">
      <string/>
     </property>
@@ -82,6 +92,12 @@ background-color: transparent;
       <width>211</width>
       <height>21</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel {
+    color: black;
+    background: transparent;
+}</string>
     </property>
     <property name="text">
      <string/>
@@ -124,6 +140,14 @@ QTableView::item:selected {
 QTableView::item:selected:hover {
     background-color: transparent;
     color: black;
+}
+
+QTableWidget {
+    color: black;
+}
+
+QHeaderView::section {
+    color: black;
 }</string>
     </property>
    </widget>
@@ -135,6 +159,12 @@ QTableView::item:selected:hover {
       <width>221</width>
       <height>31</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLabel {
+    color: black;
+    background: transparent;
+}</string>
     </property>
     <property name="text">
      <string/>
@@ -171,6 +201,10 @@ QTableView::item:selected:hover {
 QProgressBar::chunk {
     background-color: #4A9CC5;
     border-radius: 4px;
+}
+
+QProgressBar {
+    color: black;
 }</string>
     </property>
     <property name="maximum">
@@ -198,6 +232,10 @@ QProgressBar::chunk {
 QProgressBar::chunk {
     background-color: #4A9CC5;
     border-radius: 4px;
+}
+
+QProgressBar {
+    color: black;
 }</string>
     </property>
     <property name="maximum">
@@ -225,6 +263,10 @@ QProgressBar::chunk {
 QProgressBar::chunk {
     background-color: #4A9CC5;
     border-radius: 4px;
+}
+
+QProgressBar {
+    color: black;
 }</string>
     </property>
     <property name="maximum">
