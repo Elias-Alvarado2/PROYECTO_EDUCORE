@@ -436,7 +436,11 @@ class MenuUsuario(QtWidgets.QWidget):
         self.form_ajustes = None
         self.transicion_ajustes = None
 
+        self.form_perfil = None
+        self.transicion_perfil = None
+
         self.transicion_personajes = None
+
 
         BASE_DIR = Path(__file__).resolve().parent
         PROYECTO_DIR = BASE_DIR.parent
@@ -1553,6 +1557,10 @@ class MenuUsuario(QtWidgets.QWidget):
             self.abrir_ajustes
         )
 
+        self.btnPerfil.clicked.connect(
+            self.abrir_perfil
+        )
+
         self.btnCerrarSesion.clicked.connect(
             self.cerrar_sesion
         )
@@ -1592,6 +1600,99 @@ class MenuUsuario(QtWidgets.QWidget):
                 f"\n\nDetalles:\n{error}",
                 "error"
             )
+
+    # ======================================================
+    # OBTENER ID DEL JUGADOR
+    # ======================================================
+
+    def obtener_id_jugador(self):
+        """
+        Obtiene el id del jugador que inició sesión.
+        """
+
+        if self.jugador is None:
+            return None
+
+        # Normalmente validar_jugador devuelve un diccionario.
+        if isinstance(self.jugador, dict):
+            return self.jugador.get("id_jugador")
+
+        # Por si se recibió directamente el número.
+        if isinstance(self.jugador, int):
+            return self.jugador
+
+        # Por si jugador fuera un objeto.
+        if hasattr(self.jugador, "id_jugador"):
+            return self.jugador.id_jugador
+
+        return None
+
+    # ======================================================
+    # ABRIR PERFIL
+    # ======================================================
+
+    def abrir_perfil(self):
+        """
+        Abre Perfil.py con la información del jugador actual.
+        """
+
+        # Evitar abrir dos ventanas de perfil.
+        if (
+                self.form_perfil is not None
+                and self.form_perfil.isVisible()
+        ):
+            self.form_perfil.raise_()
+            self.form_perfil.activateWindow()
+            return
+
+        try:
+            # Importación local para evitar ciclos.
+            from Perfil import PerfilWindow
+
+            id_jugador = self.obtener_id_jugador()
+
+            if id_jugador is None:
+                raise ValueError(
+                    "No se encontró el id_jugador del "
+                    "usuario que inició sesión."
+                )
+
+            self.form_perfil = PerfilWindow(
+                id_jugador=id_jugador,
+                formulario_anterior=self
+            )
+
+            self.form_perfil.setAttribute(
+                QtCore.Qt.WidgetAttribute.WA_DeleteOnClose,
+                True
+            )
+
+            self.form_perfil.destroyed.connect(
+                self._limpiar_form_perfil
+            )
+
+            # Abrir con la misma transición que Ajustes.
+            self.transicion_perfil = FormTransicion(
+                self,
+                self.form_perfil
+            )
+
+        except Exception as error:
+            Alertas.mostrar(
+                self,
+                "Error al abrir perfil",
+                "No se pudo abrir la ventana de perfil."
+                f"\n\nDetalles:\n{error}",
+                "error"
+            )
+
+    def _limpiar_form_perfil(self, *_):
+        """
+        Limpia las referencias cuando Perfil se cierra.
+        """
+
+        self.form_perfil = None
+        self.transicion_perfil = None
 
     def abrir_ajustes(self):
         """
