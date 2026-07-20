@@ -679,6 +679,12 @@ class PerfilWindow(QtWidgets.QWidget):
             self.fondo,
         }
 
+        # La tabla se posiciona y escala de forma manual en
+        # ajustar_tabla_responsiva(), para tener control exacto
+        # sobre su ubicación, columnas, filas y fuente.
+        if hasattr(self, "dgv_perfil"):
+            excluidos.add(self.dgv_perfil)
+
         for boton in getattr(self, "botones_perfil", []):
             excluidos.add(boton)
 
@@ -721,43 +727,115 @@ class PerfilWindow(QtWidgets.QWidget):
         self.actualizar_hover_botones()
 
     def ajustar_tabla_responsiva(self):
+        """
+        Posiciona y redimensiona la tabla respecto al diseño base
+        de 1920 x 1080. También ajusta fuente, filas y columnas.
+
+        Modifica los valores base de x, y, ancho y alto para mover
+        o cambiar el tamaño de la tabla dentro del formulario.
+        """
+
         if not hasattr(self, "dgv_perfil"):
             return
 
-        escala = min(
-            self.width() / self.ANCHO_BASE,
-            self.height() / self.ALTO_BASE,
+        escala_x = self.width() / self.ANCHO_BASE
+        escala_y = self.height() / self.ALTO_BASE
+        escala_fuente = min(escala_x, escala_y)
+
+        # --------------------------------------------------
+        # POSICIÓN Y TAMAÑO BASE DE LA TABLA
+        # --------------------------------------------------
+        # x: mueve izquierda/derecha.
+        # y: mueve arriba/abajo.
+        # ancho y alto: cambian el tamaño total.
+        x_base = 250
+        y_base = 610
+        ancho_base = 1400
+        alto_base = 300
+
+        self.dgv_perfil.setGeometry(
+            round(x_base * escala_x),
+            round(y_base * escala_y),
+            max(1, round(ancho_base * escala_x)),
+            max(1, round(alto_base * escala_y)),
         )
 
-        alto_fila = max(22, round(34 * escala))
+        # El diseño de fondo ya contiene FECHA, EVENTO, DETALLE,
+        # LENGUAJE y ACCIÓN, por eso se ocultan los encabezados
+        # propios del QTableWidget.
+        self.dgv_perfil.horizontalHeader().setVisible(False)
+        self.dgv_perfil.verticalHeader().setVisible(False)
+
+        self.dgv_perfil.setWordWrap(False)
+        self.dgv_perfil.setShowGrid(True)
+        self.dgv_perfil.setAlternatingRowColors(False)
+
+        self.dgv_perfil.setHorizontalScrollBarPolicy(
+            QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self.dgv_perfil.setVerticalScrollBarPolicy(
+            QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        )
+
+        # --------------------------------------------------
+        # FUENTE DE LOS DATOS
+        # --------------------------------------------------
+        tamano_fuente = max(10, round(15 * escala_fuente))
+
+        fuente_tabla = QtGui.QFont(self.dgv_perfil.font())
+        fuente_tabla.setFamily(
+            getattr(
+                self,
+                "familia_pixel_normal",
+                fuente_tabla.family(),
+            )
+        )
+        fuente_tabla.setPointSize(tamano_fuente)
+        fuente_tabla.setBold(False)
+        self.dgv_perfil.setFont(fuente_tabla)
+
+        # --------------------------------------------------
+        # ALTURA DE LAS FILAS
+        # --------------------------------------------------
+        alto_fila = max(25, round(34 * escala_y))
 
         self.dgv_perfil.verticalHeader().setDefaultSectionSize(
             alto_fila
         )
 
-        # Mantiene las columnas importantes visibles sin crear
-        # desplazamiento horizontal en resoluciones pequeñas.
+        for fila in range(self.dgv_perfil.rowCount()):
+            self.dgv_perfil.setRowHeight(fila, alto_fila)
+
+        # --------------------------------------------------
+        # ANCHO DE LAS COLUMNAS
+        # --------------------------------------------------
         encabezado = self.dgv_perfil.horizontalHeader()
         encabezado.setSectionResizeMode(
-            0,
-            QtWidgets.QHeaderView.ResizeMode.ResizeToContents,
+            QtWidgets.QHeaderView.ResizeMode.Fixed
         )
-        encabezado.setSectionResizeMode(
-            1,
-            QtWidgets.QHeaderView.ResizeMode.Stretch,
-        )
-        encabezado.setSectionResizeMode(
-            2,
-            QtWidgets.QHeaderView.ResizeMode.Stretch,
-        )
-        encabezado.setSectionResizeMode(
-            3,
-            QtWidgets.QHeaderView.ResizeMode.ResizeToContents,
-        )
-        encabezado.setSectionResizeMode(
-            4,
-            QtWidgets.QHeaderView.ResizeMode.ResizeToContents,
-        )
+
+        ancho_util = self.dgv_perfil.viewport().width()
+
+        if ancho_util <= 0:
+            ancho_util = self.dgv_perfil.width()
+
+        # Fecha, Evento, Detalle, Lenguaje y Acción.
+        # La suma debe quedar aproximadamente en 1.00.
+        porcentajes = [
+            0.17,
+            0.22,
+            0.39,
+            0.10,
+            0.12,
+        ]
+
+        for columna, porcentaje in enumerate(porcentajes):
+            self.dgv_perfil.setColumnWidth(
+                columna,
+                max(1, round(ancho_util * porcentaje)),
+            )
+
+        self.dgv_perfil.raise_()
 
     def mostrar_pantalla_completa(self):
         """
@@ -935,6 +1013,8 @@ class PerfilWindow(QtWidgets.QWidget):
 
         self.dgv_perfil.setColumnCount(5)
 
+        # Los títulos ya forman parte del fondo del diseño.
+        # Se conservan internamente, pero no se muestran.
         self.dgv_perfil.setHorizontalHeaderLabels([
             "FECHA",
             "EVENTO",
@@ -942,6 +1022,9 @@ class PerfilWindow(QtWidgets.QWidget):
             "LENGUAJE",
             "ACCIÓN",
         ])
+
+        self.dgv_perfil.horizontalHeader().setVisible(False)
+        self.dgv_perfil.verticalHeader().setVisible(False)
 
         # Elimina las filas de ejemplo creadas en Qt Designer.
         self.dgv_perfil.clearContents()
@@ -965,52 +1048,18 @@ class PerfilWindow(QtWidgets.QWidget):
             .SingleSelection
         )
 
-        self.dgv_perfil.setAlternatingRowColors(
-            True
+        self.dgv_perfil.setAlternatingRowColors(False)
+        self.dgv_perfil.setWordWrap(False)
+
+        self.dgv_perfil.setHorizontalScrollBarPolicy(
+            QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff
         )
 
-        self.dgv_perfil.verticalHeader().setVisible(
-            False
+        self.dgv_perfil.setVerticalScrollBarPolicy(
+            QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded
         )
 
-        encabezado = (
-            self.dgv_perfil.horizontalHeader()
-        )
-
-        encabezado.setSectionResizeMode(
-            0,
-            QtWidgets.QHeaderView
-            .ResizeMode
-            .ResizeToContents
-        )
-
-        encabezado.setSectionResizeMode(
-            1,
-            QtWidgets.QHeaderView
-            .ResizeMode
-            .Stretch
-        )
-
-        encabezado.setSectionResizeMode(
-            2,
-            QtWidgets.QHeaderView
-            .ResizeMode
-            .Stretch
-        )
-
-        encabezado.setSectionResizeMode(
-            3,
-            QtWidgets.QHeaderView
-            .ResizeMode
-            .ResizeToContents
-        )
-
-        encabezado.setSectionResizeMode(
-            4,
-            QtWidgets.QHeaderView
-            .ResizeMode
-            .ResizeToContents
-        )
+        self.ajustar_tabla_responsiva()
 
     # ======================================================
     # CONEXIÓN
@@ -1646,7 +1695,8 @@ class PerfilWindow(QtWidgets.QWidget):
                     item
                 )
 
-        self.dgv_perfil.resizeRowsToContents()
+        # Mantiene una altura uniforme y una fuente legible.
+        self.ajustar_tabla_responsiva()
 
         self.dgv_perfil.setSortingEnabled(
             True

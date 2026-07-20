@@ -69,10 +69,15 @@ QProgressBar {
     <property name="geometry">
      <rect>
       <x>620</x>
-      <y>285</y>
+      <y>280</y>
       <width>181</width>
       <height>21</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>20</pointsize>
+     </font>
     </property>
     <property name="styleSheet">
      <string notr="true">QLabel {
@@ -88,10 +93,15 @@ QProgressBar {
     <property name="geometry">
      <rect>
       <x>590</x>
-      <y>330</y>
+      <y>332</y>
       <width>211</width>
       <height>21</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>20</pointsize>
+     </font>
     </property>
     <property name="styleSheet">
      <string notr="true">QLabel {
@@ -159,6 +169,11 @@ QHeaderView::section {
       <width>221</width>
       <height>31</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>20</pointsize>
+     </font>
     </property>
     <property name="styleSheet">
      <string notr="true">QLabel {
