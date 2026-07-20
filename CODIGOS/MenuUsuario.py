@@ -272,40 +272,6 @@ class MarcoNombrePersonaje(QtWidgets.QWidget):
         pintor.setBrush(QtGui.QColor("#FFF0D8"))
         pintor.drawPolygon(poligono_interior)
 
-        # Detalles pixelados con los colores del logo EduCore.
-        ancho_acento = max(paso * 5, ancho // 9)
-        alto_acento = max(paso, 3)
-
-        # Naranja, lado izquierdo.
-        pintor.setBrush(QtGui.QColor("#FF7A1A"))
-        pintor.drawRect(
-            paso * 5,
-            paso * 3,
-            ancho_acento,
-            alto_acento,
-        )
-        pintor.drawRect(
-            paso * 3,
-            paso * 5,
-            alto_acento,
-            max(paso * 3, alto // 4),
-        )
-
-        # Turquesa, lado derecho.
-        pintor.setBrush(QtGui.QColor("#18A89D"))
-        pintor.drawRect(
-            max(0, ancho - paso * 5 - ancho_acento),
-            max(0, alto - paso * 4),
-            ancho_acento,
-            alto_acento,
-        )
-        pintor.drawRect(
-            max(0, ancho - paso * 4),
-            max(0, alto - paso * 5 - max(paso * 3, alto // 4)),
-            alto_acento,
-            max(paso * 3, alto // 4),
-        )
-
         pintor.end()
 
 class EfectoHoverBoton(QtCore.QObject):
