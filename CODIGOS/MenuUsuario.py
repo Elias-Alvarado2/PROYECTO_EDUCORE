@@ -8,11 +8,7 @@ from Transicion import FormTransicion
 from quitar_barra import quitar
 from LogoReutilizable import LogoReutilizable
 from Ajustes import Ajustes
-
-
-# ==========================================================
-# FONDO RESPONSIVO
-# ==========================================================
+from ConexionBD import ConexionBD
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
@@ -59,11 +55,6 @@ class FondoImagen(QtWidgets.QLabel):
             alto
         )
 
-
-# ==========================================================
-# EFECTO HOVER PARA LOS BOTONES
-# ==========================================================
-
 class EfectoHoverBoton(QtCore.QObject):
     """
     Agranda ligeramente el botón y aumenta su sombra
@@ -90,7 +81,6 @@ class EfectoHoverBoton(QtCore.QObject):
             self.boton.geometry()
         )
 
-        # Animación para agrandar/reducir el botón.
         self.animacion_geometria = (
             QtCore.QPropertyAnimation(
                 self.boton,
@@ -125,7 +115,6 @@ class EfectoHoverBoton(QtCore.QObject):
             self.sombra
         )
 
-        # Animación de la sombra.
         self.animacion_sombra = (
             QtCore.QPropertyAnimation(
                 self.sombra,
@@ -258,18 +247,14 @@ class EfectoHoverBoton(QtCore.QObject):
             evento
         )
 
-
-# ==========================================================
-# MENÚ PRINCIPAL DEL JUGADOR
-# ==========================================================
-
 class MenuUsuario(QtWidgets.QWidget):
     def __init__(self, jugador=None):
         super().__init__()
 
         quitar(self)
 
-        self.jugador = jugador
+        self.jugador = jugador or {}
+        self.db = ConexionBD()
 
         # Ventanas y transiciones.
         self.ventana_lecciones = None
@@ -280,12 +265,16 @@ class MenuUsuario(QtWidgets.QWidget):
 
         self.transicion_personajes = None
 
-        # --------------------------------------------------
-        # RUTAS
-        # --------------------------------------------------
-
         BASE_DIR = Path(__file__).resolve().parent
         PROYECTO_DIR = BASE_DIR.parent
+
+        # Rutas y referencias utilizadas para mostrar el
+        # personaje seleccionado por el usuario.
+        self.base_dir = BASE_DIR
+        self.proyecto_dir = PROYECTO_DIR
+        self.pixmap_personaje_original = None
+        self.lbl_nombre_personaje_actual = None
+        self.lbl_imagen_personaje_actual = None
 
         ruta_ui = (
             PROYECTO_DIR
@@ -314,10 +303,6 @@ class MenuUsuario(QtWidgets.QWidget):
             / "Botones"
         )
 
-        # --------------------------------------------------
-        # COMPROBAR RUTAS
-        # --------------------------------------------------
-
         if not ruta_ui.exists():
             raise FileNotFoundError(
                 f"No se encontró el archivo UI:\n"
@@ -342,14 +327,19 @@ class MenuUsuario(QtWidgets.QWidget):
                 f"{ruta_logo}"
             )
 
-        # --------------------------------------------------
-        # CARGAR FORMULARIO
-        # --------------------------------------------------
-
         uic.loadUi(
             str(ruta_ui),
             self
         )
+
+        # Recupera nuevamente el jugador para asegurar que
+        # el personaje mostrado sea el guardado en MySQL.
+        self.actualizar_jugador_desde_bd()
+
+        # Configura los QLabel donde aparecerán el nombre
+        # y la imagen del personaje guardado.
+        self.configurar_vista_personaje()
+        self.mostrar_personaje_usuario()
 
         # Corregir las rutas relativas de Qt Designer.
         self.corregir_rutas_stylesheet(
@@ -371,18 +361,10 @@ class MenuUsuario(QtWidgets.QWidget):
             16777215
         )
 
-        # --------------------------------------------------
-        # FONDO
-        # --------------------------------------------------
-
         self.fondo = FondoImagen(
             self,
             ruta_imagen
         )
-
-        # --------------------------------------------------
-        # LOGO
-        # --------------------------------------------------
 
         self.logo_reutilizable = (
             LogoReutilizable(
@@ -394,17 +376,12 @@ class MenuUsuario(QtWidgets.QWidget):
         if hasattr(self, "lbl_logo"):
             self.lbl_logo.raise_()
 
-        # --------------------------------------------------
-        # BOTONES RESPONSIVOS
-        # --------------------------------------------------
-
         self.botones_menu = [
             self.btnJugar,
             self.btnAjustes,
             self.btnPerfil,
             self.btnCerrarSesion,
 
-            # Botón para abrir Personajes.py.
             self.btn_personaje,
         ]
 
@@ -420,10 +397,6 @@ class MenuUsuario(QtWidgets.QWidget):
         )
 
         self.configurar_botones()
-
-        # --------------------------------------------------
-        # EFECTOS HOVER
-        # --------------------------------------------------
 
         self.efectos_hover = [
             EfectoHoverBoton(
@@ -442,15 +415,401 @@ class MenuUsuario(QtWidgets.QWidget):
             self.actualizar_hover_botones
         )
 
-        # --------------------------------------------------
-        # EVENTOS
-        # --------------------------------------------------
-
         self.conectar_eventos()
 
+        # Ejecuta otra actualización cuando todos los widgets
+        # ya tengan su tamaño y posición definitivos.
+        QtCore.QTimer.singleShot(
+            0,
+            self.actualizar_tarjeta_personaje
+        )
+
+
     # ======================================================
-    # CORREGIR RUTAS DEL STYLESHEET
+    # INFORMACIÓN DEL PERSONAJE SELECCIONADO
     # ======================================================
+
+    def buscar_label_por_nombres(self, nombres):
+        """
+        Busca un QLabel usando varios objectName posibles.
+        """
+
+        for nombre in nombres:
+            etiqueta = self.findChild(
+                QtWidgets.QLabel,
+                nombre
+            )
+
+            if etiqueta is not None:
+                return etiqueta
+
+        return None
+
+    def configurar_vista_personaje(self):
+        """
+        Localiza y configura los QLabel creados en Qt Designer.
+
+        Nombres recomendados:
+            lbl_personaje
+            lbl_foto_personaje
+        """
+
+        self.lbl_nombre_personaje_actual = (
+            self.buscar_label_por_nombres(
+                (
+                    # Nombre exacto usado en tu Menu-Jugador.ui.
+                    "lbl_nombrepersonaje",
+
+                    # Nombres alternativos compatibles.
+                    "lbl_personaje",
+                    "lbl_nombre_personaje",
+                    "lblNombrePersonaje",
+                    "label_personaje",
+                    "labelPersonaje",
+                )
+            )
+        )
+
+        self.lbl_imagen_personaje_actual = (
+            self.buscar_label_por_nombres(
+                (
+                    # Nombre exacto usado en tu Menu-Jugador.ui.
+                    "lbl_imagenpersonaje",
+
+                    # Nombres alternativos compatibles.
+                    "lbl_foto_personaje",
+                    "lbl_personaje_seleccionado",
+                    "lblFotoPersonaje",
+                    "lblImagenPersonaje",
+                    "label_foto_personaje",
+                    "labelFotoPersonaje",
+                )
+            )
+        )
+
+        if self.lbl_nombre_personaje_actual is None:
+            print(
+                "ADVERTENCIA: No se encontró el QLabel del nombre "
+                "del personaje. Usa el objectName lbl_nombrepersonaje."
+            )
+        else:
+            self.lbl_nombre_personaje_actual.setAlignment(
+                QtCore.Qt.AlignmentFlag.AlignCenter
+            )
+
+            self.lbl_nombre_personaje_actual.setStyleSheet(
+                """
+                QLabel {
+                    color: #000000;
+                    background: transparent;
+                    border: none;
+                    font-weight: bold;
+                }
+                """
+            )
+
+        if self.lbl_imagen_personaje_actual is None:
+            print(
+                "ADVERTENCIA: No se encontró el QLabel de la imagen "
+                "del personaje. Usa el objectName lbl_imagenpersonaje."
+            )
+        else:
+            self.lbl_imagen_personaje_actual.setAlignment(
+                QtCore.Qt.AlignmentFlag.AlignCenter
+            )
+
+            self.lbl_imagen_personaje_actual.setScaledContents(
+                False
+            )
+
+            self.lbl_imagen_personaje_actual.setStyleSheet(
+                """
+                QLabel {
+                    color: #000000;
+                    background: transparent;
+                    border: none;
+                }
+                """
+            )
+
+    def obtener_id_jugador(self):
+        """Obtiene el ID del jugador de la sesión actual."""
+
+        if isinstance(self.jugador, dict):
+            return self.jugador.get("id_jugador")
+
+        return getattr(
+            self.jugador,
+            "id_jugador",
+            None
+        )
+
+    def actualizar_jugador_desde_bd(self):
+        """
+        Actualiza el diccionario de sesión con los datos más
+        recientes del jugador, incluido el personaje guardado.
+        """
+
+        id_jugador = self.obtener_id_jugador()
+
+        if id_jugador is None:
+            return
+
+        if not hasattr(
+            self.db,
+            "buscar_jugador_por_id"
+        ):
+            return
+
+        try:
+            jugador_bd = self.db.buscar_jugador_por_id(
+                id_jugador
+            )
+
+            if not jugador_bd:
+                return
+
+            datos = dict(jugador_bd)
+
+            if isinstance(self.jugador, dict):
+                self.jugador.update(datos)
+            else:
+                for clave, valor in datos.items():
+                    try:
+                        setattr(
+                            self.jugador,
+                            clave,
+                            valor
+                        )
+                    except Exception:
+                        pass
+
+        except Exception as error:
+            print(
+                "No se pudieron actualizar los datos "
+                f"del jugador desde MySQL: {error}"
+            )
+
+    def obtener_personaje_sesion(self):
+        """
+        Obtiene el personaje del diccionario del jugador
+        y normaliza nombres antiguos.
+        """
+
+        if not hasattr(self.jugador, "get"):
+            return ""
+
+        personaje = str(
+            self.jugador.get("personaje") or ""
+        ).strip().lower()
+
+        equivalencias = {
+            "cerdito": "cerdo",
+            "jugador": "cerdo",
+            "banano": "gato",
+            "patito": "pato",
+        }
+
+        return equivalencias.get(
+            personaje,
+            personaje
+        )
+
+    def mostrar_personaje_usuario(self):
+        """
+        Muestra el nombre y el primer frame del personaje
+        seleccionado por el usuario.
+        """
+
+        if (
+            self.lbl_nombre_personaje_actual is None
+            or self.lbl_imagen_personaje_actual is None
+        ):
+            return
+
+        personaje = self.obtener_personaje_sesion()
+
+        nombres_visibles = {
+            "cerdo": "CERDO",
+            "gato": "GATO",
+            "pato": "PATO",
+        }
+
+        if personaje not in nombres_visibles:
+            self.lbl_nombre_personaje_actual.setText(
+                "SIN PERSONAJE"
+            )
+
+            self.lbl_imagen_personaje_actual.clear()
+            self.pixmap_personaje_original = None
+            return
+
+        self.lbl_nombre_personaje_actual.setText(
+            nombres_visibles[personaje]
+        )
+
+        ruta_imagen = self.buscar_imagen_personaje(
+            personaje
+        )
+
+        if ruta_imagen is None:
+            self.pixmap_personaje_original = None
+            self.lbl_imagen_personaje_actual.clear()
+            self.lbl_imagen_personaje_actual.setText(
+                "IMAGEN NO ENCONTRADA"
+            )
+
+            print(
+                "No se encontró la imagen del personaje:",
+                personaje
+            )
+            return
+
+        pixmap = QtGui.QPixmap(
+            str(ruta_imagen)
+        )
+
+        if pixmap.isNull():
+            self.pixmap_personaje_original = None
+            self.lbl_imagen_personaje_actual.clear()
+            self.lbl_imagen_personaje_actual.setText(
+                "NO SE PUDO CARGAR"
+            )
+            return
+
+        self.pixmap_personaje_original = pixmap
+        self.lbl_imagen_personaje_actual.setText("")
+        self.actualizar_imagen_personaje()
+
+        self.lbl_nombre_personaje_actual.raise_()
+        self.lbl_imagen_personaje_actual.raise_()
+
+    def buscar_imagen_personaje(self, personaje):
+        """
+        Busca el primer frame del personaje en las carpetas
+        que utiliza la ventana Personajes.py.
+        """
+
+        raices_personajes = (
+            self.proyecto_dir
+            / "assets"
+            / "personajes",
+
+            self.proyecto_dir
+            / "ASSETS"
+            / "PERSONAJES",
+
+            self.proyecto_dir
+            / "juego"
+            / "assets"
+            / "personajes",
+
+            self.proyecto_dir
+            / "EXPO-DISEÑOS"
+            / "DISEÑOS"
+            / "PERSONAJES",
+        )
+
+        configuracion = {
+            "cerdo": {
+                "carpetas": (
+                    "cerdo",
+                    "cerdito",
+                    "jugador",
+                ),
+                "archivos": (
+                    "jugador_caminar1.png",
+                ),
+            },
+
+            "gato": {
+                "carpetas": (
+                    "gato",
+                    "banano",
+                ),
+                "archivos": (
+                    "gato_caminar2.png",
+                    "gato_caminar1.png",
+                ),
+            },
+
+            "pato": {
+                "carpetas": (
+                    "pato",
+                    "patito",
+                ),
+                "archivos": (
+                    "Pato_Caminar1.png",
+                    "pato_caminar1.png",
+                ),
+            },
+        }
+
+        datos = configuracion.get(
+            personaje
+        )
+
+        if datos is None:
+            return None
+
+        for raiz in raices_personajes:
+            if not raiz.exists():
+                continue
+
+            for nombre_carpeta in datos["carpetas"]:
+                carpeta = raiz / nombre_carpeta
+
+                if not carpeta.exists():
+                    continue
+
+                for nombre_archivo in datos["archivos"]:
+                    ruta = carpeta / nombre_archivo
+
+                    if ruta.exists():
+                        return ruta
+
+                for nombre_archivo in datos["archivos"]:
+                    resultados = list(
+                        carpeta.rglob(
+                            nombre_archivo
+                        )
+                    )
+
+                    if resultados:
+                        return resultados[0]
+
+        return None
+
+    def actualizar_imagen_personaje(self):
+        """
+        Escala el personaje sin deformarlo y lo mantiene
+        centrado dentro de lbl_foto_personaje.
+        """
+
+        if self.lbl_imagen_personaje_actual is None:
+            return
+
+        if self.pixmap_personaje_original is None:
+            return
+
+        ancho = self.lbl_imagen_personaje_actual.width()
+        alto = self.lbl_imagen_personaje_actual.height()
+
+        if ancho <= 0 or alto <= 0:
+            return
+
+        pixmap_escalado = (
+            self.pixmap_personaje_original.scaled(
+                max(1, ancho - 12),
+                max(1, alto - 12),
+                QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+                QtCore.Qt.TransformationMode.FastTransformation
+            )
+        )
+
+        self.lbl_imagen_personaje_actual.setPixmap(
+            pixmap_escalado
+        )
 
     def corregir_rutas_stylesheet(
         self,
@@ -508,10 +867,6 @@ class MenuUsuario(QtWidgets.QWidget):
                     estilo_corregido
                 )
 
-    # ======================================================
-    # CONFIGURAR BOTONES
-    # ======================================================
-
     def configurar_botones(self):
         for boton in self.botones_menu:
             boton.setCursor(
@@ -534,10 +889,6 @@ class MenuUsuario(QtWidgets.QWidget):
         ):
             efecto.actualizar_geometria_base()
 
-    # ======================================================
-    # CONECTAR BOTONES
-    # ======================================================
-
     def conectar_eventos(self):
         self.btnJugar.clicked.connect(
             self.abrir_lecciones
@@ -555,10 +906,6 @@ class MenuUsuario(QtWidgets.QWidget):
             self.abrir_personajes
         )
 
-    # ======================================================
-    # ABRIR PERSONAJES
-    # ======================================================
-
     def abrir_personajes(self):
         """
         Abre Personajes.py conservando los datos
@@ -566,17 +913,14 @@ class MenuUsuario(QtWidgets.QWidget):
         """
 
         try:
-            # Importación local para evitar
-            # importaciones circulares.
+
             from Personajes import Personajes
 
-            # La clase Personajes recuperará este jugador
-            # cuando FormTransicion cree la ventana.
+
             Personajes.jugador_pendiente = (
                 self.jugador
             )
 
-            # FormTransicion recibe la clase Personajes.
             self.transicion_personajes = (
                 FormTransicion(
                     self,
@@ -593,10 +937,6 @@ class MenuUsuario(QtWidgets.QWidget):
                 f"\n\nDetalles:\n{error}",
                 "error"
             )
-
-    # ======================================================
-    # ABRIR AJUSTES
-    # ======================================================
 
     def abrir_ajustes(self):
         """
@@ -620,7 +960,6 @@ class MenuUsuario(QtWidgets.QWidget):
                 desde_juego=False,
             )
 
-            # Libera la ventana cuando se cierre.
             self.form_ajustes.setAttribute(
                 QtCore.Qt.WidgetAttribute
                 .WA_DeleteOnClose,
@@ -631,8 +970,6 @@ class MenuUsuario(QtWidgets.QWidget):
                 self._limpiar_form_ajustes
             )
 
-            # Guardar la transición evita que Python
-            # la elimine antes de terminar.
             self.transicion_ajustes = (
                 FormTransicion(
                     self,
@@ -658,10 +995,6 @@ class MenuUsuario(QtWidgets.QWidget):
 
         self.form_ajustes = None
         self.transicion_ajustes = None
-
-    # ======================================================
-    # ABRIR LECCIONES
-    # ======================================================
 
     def abrir_lecciones(self):
         try:
@@ -694,8 +1027,6 @@ class MenuUsuario(QtWidgets.QWidget):
                             Lecciones()
                         )
 
-            # Guardamos la transición dentro de la
-            # instancia para evitar que se elimine.
             self.transicion_lecciones = (
                 FormTransicion(
                     self,
@@ -712,10 +1043,6 @@ class MenuUsuario(QtWidgets.QWidget):
                 f"\n\nDetalles:\n{error}",
                 "error"
             )
-
-    # ======================================================
-    # CERRAR SESIÓN
-    # ======================================================
 
     def cerrar_sesion(self):
         respuesta = Alertas.confirmar(
@@ -769,9 +1096,19 @@ class MenuUsuario(QtWidgets.QWidget):
                 "error"
             )
 
-    # ======================================================
-    # REDIMENSIONAR VENTANA
-    # ======================================================
+    def actualizar_tarjeta_personaje(self):
+        # Recupera los datos más recientes y vuelve a mostrar
+        # el nombre y la imagen del personaje.
+        self.actualizar_jugador_desde_bd()
+        self.mostrar_personaje_usuario()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+
+        QtCore.QTimer.singleShot(
+            0,
+            self.actualizar_tarjeta_personaje
+        )
 
     def resizeEvent(self, event):
         # Ajustar el fondo.
@@ -783,7 +1120,6 @@ class MenuUsuario(QtWidgets.QWidget):
 
             self.fondo.lower()
 
-        # Ajustar el frame principal.
         if hasattr(self, "MenuJugador"):
             self.MenuJugador.setGeometry(
                 0,
@@ -794,13 +1130,10 @@ class MenuUsuario(QtWidgets.QWidget):
 
             self.MenuJugador.raise_()
 
-        # Asegurar que el botón de personajes
-        # permanezca visible.
         if hasattr(self, "btn_personaje"):
             self.btn_personaje.show()
             self.btn_personaje.raise_()
 
-        # Mantener el logo sobre el fondo.
         if hasattr(self, "lbl_logo"):
             self.lbl_logo.raise_()
 
@@ -810,15 +1143,24 @@ class MenuUsuario(QtWidgets.QWidget):
         ):
             self.logo_reutilizable.actualizar()
 
-        # Escalar botones.
         if hasattr(
             self,
             "botones_responsivos"
         ):
             self.botones_responsivos.ajustar()
 
-        # Actualizar la geometría usada por
-        # las animaciones hover.
+        if hasattr(
+            self,
+            "pixmap_personaje_original"
+        ):
+            self.actualizar_imagen_personaje()
+
+        if self.lbl_nombre_personaje_actual is not None:
+            self.lbl_nombre_personaje_actual.raise_()
+
+        if self.lbl_imagen_personaje_actual is not None:
+            self.lbl_imagen_personaje_actual.raise_()
+
         if hasattr(self, "efectos_hover"):
             QtCore.QTimer.singleShot(
                 0,

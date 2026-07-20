@@ -5,21 +5,13 @@ from PyQt6 import QtCore, QtGui, QtWidgets, uic
 from quitar_barra import quitar
 from Transicion import FormTransicion
 from AjusteResponsive import BotonesResponsivos, ElementosResponsivos
-
-# ==========================================================
-# CONFIGURACIÓN GENERAL
-# ==========================================================
+from Alertas import Alertas
+from ConexionBD import ConexionBD
 
 ANCHO_BASE = 1366
 ALTO_BASE = 768
 
 VELOCIDAD_ANIMACION = 120  # Milisegundos entre cada frame
-
-
-# ==========================================================
-# FONDO RESPONSIVO
-# ==========================================================
-
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
         super().__init__(ventana)
@@ -57,11 +49,6 @@ class FondoImagen(QtWidgets.QLabel):
             ancho,
             alto
         )
-
-
-# ==========================================================
-# CREAR UNA VERSIÓN APAGADA DEL PERSONAJE
-# ==========================================================
 
 def crear_pixmap_apagado(pixmap):
     """
@@ -103,11 +90,6 @@ def crear_pixmap_apagado(pixmap):
             )
 
     return QtGui.QPixmap.fromImage(imagen)
-
-
-# ==========================================================
-# PERSONAJE PEQUEÑO SELECCIONABLE
-# ==========================================================
 
 class TarjetaPersonaje(QtWidgets.QLabel):
     seleccionado = QtCore.pyqtSignal(str)
@@ -196,11 +178,6 @@ class TarjetaPersonaje(QtWidgets.QLabel):
     def resizeEvent(self, evento):
         self.actualizar_imagen()
         super().resizeEvent(evento)
-
-
-# ==========================================================
-# EFECTO HOVER PARA VOLVER Y CONFIRMAR
-# ==========================================================
 
 class EfectoHoverBoton(QtCore.QObject):
     """
@@ -603,11 +580,6 @@ class EfectoHoverBoton(QtCore.QObject):
 
         return super().eventFilter(objeto, evento)
 
-
-# ==========================================================
-# FORMULARIO PRINCIPAL
-# ==========================================================
-
 class Personajes(QtWidgets.QWidget):
     """
     Esta variable permite conservar el jugador cuando
@@ -625,6 +597,9 @@ class Personajes(QtWidgets.QWidget):
         Personajes.jugador_pendiente = None
 
         self.jugador = jugador
+
+        # Conexión utilizada para consultar y guardar el personaje.
+        self.db = ConexionBD()
 
         self.personaje_actual = None
         self.indice_frame = 0
@@ -734,22 +709,6 @@ class Personajes(QtWidgets.QWidget):
         self.lbl_logo.setScaledContents(False)
         self.actualizar_logo()
         self.lbl_logo.raise_()
-
-        # --------------------------------------------------
-        # CONFIGURACIÓN DE LOS PERSONAJES
-        # --------------------------------------------------
-        #
-        # La estructura recomendada es:
-        #
-        # PROYECTO_EDUCORE/
-        # └── assets/
-        #     └── personajes/
-        #         ├── cerdo/
-        #         ├── gato/
-        #         └── pato/
-        #
-        # El código también busca en otras carpetas comunes.
-        # --------------------------------------------------
 
         self.raices_personajes = [
             proyecto_dir
@@ -869,10 +828,6 @@ class Personajes(QtWidgets.QWidget):
             self.cargar_todos_los_personajes()
         )
 
-        # --------------------------------------------------
-        # CUADRO GRANDE
-        # --------------------------------------------------
-
         self.vista_personaje = QtWidgets.QLabel(
             self
         )
@@ -889,10 +844,6 @@ class Personajes(QtWidgets.QWidget):
             }
             """
         )
-
-        # --------------------------------------------------
-        # TARJETAS PEQUEÑAS
-        # --------------------------------------------------
 
         self.tarjetas = {}
 
@@ -917,10 +868,6 @@ class Personajes(QtWidgets.QWidget):
 
             self.tarjetas[nombre] = tarjeta
 
-        # --------------------------------------------------
-        # TEMPORIZADOR DE LA ANIMACIÓN
-        # --------------------------------------------------
-
         self.timer_animacion = QtCore.QTimer(
             self
         )
@@ -932,10 +879,6 @@ class Personajes(QtWidgets.QWidget):
         self.timer_animacion.timeout.connect(
             self.actualizar_animacion
         )
-
-        # --------------------------------------------------
-        # BOTONES, ELEMENTOS RESPONSIVOS Y EVENTOS
-        # --------------------------------------------------
 
         self.configurar_botones_interfaz()
 
@@ -951,18 +894,10 @@ class Personajes(QtWidgets.QWidget):
             if boton is not None
         ]
 
-        # Las tarjetas se colocan exactamente sobre la zona de
-        # cada botón creada en Qt Designer. De esta forma ya no
-        # dependen de coordenadas manuales que se desalinean.
         self.preparar_elementos_dinamicos()
 
-        # Se crean grupos separados para la ventana principal y
-        # para el QFrame Personaje. Esto es importante porque las
-        # coordenadas de un control dentro de un QFrame son
-        # relativas al QFrame, no a toda la ventana.
         self.configurar_responsividad()
 
-        # El hover se aplica únicamente a Volver y Confirmar.
         self.efectos_hover = [
             EfectoHoverBoton(
                 boton=boton,
@@ -982,18 +917,19 @@ class Personajes(QtWidgets.QWidget):
         self.actualizar_responsividad()
         self.actualizar_capas()
 
-        # Estado inicial:
-        # todos apagados y cuadro grande vacío.
+        # Estado inicial: primero limpia la vista y luego carga
+        # el personaje que el usuario ya tenga guardado.
         self.vista_personaje.clear()
+
+        QtCore.QTimer.singleShot(
+            0,
+            self.cargar_personaje_guardado
+        )
 
         QtCore.QTimer.singleShot(
             0,
             self.actualizar_interfaz
         )
-
-    # ======================================================
-    # BUSCAR Y CARGAR SPRITES
-    # ======================================================
 
     def buscar_frame(
             self,
@@ -1081,10 +1017,6 @@ class Personajes(QtWidgets.QWidget):
 
         return personajes_cargados
 
-    # ======================================================
-    # CONFIGURACIÓN DE BOTONES DEL FORMULARIO
-    # ======================================================
-
     def configurar_botones_interfaz(self):
         nombres_volver = (
             "btn_volver",
@@ -1122,6 +1054,12 @@ class Personajes(QtWidgets.QWidget):
                 "Usa el objectName btn_confirmar."
             )
 
+        # Solo se puede confirmar después de seleccionar un personaje.
+        self.btn_confirmar.setEnabled(False)
+        self.btn_confirmar.clicked.connect(
+            self.confirmar_personaje
+        )
+
         self.btn_personaje1 = self.findChild(
             QtWidgets.QPushButton,
             "btn_personaje1"
@@ -1155,9 +1093,6 @@ class Personajes(QtWidgets.QWidget):
             self.volver_menu_usuario
         )
 
-        # Los botones transparentes del .ui también permiten
-        # seleccionar cada personaje. Las tarjetas continúan
-        # siendo seleccionables directamente.
         if self.btn_personaje1 is not None:
             self.btn_personaje1.clicked.connect(
                 lambda: self.seleccionar_personaje("cerdo")
@@ -1191,9 +1126,6 @@ class Personajes(QtWidgets.QWidget):
         ):
             contenedor_principal = self
 
-        # Primero intenta usar un QLabel de Qt Designer como
-        # referencia para el cuadro grande. Si no existe, usa la
-        # posición original de la clase anterior.
         nombres_vista = (
             "lbl_vista_personaje",
             "lbl_personaje_grande",
@@ -1362,9 +1294,6 @@ class Personajes(QtWidgets.QWidget):
             None
         )
 
-        # Primero se escalan los controles que son hijos directos
-        # de la ventana. El fondo se excluye porque siempre ocupa
-        # el tamaño completo.
         self._crear_grupo_responsivo(
             padre=self,
             ancho_base=self.ancho_base_ui,
@@ -1372,8 +1301,6 @@ class Personajes(QtWidgets.QWidget):
             excluir=(self.fondo,)
         )
 
-        # Después se escalan los controles internos del QFrame
-        # usando el tamaño original del propio QFrame.
         if (
                 isinstance(contenedor, QtWidgets.QWidget)
                 and contenedor is not self
@@ -1513,9 +1440,270 @@ class Personajes(QtWidgets.QWidget):
             self.clase_menu_destino
         )
 
-    # ======================================================
-    # SELECCIÓN DE PERSONAJES
-    # ======================================================
+    def obtener_id_jugador(self):
+        """Devuelve el ID del jugador de la sesión actual."""
+
+        if isinstance(self.jugador, dict):
+            return self.jugador.get("id_jugador")
+
+        return getattr(self.jugador, "id_jugador", None)
+
+    def actualizar_sesion_personaje(self, personaje):
+        """Actualiza el personaje también en la sesión de PyQt."""
+
+        if isinstance(self.jugador, dict):
+            self.jugador["personaje"] = personaje
+            return
+
+        if self.jugador is not None:
+            try:
+                setattr(self.jugador, "personaje", personaje)
+            except Exception:
+                pass
+
+    def cargar_personaje_guardado(self):
+        """
+        Consulta el jugador y selecciona automáticamente el personaje
+        que ya se encuentra guardado en la base de datos.
+        """
+
+        id_jugador = self.obtener_id_jugador()
+        personaje_guardado = ""
+
+        try:
+            if id_jugador is not None:
+                jugador_bd = self.db.buscar_jugador_por_id(
+                    id_jugador
+                )
+
+                if jugador_bd:
+                    personaje_guardado = str(
+                        jugador_bd.get("personaje") or ""
+                    ).strip().lower()
+
+                    if isinstance(self.jugador, dict):
+                        self.jugador.update(dict(jugador_bd))
+
+            elif isinstance(self.jugador, dict):
+                personaje_guardado = str(
+                    self.jugador.get("personaje") or ""
+                ).strip().lower()
+
+        except Exception as error:
+            print(
+                "No se pudo consultar el personaje guardado:",
+                error
+            )
+
+            if isinstance(self.jugador, dict):
+                personaje_guardado = str(
+                    self.jugador.get("personaje") or ""
+                ).strip().lower()
+
+        # Compatibilidad con nombres usados anteriormente.
+        equivalencias = {
+            "jugador": "cerdo",
+            "cerdito": "cerdo",
+            "banano": "gato",
+            "patito": "pato",
+        }
+
+        personaje_guardado = equivalencias.get(
+            personaje_guardado,
+            personaje_guardado
+        )
+
+        if personaje_guardado in self.frames_personajes:
+            self.seleccionar_personaje(
+                personaje_guardado
+            )
+        else:
+            self.personaje_actual = None
+            self.vista_personaje.clear()
+
+            if hasattr(self, "btn_confirmar"):
+                self.btn_confirmar.setEnabled(False)
+
+    def guardar_personaje_en_bd(
+            self,
+            id_jugador,
+            personaje
+    ):
+        """
+        Guarda únicamente el personaje. Usa actualizar_personaje()
+        cuando exista; de lo contrario mantiene compatibilidad con
+        actualizar_jugador() de la clase ConexionBD actual.
+        """
+
+        if hasattr(self.db, "actualizar_personaje"):
+            return bool(
+                self.db.actualizar_personaje(
+                    id_jugador,
+                    personaje
+                )
+            )
+
+        if not hasattr(self.db, "buscar_jugador_por_id"):
+            raise AttributeError(
+                "ConexionBD no tiene buscar_jugador_por_id()."
+            )
+
+        if not hasattr(self.db, "actualizar_jugador"):
+            raise AttributeError(
+                "ConexionBD no tiene actualizar_personaje() ni "
+                "actualizar_jugador()."
+            )
+
+        jugador_bd = self.db.buscar_jugador_por_id(
+            id_jugador
+        )
+
+        if not jugador_bd:
+            raise ValueError(
+                f"No existe el jugador con ID {id_jugador}."
+            )
+
+        personaje_anterior = str(
+            jugador_bd.get("personaje") or ""
+        ).strip().lower()
+
+        if personaje_anterior == personaje:
+            return True
+
+        actualizado = self.db.actualizar_jugador(
+            id_jugador,
+            jugador_bd.get("nombre"),
+            jugador_bd.get("correo"),
+            jugador_bd.get("contrasena"),
+            personaje,
+            jugador_bd.get("vidas"),
+            jugador_bd.get("estado"),
+        )
+
+        if actualizado:
+            return True
+
+        # Algunas implementaciones devuelven False cuando el UPDATE
+        # no reporta filas modificadas. Se vuelve a consultar para
+        # comprobar el valor realmente guardado.
+        comprobacion = self.db.buscar_jugador_por_id(
+            id_jugador
+        )
+
+        return bool(
+            comprobacion
+            and str(
+                comprobacion.get("personaje") or ""
+            ).strip().lower() == personaje
+        )
+
+    def confirmar_personaje(self):
+        """Guarda el personaje seleccionado para el usuario actual."""
+
+        if self.personaje_actual is None:
+            Alertas.mostrar(
+                self,
+                "Selecciona un personaje",
+                "Debes seleccionar un personaje antes de confirmar.",
+                "advertencia"
+            )
+            return
+
+        id_jugador = self.obtener_id_jugador()
+
+        if id_jugador is None:
+            Alertas.mostrar(
+                self,
+                "Sesión no encontrada",
+                "No se encontró el ID del jugador que inició sesión.",
+                "error"
+            )
+            return
+
+        respuesta = Alertas.confirmar(
+            self,
+            "Confirmar personaje",
+            (
+                "¿Deseas utilizar el personaje "
+                f"{self.personaje_actual.upper()}?"
+            ),
+            tipo="informacion",
+            texto_confirmar="CONFIRMAR",
+            texto_cancelar="CANCELAR"
+        )
+
+        if not respuesta:
+            return
+
+        try:
+            guardado = self.guardar_personaje_en_bd(
+                id_jugador,
+                self.personaje_actual
+            )
+
+            if not guardado:
+                detalle = getattr(
+                    self.db,
+                    "ultimo_error",
+                    "La base de datos no confirmó el cambio."
+                )
+
+                Alertas.mostrar(
+                    self,
+                    "No se pudo guardar",
+                    (
+                        "No se logró guardar el personaje."
+                        f"\n\nDetalles:\n{detalle}"
+                    ),
+                    "error"
+                )
+                return
+
+            self.actualizar_sesion_personaje(
+                self.personaje_actual
+            )
+
+            # El historial no debe impedir que se guarde el personaje.
+            if hasattr(self.db, "registrar_historial"):
+                try:
+                    self.db.registrar_historial(
+                        id_jugador,
+                        "Cambio de personaje",
+                        (
+                            "El jugador seleccionó el personaje "
+                            f"{self.personaje_actual}."
+                        )
+                    )
+                except Exception as error_historial:
+                    print(
+                        "No se pudo registrar el historial:",
+                        error_historial
+                    )
+
+            Alertas.mostrar(
+                self,
+                "Personaje guardado",
+                (
+                    "El personaje "
+                    f"{self.personaje_actual.upper()} "
+                    "se guardó correctamente."
+                ),
+                "exito"
+            )
+
+            # Vuelve al menú con el diccionario de sesión actualizado.
+            self.volver_menu_usuario()
+
+        except Exception as error:
+            Alertas.mostrar(
+                self,
+                "Error de base de datos",
+                (
+                    "No se pudo guardar el personaje."
+                    f"\n\nDetalles:\n{error}"
+                ),
+                "error"
+            )
 
     def seleccionar_personaje(self, nombre):
         if nombre not in self.frames_personajes:
@@ -1523,6 +1711,9 @@ class Personajes(QtWidgets.QWidget):
 
         self.personaje_actual = nombre
         self.indice_frame = 0
+
+        if hasattr(self, "btn_confirmar"):
+            self.btn_confirmar.setEnabled(True)
 
         # El seleccionado recupera el color.
         # Los demás vuelven a estar apagados.
@@ -1548,10 +1739,6 @@ class Personajes(QtWidgets.QWidget):
         print(
             f"Personaje seleccionado: {nombre}"
         )
-
-    # ======================================================
-    # ANIMACIÓN DEL CUADRO GRANDE
-    # ======================================================
 
     def actualizar_animacion(self):
         if self.personaje_actual is None:
@@ -1607,10 +1794,6 @@ class Personajes(QtWidgets.QWidget):
             pixmap_escalado
         )
 
-    # ======================================================
-    # ACTUALIZACIÓN DE CAPAS
-    # ======================================================
-
     def actualizar_capas(self):
         if hasattr(self, "fondo"):
             self.fondo.lower()
@@ -1629,10 +1812,6 @@ class Personajes(QtWidgets.QWidget):
 
         for efecto in getattr(self, "efectos_hover", []):
             efecto.colocar_capas_correctamente()
-
-    # ======================================================
-    # EVENTOS DEL FORMULARIO
-    # ======================================================
 
     def resizeEvent(self, evento):
         if hasattr(self, "fondo"):
@@ -1684,11 +1863,6 @@ class Personajes(QtWidgets.QWidget):
             100,
             self.actualizar_interfaz
         )
-
-
-# ==========================================================
-# EJECUTAR PERSONAJES.PY DIRECTAMENTE
-# ==========================================================
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

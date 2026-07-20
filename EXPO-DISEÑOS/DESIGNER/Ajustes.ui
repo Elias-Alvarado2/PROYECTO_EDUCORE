@@ -220,14 +220,30 @@ QPushButton#btn_muteefectos:checked {
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>900</x>
-      <y>500</y>
-      <width>49</width>
-      <height>16</height>
+      <x>890</x>
+      <y>480</y>
+      <width>121</width>
+      <height>41</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Segoe UI Black</family>
+      <pointsize>14</pointsize>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="layoutDirection">
+     <enum>Qt::LayoutDirection::LeftToRight</enum>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: black;</string>
     </property>
     <property name="text">
      <string>TextLabel</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignmentFlag::AlignCenter</set>
     </property>
    </widget>
   </widget>
