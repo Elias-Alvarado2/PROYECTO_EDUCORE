@@ -274,6 +274,14 @@ class MenuUsuario(QtWidgets.QWidget):
         # personaje seleccionado por el usuario.
         self.base_dir = BASE_DIR
         self.proyecto_dir = PROYECTO_DIR
+
+        # Fuente usada para el nombre del personaje.
+        # Primero intenta cargar Pixel Operator Bold desde
+        # el proyecto y después busca la fuente instalada.
+        self.familia_fuente_personaje = (
+            self.cargar_fuente_pixel_operator()
+        )
+
         self.pixmap_personaje_original = None
         self.lbl_nombre_personaje_actual = None
         self.lbl_imagen_personaje_actual = None
@@ -462,6 +470,167 @@ class MenuUsuario(QtWidgets.QWidget):
 
         return None
 
+    def cargar_fuente_pixel_operator(self):
+        """
+        Carga Pixel Operator Bold desde una carpeta de fuentes
+        del proyecto. Si no encuentra el archivo, utiliza la
+        fuente instalada en Windows.
+
+        Nombres de archivo admitidos:
+            PixelOperator-Bold.ttf
+            PixelOperatorBold.ttf
+            Pixel Operator Bold.ttf
+            Pixel Operator - Bold.ttf
+            pixel_operator_bold.ttf
+        """
+
+        nombres_archivo = (
+            "PixelOperator-Bold.ttf",
+            "PixelOperatorBold.ttf",
+            "Pixel Operator Bold.ttf",
+            "Pixel Operator - Bold.ttf",
+            "pixel_operator_bold.ttf",
+            "PixelOperator-Bold.otf",
+            "Pixel Operator Bold.otf",
+        )
+
+        carpetas_fuentes = (
+            self.proyecto_dir / "assets" / "FUENTES",
+            self.proyecto_dir / "assets" / "fuentes",
+            self.proyecto_dir / "ASSETS" / "FUENTES",
+            self.proyecto_dir / "EXPO-DISEÑOS" / "FUENTES",
+            self.proyecto_dir / "EXPO-DISEÑOS" / "Fuentes",
+        )
+
+        # Primero intenta cargar el archivo desde el proyecto.
+        for carpeta in carpetas_fuentes:
+            for nombre_archivo in nombres_archivo:
+                ruta_fuente = carpeta / nombre_archivo
+
+                if not ruta_fuente.exists():
+                    continue
+
+                id_fuente = (
+                    QtGui.QFontDatabase.addApplicationFont(
+                        str(ruta_fuente)
+                    )
+                )
+
+                if id_fuente == -1:
+                    continue
+
+                familias = (
+                    QtGui.QFontDatabase.applicationFontFamilies(
+                        id_fuente
+                    )
+                )
+
+                if familias:
+                    familia = familias[0]
+
+                    print(
+                        "Fuente Pixel Operator cargada desde:",
+                        ruta_fuente
+                    )
+                    print(
+                        "Familia reconocida por PyQt6:",
+                        familia
+                    )
+
+                    return familia
+
+        # Si no existe el archivo, busca la fuente instalada.
+        familias_instaladas = (
+            QtGui.QFontDatabase.families()
+        )
+
+        nombres_preferidos = (
+            "Pixel Operator",
+            "Pixel Operator Bold",
+            "Pixel Operator - Bold",
+            "PixelOperator",
+            "PixelOperator-Bold",
+        )
+
+        # Coincidencia exacta.
+        for nombre_preferido in nombres_preferidos:
+            for familia in familias_instaladas:
+                if (
+                    familia.casefold()
+                    == nombre_preferido.casefold()
+                ):
+                    print(
+                        "Fuente Pixel Operator instalada:",
+                        familia
+                    )
+                    return familia
+
+        # Coincidencia parcial.
+        for familia in familias_instaladas:
+            nombre_normalizado = familia.casefold()
+
+            if (
+                "pixel" in nombre_normalizado
+                and "operator" in nombre_normalizado
+            ):
+                print(
+                    "Fuente Pixel Operator encontrada:",
+                    familia
+                )
+                return familia
+
+        print(
+            "ADVERTENCIA: Pixel Operator Bold no está instalada "
+            "y tampoco se encontró su archivo en assets/FUENTES."
+        )
+
+        return "Arial"
+
+    def crear_fuente_nombre_personaje(self):
+        """
+        Crea la fuente Pixel Operator Bold con un tamaño
+        proporcional al alto del QLabel.
+        """
+
+        etiqueta = self.lbl_nombre_personaje_actual
+
+        if etiqueta is None:
+            return QtGui.QFont(
+                self.familia_fuente_personaje
+            )
+
+        tamano_pixel = max(
+            24,
+            min(
+                42,
+                round(
+                    etiqueta.height() * 0.58
+                )
+            )
+        )
+
+        fuente = QtGui.QFont(
+            self.familia_fuente_personaje
+        )
+
+        # Algunos archivos registran la familia como
+        # "Pixel Operator" y el estilo aparte como "Bold".
+        fuente.setStyleName("Bold")
+
+        fuente.setWeight(
+            QtGui.QFont.Weight.Bold
+        )
+
+        fuente.setBold(True)
+
+        # El tamaño en píxeles mantiene una apariencia más
+        # consistente para una tipografía pixel art.
+        fuente.setPixelSize(
+            tamano_pixel
+        )
+
+        return fuente
+
     def configurar_vista_personaje(self):
         """
         Localiza y configura los QLabel creados en Qt Designer.
@@ -517,8 +686,6 @@ class MenuUsuario(QtWidgets.QWidget):
                     color: #000000;
                     background: transparent;
                     border: none;
-                    font-size: 28px;
-                    font-weight: 900;
                 }
                 """
             )
@@ -583,22 +750,13 @@ class MenuUsuario(QtWidgets.QWidget):
                 max(50, geometria_nombre.height())
             )
 
-        # Ajusta el tamaño de fuente según el tamaño del label.
-        fuente = etiqueta_nombre.font()
-        fuente.setBold(True)
+        # Aplica Pixel Operator Bold. Se crea nuevamente
+        # durante cada resize para conservar el tamaño correcto.
+        fuente = self.crear_fuente_nombre_personaje()
 
-        tamano = max(
-            18,
-            min(
-                30,
-                round(
-                    etiqueta_nombre.height() * 0.46
-                )
-            )
+        etiqueta_nombre.setFont(
+            fuente
         )
-
-        fuente.setPointSize(tamano)
-        etiqueta_nombre.setFont(fuente)
 
     def obtener_id_jugador(self):
         """Obtiene el ID del jugador de la sesión actual."""
