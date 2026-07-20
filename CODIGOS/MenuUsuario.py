@@ -58,6 +58,65 @@ class FondoImagen(QtWidgets.QLabel):
         )
 
 
+def recortar_pixmap_transparente(
+    pixmap: QtGui.QPixmap,
+    margen: int = 2,
+    alpha_minimo: int = 5,
+) -> QtGui.QPixmap:
+    """
+    Recorta el espacio transparente alrededor del sprite.
+
+    Esto permite que CERDO, GATO y PATO se centren por su
+    contenido visible y no por el tamaño completo del archivo.
+    """
+
+    if pixmap is None or pixmap.isNull():
+        return pixmap
+
+    imagen = pixmap.toImage().convertToFormat(
+        QtGui.QImage.Format.Format_ARGB32
+    )
+
+    ancho = imagen.width()
+    alto = imagen.height()
+
+    minimo_x = ancho
+    minimo_y = alto
+    maximo_x = -1
+    maximo_y = -1
+
+    for y in range(alto):
+        for x in range(ancho):
+            if imagen.pixelColor(x, y).alpha() < alpha_minimo:
+                continue
+
+            minimo_x = min(minimo_x, x)
+            minimo_y = min(minimo_y, y)
+            maximo_x = max(maximo_x, x)
+            maximo_y = max(maximo_y, y)
+
+    # La imagen es completamente transparente.
+    if maximo_x < minimo_x or maximo_y < minimo_y:
+        return pixmap
+
+    margen = max(0, int(margen))
+
+    izquierda = max(0, minimo_x - margen)
+    arriba = max(0, minimo_y - margen)
+    derecha = min(ancho - 1, maximo_x + margen)
+    abajo = min(alto - 1, maximo_y + margen)
+
+    return pixmap.copy(
+        QtCore.QRect(
+            izquierda,
+            arriba,
+            derecha - izquierda + 1,
+            abajo - arriba + 1,
+        )
+    )
+
+
+
 class MarcoNombrePersonaje(QtWidgets.QWidget):
     """
     Dibuja un cuadro pixel art detrás del nombre del personaje.
@@ -175,7 +234,8 @@ class MarcoNombrePersonaje(QtWidgets.QWidget):
             paso
         )
 
-        pintor.setBrush(QtGui.QColor('#ff9f91'))
+        # Borde principal azul marino de EduCore.
+        pintor.setBrush(QtGui.QColor("#082B63"))
         pintor.drawPolygon(poligono_exterior)
 
         margen_medio = paso
@@ -191,7 +251,8 @@ class MarcoNombrePersonaje(QtWidgets.QWidget):
             max(2, paso - 1)
         )
 
-        pintor.setBrush(QtGui.QColor('#ffd2c0'))
+        # Segunda capa azul del logotipo.
+        pintor.setBrush(QtGui.QColor("#4D68A8"))
         pintor.drawPolygon(poligono_medio)
 
         margen_interior = paso * 2
@@ -207,23 +268,42 @@ class MarcoNombrePersonaje(QtWidgets.QWidget):
             max(2, paso - 1)
         )
 
-        pintor.setBrush(QtGui.QColor('#ffe9c8'))
+        # Interior crema para conservar buena legibilidad.
+        pintor.setBrush(QtGui.QColor("#FFF0D8"))
         pintor.drawPolygon(poligono_interior)
 
-        # Brillos pixelados similares a la referencia.
-        pintor.setBrush(QtGui.QColor(255, 239, 211, 190))
+        # Detalles pixelados con los colores del logo EduCore.
+        ancho_acento = max(paso * 5, ancho // 9)
+        alto_acento = max(paso, 3)
+
+        # Naranja, lado izquierdo.
+        pintor.setBrush(QtGui.QColor("#FF7A1A"))
         pintor.drawRect(
             paso * 5,
             paso * 3,
-            max(1, ancho // 3),
-            paso
+            ancho_acento,
+            alto_acento,
+        )
+        pintor.drawRect(
+            paso * 3,
+            paso * 5,
+            alto_acento,
+            max(paso * 3, alto // 4),
         )
 
+        # Turquesa, lado derecho.
+        pintor.setBrush(QtGui.QColor("#18A89D"))
         pintor.drawRect(
-            paso * 3,
-            paso * 5,
-            paso,
-            max(1, alto // 3)
+            max(0, ancho - paso * 5 - ancho_acento),
+            max(0, alto - paso * 4),
+            ancho_acento,
+            alto_acento,
+        )
+        pintor.drawRect(
+            max(0, ancho - paso * 4),
+            max(0, alto - paso * 5 - max(paso * 3, alto // 4)),
+            alto_acento,
+            max(paso * 3, alto // 4),
         )
 
         pintor.end()
@@ -436,11 +516,11 @@ class MenuUsuario(QtWidgets.QWidget):
         self.form_ajustes = None
         self.transicion_ajustes = None
 
+        # Referencias de la ventana de perfil.
         self.form_perfil = None
         self.transicion_perfil = None
 
         self.transicion_personajes = None
-
 
         BASE_DIR = Path(__file__).resolve().parent
         PROYECTO_DIR = BASE_DIR.parent
@@ -873,7 +953,7 @@ class MenuUsuario(QtWidgets.QWidget):
             self.lbl_nombre_personaje_actual.setStyleSheet(
                 """
                 QLabel {
-                    color: #000000;
+                    color: #082B63;
                     background-color: transparent;
                     border: none;
                 }
@@ -914,6 +994,13 @@ class MenuUsuario(QtWidgets.QWidget):
 
             self.lbl_imagen_personaje_actual.setScaledContents(
                 False
+            )
+
+            self.lbl_imagen_personaje_actual.setContentsMargins(
+                0,
+                0,
+                0,
+                0
             )
 
             self.lbl_imagen_personaje_actual.setStyleSheet(
@@ -1046,10 +1133,21 @@ class MenuUsuario(QtWidgets.QWidget):
         etiqueta_nombre.raise_()
 
     def obtener_id_jugador(self):
-        """Obtiene el ID del jugador de la sesión actual."""
+        """
+        Obtiene el ID del jugador de la sesión actual.
+
+        Admite que la sesión llegue como diccionario, número
+        entero u objeto con el atributo id_jugador.
+        """
+
+        if self.jugador is None:
+            return None
 
         if isinstance(self.jugador, dict):
             return self.jugador.get("id_jugador")
+
+        if isinstance(self.jugador, int):
+            return self.jugador
 
         return getattr(
             self.jugador,
@@ -1408,8 +1506,15 @@ class MenuUsuario(QtWidgets.QWidget):
             )
 
             if not pixmap.isNull():
+                # Elimina márgenes transparentes desiguales.
+                # Así todos los personajes quedan centrados.
+                pixmap_centrado = recortar_pixmap_transparente(
+                    pixmap,
+                    margen=2,
+                )
+
                 frames_cargados.append(
-                    pixmap
+                    pixmap_centrado
                 )
 
         return frames_cargados
@@ -1441,34 +1546,53 @@ class MenuUsuario(QtWidgets.QWidget):
 
     def actualizar_imagen_personaje(self):
         """
-        Escala el frame actual sin deformarlo y lo mantiene
-        centrado dentro de lbl_imagenpersonaje.
+        Escala el frame sin deformarlo y centra el contenido
+        visible de CERDO, GATO y PATO dentro del QLabel.
         """
 
-        if self.lbl_imagen_personaje_actual is None:
+        etiqueta = self.lbl_imagen_personaje_actual
+
+        if etiqueta is None:
             return
 
         if self.pixmap_personaje_original is None:
+            etiqueta.clear()
             return
 
-        ancho = self.lbl_imagen_personaje_actual.width()
-        alto = self.lbl_imagen_personaje_actual.height()
+        ancho = etiqueta.width()
+        alto = etiqueta.height()
 
         if ancho <= 0 or alto <= 0:
             return
 
-        pixmap_escalado = (
-            self.pixmap_personaje_original.scaled(
-                max(1, ancho - 12),
-                max(1, alto - 12),
-                QtCore.Qt.AspectRatioMode.KeepAspectRatio,
-                QtCore.Qt.TransformationMode.FastTransformation
-            )
+        pixmap_centrado = recortar_pixmap_transparente(
+            self.pixmap_personaje_original,
+            margen=2,
         )
 
-        self.lbl_imagen_personaje_actual.setPixmap(
-            pixmap_escalado
+        margen_horizontal = max(
+            8,
+            round(ancho * 0.04),
         )
+
+        margen_vertical = max(
+            8,
+            round(alto * 0.04),
+        )
+
+        pixmap_escalado = pixmap_centrado.scaled(
+            max(1, ancho - margen_horizontal * 2),
+            max(1, alto - margen_vertical * 2),
+            QtCore.Qt.AspectRatioMode.KeepAspectRatio,
+            QtCore.Qt.TransformationMode.FastTransformation,
+        )
+
+        etiqueta.setAlignment(
+            QtCore.Qt.AlignmentFlag.AlignCenter
+        )
+        etiqueta.setScaledContents(False)
+        etiqueta.setContentsMargins(0, 0, 0, 0)
+        etiqueta.setPixmap(pixmap_escalado)
 
     def corregir_rutas_stylesheet(
         self,
@@ -1601,52 +1725,22 @@ class MenuUsuario(QtWidgets.QWidget):
                 "error"
             )
 
-    # ======================================================
-    # OBTENER ID DEL JUGADOR
-    # ======================================================
-
-    def obtener_id_jugador(self):
-        """
-        Obtiene el id del jugador que inició sesión.
-        """
-
-        if self.jugador is None:
-            return None
-
-        # Normalmente validar_jugador devuelve un diccionario.
-        if isinstance(self.jugador, dict):
-            return self.jugador.get("id_jugador")
-
-        # Por si se recibió directamente el número.
-        if isinstance(self.jugador, int):
-            return self.jugador
-
-        # Por si jugador fuera un objeto.
-        if hasattr(self.jugador, "id_jugador"):
-            return self.jugador.id_jugador
-
-        return None
-
-    # ======================================================
-    # ABRIR PERFIL
-    # ======================================================
-
     def abrir_perfil(self):
         """
         Abre Perfil.py con la información del jugador actual.
+        Evita crear más de una ventana de perfil.
         """
 
-        # Evitar abrir dos ventanas de perfil.
         if (
-                self.form_perfil is not None
-                and self.form_perfil.isVisible()
+            self.form_perfil is not None
+            and self.form_perfil.isVisible()
         ):
             self.form_perfil.raise_()
             self.form_perfil.activateWindow()
             return
 
         try:
-            # Importación local para evitar ciclos.
+            # Importación local para evitar importaciones circulares.
             from Perfil import PerfilWindow
 
             id_jugador = self.obtener_id_jugador()
@@ -1659,34 +1753,37 @@ class MenuUsuario(QtWidgets.QWidget):
 
             self.form_perfil = PerfilWindow(
                 id_jugador=id_jugador,
-                formulario_anterior=self
+                formulario_anterior=self,
             )
 
             self.form_perfil.setAttribute(
                 QtCore.Qt.WidgetAttribute.WA_DeleteOnClose,
-                True
+                True,
             )
 
             self.form_perfil.destroyed.connect(
                 self._limpiar_form_perfil
             )
 
-            # Abrir con la misma transición que Ajustes.
             self.transicion_perfil = FormTransicion(
                 self,
-                self.form_perfil
+                self.form_perfil,
             )
 
         except Exception as error:
+            # Limpia referencias si la apertura falló.
+            self.form_perfil = None
+            self.transicion_perfil = None
+
             Alertas.mostrar(
                 self,
                 "Error al abrir perfil",
                 "No se pudo abrir la ventana de perfil."
                 f"\n\nDetalles:\n{error}",
-                "error"
+                "error",
             )
 
-    def _limpiar_form_perfil(self, *_):
+    def _limpiar_form_perfil(self, *_args):
         """
         Limpia las referencias cuando Perfil se cierra.
         """
