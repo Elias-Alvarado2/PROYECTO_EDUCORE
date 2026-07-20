@@ -166,9 +166,9 @@
     <property name="geometry">
      <rect>
       <x>1420</x>
-      <y>430</y>
+      <y>398</y>
       <width>261</width>
-      <height>231</height>
+      <height>240</height>
      </rect>
     </property>
     <property name="text">
@@ -178,14 +178,26 @@
    <widget class="QLabel" name="lbl_nombrepersonaje">
     <property name="geometry">
      <rect>
-      <x>1510</x>
+      <x>1475</x>
       <y>340</y>
       <width>151</width>
       <height>31</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <pointsize>14</pointsize>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color:black;</string>
+    </property>
     <property name="text">
-     <string/>
+     <string>A</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignmentFlag::AlignCenter</set>
     </property>
    </widget>
    <widget class="QLabel" name="lbl_logo">

@@ -217,11 +217,40 @@ QPushButton#btn_muteefectos:checked {
      <bool>true</bool>
     </property>
    </widget>
-   <widget class="QLabel" name="label">
+   <widget class="QLabel" name="lbl_vol_sonido">
     <property name="geometry">
      <rect>
       <x>890</x>
-      <y>480</y>
+      <y>479</y>
+      <width>121</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Segoe UI Black</family>
+      <pointsize>14</pointsize>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="layoutDirection">
+     <enum>Qt::LayoutDirection::LeftToRight</enum>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: black;</string>
+    </property>
+    <property name="text">
+     <string>TextLabel</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignmentFlag::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lbl_vol_efectos">
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>666</y>
       <width>121</width>
       <height>41</height>
      </rect>
