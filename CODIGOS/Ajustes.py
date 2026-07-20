@@ -822,6 +822,22 @@ class Ajustes(QtWidgets.QWidget):
                 self.actualizar_controles_audio
             )
 
+        if hasattr(
+            gestor_audio,
+            "volumen_efectos_cambiado",
+        ):
+            gestor_audio.volumen_efectos_cambiado.connect(
+                self.actualizar_controles_audio
+            )
+
+        if hasattr(
+            gestor_audio,
+            "silencio_efectos_cambiado",
+        ):
+            gestor_audio.silencio_efectos_cambiado.connect(
+                self.actualizar_controles_audio
+            )
+
     # =========================================================
     # CAMBIAR VOLUMEN GENERAL
     # =========================================================
@@ -1108,6 +1124,64 @@ class Ajustes(QtWidgets.QWidget):
             self.btn_silenciar.setAccessibleName(
                 "Silenciar sonido"
             )
+
+        porcentaje_efectos = int(
+            getattr(
+                gestor_audio,
+                "porcentaje_efectos_actual",
+                self.hsz_efectos.value(),
+            )
+        )
+
+        porcentaje_efectos = max(
+            0,
+            min(100, porcentaje_efectos),
+        )
+
+        self._volumen_efectos = int(
+            getattr(
+                gestor_audio,
+                "volumen_efectos",
+                porcentaje_efectos,
+            )
+        )
+
+        self._efectos_silenciados = bool(
+            getattr(
+                gestor_audio,
+                "efectos_silenciados",
+                porcentaje_efectos <= 0,
+            )
+        )
+
+        ultimo_volumen_efectos = int(
+            getattr(
+                gestor_audio,
+                "ultimo_volumen_efectos",
+                self._volumen_efectos,
+            )
+        )
+
+        if ultimo_volumen_efectos > 0:
+            self._ultimo_volumen_efectos = ultimo_volumen_efectos
+
+        bloqueador_efectos = QtCore.QSignalBlocker(
+            self.hsz_efectos
+        )
+
+        self.hsz_efectos.setValue(
+            porcentaje_efectos
+        )
+
+        del bloqueador_efectos
+
+        if self._efectos_silenciados or porcentaje_efectos <= 0:
+            texto_efectos = "Activar efectos"
+        else:
+            texto_efectos = "Silenciar efectos"
+
+        self.btn_muteefectos.setToolTip(texto_efectos)
+        self.btn_muteefectos.setAccessibleName(texto_efectos)
 
         self._actualizar_iconos_audio()
 

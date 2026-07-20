@@ -24,7 +24,7 @@ class NivelMySQL06(JuegoBase):
     AJUSTE_Y_SPRITE_SUELO = 0
     AJUSTE_Y_SPRITE_PLANTAS = 0
     CARTEL_FINAL = {
-    "x": 8350,
+    "x": 9300,
     "ajuste_y": -10,
     "tamano":0.40,
     "mostrar_bloqueado": True,
@@ -543,7 +543,675 @@ class NivelMySQL06(JuegoBase):
     )
 
     PRACTICAS = (
-      
+
+        # =========================================================
+        # EJERCICIO 1 - VERDADERO O FALSO
+        # =========================================================
+        {
+            "x": 750,
+            "y": 470,
+            "nombre": "prueba_final_mysql_01",
+            "desbloqueada": True,
+
+            "pregunta": (
+                "La consulta USE escuela; selecciona la base de datos "
+                "llamada escuela."
+            ),
+
+            "respuesta_correcta": True,
+        },
+
+
+        # =========================================================
+        # EJERCICIO 2 - OPCIÓN MÚLTIPLE
+        # =========================================================
+        {
+            "x": 1300,
+            "y": 420,
+            "tipo": "eleccion_multiple",
+            "nombre": "prueba_final_mysql_02",
+            "desbloqueada": True,
+
+            "pregunta": (
+                "¿Cuál consulta crea una base de datos llamada tienda?"
+            ),
+
+            "opciones": [
+                "CREATE DATABASE tienda;",
+                "CREATE TABLE tienda;",
+                "USE DATABASE tienda;",
+            ],
+
+            "respuesta_correcta": 1,
+        },
+
+
+        # =========================================================
+        # EJERCICIO 3 - COMPLETAR CÓDIGO
+        # =========================================================
+        {
+            "x": 1850,
+            "y": None,
+            "tipo": "codigo",
+            "nombre": "prueba_final_mysql_03",
+            "desbloqueada": True,
+
+            "pregunta": (
+                "Completa el código para crear y seleccionar "
+                "la base de datos biblioteca."
+            ),
+
+            "respuestas": {
+                "crear": "CREATE",
+                "usar": "USE",
+            },
+
+            "codigo": [
+                {
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"hueco": "crear"},
+                        {"texto": " DATABASE biblioteca;"},
+                    ],
+                },
+                {
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"hueco": "usar"},
+                        {"texto": " biblioteca;"},
+                    ],
+                },
+            ],
+
+            "opciones": [
+                "CREATE",
+                "USE",
+                "SELECT",
+                "TABLE",
+                "INSERT",
+            ],
+        },
+
+
+        # =========================================================
+        # EJERCICIO 4 - VERDADERO O FALSO
+        # =========================================================
+        {
+            "x": 2400,
+            "y": 350,
+            "nombre": "prueba_final_mysql_04",
+            "desbloqueada": True,
+
+            "pregunta": (
+                "VARCHAR se utiliza para guardar textos como nombres, "
+                "correos y direcciones."
+            ),
+
+            "respuesta_correcta": True,
+        },
+
+
+        # =========================================================
+        # EJERCICIO 5 - OPCIÓN MÚLTIPLE
+        # =========================================================
+        {
+            "x": 2950,
+            "y": 350,
+            "tipo": "eleccion_multiple",
+            "nombre": "prueba_final_mysql_05",
+            "desbloqueada": True,
+
+            "pregunta": (
+                "¿Qué tipo de dato es más adecuado para guardar "
+                "un precio como 49.99?"
+            ),
+
+            "opciones": [
+                "VARCHAR(20)",
+                "DECIMAL(10,2)",
+                "DATE",
+            ],
+
+            "respuesta_correcta": 2,
+        },
+
+
+        # =========================================================
+        # EJERCICIO 6 - COMPLETAR CÓDIGO
+        # =========================================================
+        {
+            "x": 3500,
+            "y": None,
+            "tipo": "codigo",
+            "nombre": "prueba_final_mysql_06",
+            "desbloqueada": True,
+
+            "pregunta": (
+                "Completa el código para crear la tabla libros."
+            ),
+
+            "respuestas": {
+                "clave": "PRIMARY KEY",
+                "incremento": "AUTO_INCREMENT",
+                "texto": "VARCHAR(100)",
+                "precio": "DECIMAL(10,2)",
+            },
+
+            "codigo": [
+                {
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"texto": "CREATE TABLE libros ("},
+                    ],
+                },
+                {
+                    "indentacion": 1,
+                    "segmentos": [
+                        {"texto": "id_libro INT "},
+                        {"hueco": "clave"},
+                        {"texto": " "},
+                        {"hueco": "incremento"},
+                        {"texto": ","},
+                    ],
+                },
+                {
+                    "indentacion": 1,
+                    "segmentos": [
+                        {"texto": "titulo "},
+                        {"hueco": "texto"},
+                        {"texto": " NOT NULL,"},
+                    ],
+                },
+                {
+                    "indentacion": 1,
+                    "segmentos": [
+                        {"texto": "precio "},
+                        {"hueco": "precio"},
+                    ],
+                },
+                {
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"texto": ");"},
+                    ],
+                },
+            ],
+
+            "opciones": [
+                "PRIMARY KEY",
+                "AUTO_INCREMENT",
+                "VARCHAR(100)",
+                "DECIMAL(10,2)",
+                "VALUES",
+                "WHERE",
+            ],
+        },
+
+
+        # =========================================================
+        # EJERCICIO 7 - VERDADERO O FALSO
+        # =========================================================
+        {
+            "x": 4050,
+            "y": 470,
+            "nombre": "prueba_final_mysql_07",
+            "desbloqueada": True,
+
+            "pregunta": (
+                "Una columna declarada como PRIMARY KEY puede tener "
+                "valores repetidos."
+            ),
+
+            "respuesta_correcta": False,
+        },
+
+
+        # =========================================================
+        # EJERCICIO 8 - OPCIÓN MÚLTIPLE
+        # =========================================================
+        {
+            "x": 4650,
+            "y": 470,
+            "tipo": "eleccion_multiple",
+            "nombre": "prueba_final_mysql_08",
+            "desbloqueada": True,
+
+            "pregunta": (
+                "¿Cuál consulta inserta correctamente un estudiante "
+                "llamado Ana con 16 años?"
+            ),
+
+            "opciones": [
+                (
+                    "INSERT INTO estudiantes (nombre, edad) "
+                    "VALUES ('Ana', 16);"
+                ),
+                (
+                    "INSERT estudiantes VALUES "
+                    "nombre = 'Ana', edad = 16;"
+                ),
+                (
+                    "ADD INTO estudiantes "
+                    "('Ana', 16);"
+                ),
+            ],
+
+            "respuesta_correcta": 1,
+        },
+
+
+        # =========================================================
+        # EJERCICIO 9 - COMPLETAR CÓDIGO
+        # =========================================================
+        {
+            "x": 5150,
+            "y": 390,
+            "tipo": "codigo",
+            "nombre": "prueba_final_mysql_09",
+            "desbloqueada": True,
+
+            "pregunta": (
+                "Completa la consulta para insertar el producto "
+                "Teclado con precio 150.50."
+            ),
+
+            "respuestas": {
+                "insertar": "INSERT INTO",
+                "valores": "VALUES",
+            },
+
+            "codigo": [
+                {
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"hueco": "insertar"},
+                        {"texto": " productos (nombre, precio)"},
+                    ],
+                },
+                {
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"hueco": "valores"},
+                        {"texto": " ('Teclado', 150.50);"},
+                    ],
+                },
+            ],
+
+            "opciones": [
+                "INSERT INTO",
+                "VALUES",
+                "SELECT",
+                "WHERE",
+                "UPDATE",
+                "CREATE",
+            ],
+        },
+
+
+        # =========================================================
+        # EJERCICIO 10 - VERDADERO O FALSO
+        # =========================================================
+        {
+            "x": 5700,
+            "y": 310,
+            "nombre": "prueba_final_mysql_10",
+            "desbloqueada": True,
+
+            "pregunta": (
+                "La cláusula WHERE permite seleccionar únicamente "
+                "los registros que cumplen una condición."
+            ),
+
+            "respuesta_correcta": True,
+        },
+
+
+        # =========================================================
+        # EJERCICIO 11 - OPCIÓN MÚLTIPLE
+        # =========================================================
+        {
+            "x": 6250,
+            "y": 390,
+            "tipo": "eleccion_multiple",
+            "nombre": "prueba_final_mysql_11",
+            "desbloqueada": True,
+
+            "pregunta": (
+                "¿Cuál consulta muestra estudiantes de 18 años o más "
+                "que además tengan estado Activo?"
+            ),
+
+            "opciones": [
+                (
+                    "SELECT * FROM estudiantes "
+                    "WHERE edad >= 18 AND estado = 'Activo';"
+                ),
+                (
+                    "SELECT * FROM estudiantes "
+                    "WHERE edad >= 18 OR estado = 'Activo';"
+                ),
+                (
+                    "SELECT * FROM estudiantes "
+                    "edad >= 18 AND estado = 'Activo';"
+                ),
+            ],
+
+            "respuesta_correcta": 1,
+        },
+
+
+        # =========================================================
+        # EJERCICIO 12 - COMPLETAR CÓDIGO
+        # =========================================================
+        {
+            "x": 6800,
+            "y": None,
+            "tipo": "codigo",
+            "nombre": "prueba_final_mysql_12",
+            "desbloqueada": True,
+
+            "pregunta": (
+                "Completa la consulta para mostrar productos con precio "
+                "menor que 100 o existencia igual a 0."
+            ),
+
+            "respuestas": {
+                "condicion": "WHERE",
+                "comparador": "<",
+                "operador": "OR",
+            },
+
+            "codigo": [
+                {
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"texto": "SELECT * FROM productos"},
+                    ],
+                },
+                {
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"hueco": "condicion"},
+                        {"texto": " precio "},
+                        {"hueco": "comparador"},
+                        {"texto": " 100"},
+                    ],
+                },
+                {
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"hueco": "operador"},
+                        {"texto": " existencia = 0;"},
+                    ],
+                },
+            ],
+
+            "opciones": [
+                "WHERE",
+                "<",
+                ">",
+                "AND",
+                "OR",
+                "UPDATE",
+            ],
+        },
+
+
+        # =========================================================
+        # EJERCICIO 13 - VERDADERO O FALSO
+        # =========================================================
+        {
+            "x": 7350,
+            "y": 365,
+            "nombre": "prueba_final_mysql_13",
+            "desbloqueada": True,
+
+            "pregunta": (
+                "La consulta DELETE FROM usuarios; elimina todos "
+                "los registros de la tabla usuarios."
+            ),
+
+            "respuesta_correcta": True,
+        },
+
+
+        # =========================================================
+        # EJERCICIO 14 - OPCIÓN MÚLTIPLE
+        # =========================================================
+        {
+            "x": 7900,
+            "y": 425,
+            "tipo": "eleccion_multiple",
+            "nombre": "prueba_final_mysql_14",
+            "desbloqueada": True,
+
+            "pregunta": (
+                "¿Cuál consulta elimina solamente al estudiante "
+                "cuyo id_estudiante es 4?"
+            ),
+
+            "opciones": [
+                (
+                    "DELETE estudiantes "
+                    "WHERE id_estudiante = 4;"
+                ),
+                (
+                    "DELETE FROM estudiantes "
+                    "WHERE id_estudiante = 4;"
+                ),
+                "DELETE FROM estudiantes;",
+            ],
+
+            "respuesta_correcta": 2,
+        },
+
+
+        # =========================================================
+        # EJERCICIO 15 - COMPLETAR CÓDIGO
+        # =========================================================
+        {
+            "x": 8200,
+            "y": None,
+            "tipo": "codigo",
+            "nombre": "prueba_final_mysql_15",
+            "desbloqueada": True,
+
+            "pregunta": (
+                "Completa la consulta para cambiar el nombre y el precio "
+                "del producto cuyo id_producto es 3."
+            ),
+
+            "respuestas": {
+                "actualizar": "UPDATE",
+                "asignar": "SET",
+                "condicion": "WHERE",
+            },
+
+            "codigo": [
+                {
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"hueco": "actualizar"},
+                        {"texto": " productos"},
+                    ],
+                },
+                {
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"hueco": "asignar"},
+                        {"texto": " nombre = 'Mouse inalámbrico',"},
+                    ],
+                },
+                {
+                    "indentacion": 1,
+                    "segmentos": [
+                        {"texto": "precio = 125.00"},
+                    ],
+                },
+                {
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"hueco": "condicion"},
+                        {"texto": " id_producto = 3;"},
+                    ],
+                },
+            ],
+
+            "opciones": [
+                "UPDATE",
+                "SET",
+                "WHERE",
+                "VALUES",
+                "DELETE",
+                "SELECT",
+            ],
+        },
+
+
+        # =========================================================
+        # EJERCICIO 16 - VERDADERO O FALSO
+        # =========================================================
+        {
+            "x": 8400,
+            "y": None,
+            "nombre": "prueba_final_mysql_16",
+            "desbloqueada": True,
+
+            "pregunta": (
+                "La consulta UPDATE productos SET precio = 0; modifica "
+                "el precio de todos los registros de productos."
+            ),
+
+            "respuesta_correcta": True,
+        },
+
+
+        # =========================================================
+        # EJERCICIO 17 - OPCIÓN MÚLTIPLE
+        # =========================================================
+        {
+            "x": 8580,
+            "y": None,
+            "tipo": "eleccion_multiple",
+            "nombre": "prueba_final_mysql_17",
+            "desbloqueada": True,
+
+            "pregunta": (
+                "¿Cuál consulta muestra solamente las columnas nombre "
+                "y precio de la tabla productos?"
+            ),
+
+            "opciones": [
+                "SELECT nombre, precio FROM productos;",
+                "SELECT * FROM productos;",
+                "SHOW nombre, precio FROM productos;",
+            ],
+
+            "respuesta_correcta": 1,
+        },
+
+
+        # =========================================================
+        # EJERCICIO 18 - COMPLETAR CÓDIGO
+        # =========================================================
+        {
+            "x": 8760,
+            "y": None,
+            "tipo": "codigo",
+            "nombre": "prueba_final_mysql_18",
+            "desbloqueada": True,
+
+            "pregunta": (
+                "Completa la consulta para cambiar la existencia a 20 "
+                "solamente en el producto cuyo id_producto es 5."
+            ),
+
+            "respuestas": {
+                "actualizar": "UPDATE",
+                "asignar": "SET",
+                "condicion": "WHERE",
+            },
+
+            "codigo": [
+                {
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"hueco": "actualizar"},
+                        {"texto": " productos"},
+                    ],
+                },
+                {
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"hueco": "asignar"},
+                        {"texto": " existencia = 20"},
+                    ],
+                },
+                {
+                    "indentacion": 0,
+                    "segmentos": [
+                        {"hueco": "condicion"},
+                        {"texto": " id_producto = 5;"},
+                    ],
+                },
+            ],
+
+            "opciones": [
+                "UPDATE",
+                "SET",
+                "WHERE",
+                "VALUES",
+                "DELETE",
+                "SELECT",
+            ],
+        },
+
+
+        # =========================================================
+        # EJERCICIO 19 - VERDADERO O FALSO
+        # =========================================================
+        {
+            "x": 8940,
+            "y": None,
+            "nombre": "prueba_final_mysql_19",
+            "desbloqueada": True,
+
+            "pregunta": (
+                "Una columna definida con NOT NULL no permite guardar "
+                "un valor nulo."
+            ),
+
+            "respuesta_correcta": True,
+        },
+
+
+        # =========================================================
+        # EJERCICIO 20 - OPCIÓN MÚLTIPLE
+        # =========================================================
+        {
+            "x": 9120,
+            "y": None,
+            "tipo": "eleccion_multiple",
+            "nombre": "prueba_final_mysql_20",
+            "desbloqueada": True,
+
+            "pregunta": (
+                "¿Cuál consulta elimina únicamente los usuarios cuyo "
+                "estado es Inactivo?"
+            ),
+
+            "opciones": [
+                (
+                    "DELETE FROM usuarios "
+                    "WHERE estado = 'Inactivo';"
+                ),
+                "DELETE FROM usuarios;",
+                "REMOVE usuarios WHERE estado = 'Inactivo';",
+            ],
+
+            "respuesta_correcta": 1,
+        },
+
     )
 
 

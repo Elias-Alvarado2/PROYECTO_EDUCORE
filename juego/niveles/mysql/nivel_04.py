@@ -23,6 +23,69 @@ class NivelMySQL04(JuegoBase):
     AJUSTE_Y_SPRITE_MONTANAS = 0
     AJUSTE_Y_SPRITE_SUELO = 0
     AJUSTE_Y_SPRITE_PLANTAS = 0
+    ENEMIGOS=(
+{
+        "tipo": "jabali",
+        "x_inicial": 814,
+        "x_limite": 518,
+        "velocidad": 120,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+    {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 2145,
+        "y_inicial": -70,
+        "y_limite": -260,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -10,
+    },
+    {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 2570,
+        "y_inicial": -70,
+        "y_limite": -330,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -10,
+    },
+    {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 2880,
+        "y_inicial": -70,
+        "y_limite": -350,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -10,
+    },
+{
+        "tipo": "serpiente",
+        "x_inicial": 4575,
+        "x_limite": 4470,
+        "ajuste_y": -266,
+        "velocidad": 100,
+        "ancho": 80,
+        "alto": 48,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+    )
+
     CARTEL_FINAL = {
     "x": 5700,
     "ajuste_y": -10,

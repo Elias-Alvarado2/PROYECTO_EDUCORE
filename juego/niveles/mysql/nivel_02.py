@@ -23,6 +23,90 @@ class NivelMySQL02(JuegoBase):
     AJUSTE_Y_SPRITE_MONTANAS = 0
     AJUSTE_Y_SPRITE_SUELO = 0
     AJUSTE_Y_SPRITE_PLANTAS = 0
+    ENEMIGOS=(
+         {      
+        "tipo": "caracol",
+        "x_inicial": 1381,
+        "x_limite": 883,
+        "ajuste_y": 0,
+        "ancho": 100,
+        "alto": 68,
+        "velocidad": 80,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+        "fps_animacion":6,
+
+        },
+         {      
+        "tipo": "caracol",
+        "x_inicial": 1896,
+        "x_limite": 1385,
+        "ajuste_y": 0,
+        "ancho": 100,
+        "alto": 68,
+        "velocidad": 80,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+        "fps_animacion":6,
+
+        },
+         {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 1231,
+
+        # Posiciones relativas al suelo
+        "y_inicial": 0,
+        "y_limite": -300,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -10,
+    },
+    {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 1600,
+
+        # Posiciones relativas al suelo
+        "y_inicial": 0,
+        "y_limite": -300,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -10,
+    },
+    {
+        "tipo": "jabali",
+        # Posiciones relativas al suelo
+        "x_inicial": 2450,
+        "x_limite": 2265,
+
+        "velocidad": 120,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+     {
+            
+        "tipo": "bolaazul",
+        "x_inicial": 3765,
+        "x_limite": 3415,
+        "ajuste_y": 0,
+        "ancho": 100,
+        "alto": 68,
+        "velocidad": 120,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+        "fps_animacion":8,
+
+        },
+    )
     CARTEL_FINAL = {
     "x": 4400,
     "ajuste_y": -10,

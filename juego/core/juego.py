@@ -11,6 +11,7 @@ from juego.core.enemigos import (
     clasificar_colision_jugador,
     crear_enemigos_desde_configuraciones,
 )
+from juego.core.efectos import efectos
 from juego.interfaz.practica_codigo import PantallaPracticaCodigo
 from juego.interfaz.practica_eleccion_multiple import (
     PantallaPracticaEleccionMultiple,
@@ -436,7 +437,9 @@ class JuegoBase(motor.JuegoEduCore):
             )
 
             if tipo_colision == COLISION_PISADO:
-                enemigo.eliminar()
+                if enemigo.eliminar():
+                    efectos.reproducir_enemigo_eliminado()
+
                 self.jugador.y = (
                     enemigo.rect.top - hitbox_local.bottom
                 )

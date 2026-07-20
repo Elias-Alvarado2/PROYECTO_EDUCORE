@@ -34,21 +34,93 @@ class NivelMySQL01(JuegoBase):
     PISOS = (
         (0, LONGITUD_NIVEL),
     )
-    ENEMIGOS = (
-        {
-            
-        "tipo": "jabali",
-        "x_inicial": 3800,
-        "x_limite": 3400,
-        "ajuste_y": 0,
+    ENEMIGOS=(
+    {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 600,
+
+        # Posiciones relativas al suelo
+        "y_inicial": 0,
+        "y_limite": -250,
+
+        "velocidad": 80,
         "ancho": 100,
         "alto": 68,
-        "velocidad": 80,
         "hace_dano": True,
         "rebote_al_pisar": -20,
+    },
+    {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 785,
 
-        },
-    )
+        # Posiciones relativas al suelo
+        "y_inicial": 0,
+        "y_limite": -250,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+    {
+        "tipo": "serpiente",
+        # Posiciones relativas al suelo
+        "x_inicial": 1230,
+        "x_limite": 975,
+
+        "velocidad": 80,
+        "ancho": 80,
+        "alto": 48,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+    {
+        "tipo": "serpiente",
+        # Posiciones relativas al suelo
+        "x_inicial": 1230,
+        "x_limite": 975,
+
+        "velocidad": 80,
+        "ancho": 80,
+        "alto": 48,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+    {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 2540,
+
+        # Posiciones relativas al suelo
+        "y_inicial": 0,
+        "y_limite": -300,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -10,
+    },
+     {
+        "tipo": "jabali",
+        # Posiciones relativas al suelo
+        "x_inicial": 3845,
+        "x_limite": 3290,
+
+        "velocidad": 120,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+     )
+    
+   
+
+    
     NPCS = (
     {
         "nombre": "pinguino_1",

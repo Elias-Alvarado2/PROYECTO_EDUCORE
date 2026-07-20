@@ -17,7 +17,7 @@ class NivelMySQL03(JuegoBase):
     # Negativo = sube.
     # Positivo = baja.
     AJUSTE_Y_JUGADOR =0
-    LONGITUD_NIVEL = 6000
+    LONGITUD_NIVEL = 5800
     NPC_X = 790
     AJUSTE_Y_NPC = -8
     AJUSTE_Y_SPRITE_MONTANAS = 0
@@ -29,6 +29,98 @@ class NivelMySQL03(JuegoBase):
     "tamano":0.40,
     "mostrar_bloqueado": True,
 }
+    ENEMIGOS=(
+         {
+        "tipo": "serpiente",
+        "x_inicial": 781,
+        "x_limite": 390,
+
+        "velocidad": 100,
+        "ancho": 80,
+        "alto": 48,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+    {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 1050,
+        "y_inicial": -70,
+        "y_limite": -260,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -10,
+    },
+    {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 1360,
+        "y_inicial": -70,
+        "y_limite": -260,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -10,
+    },
+    {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 2215,
+        "y_inicial": -70,
+        "y_limite": -260,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -10,
+    },
+     {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 2480,
+        "y_inicial": -70,
+        "y_limite": -260,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -10,
+    },
+    {      
+        "tipo": "caracol",
+        "x_inicial": 2969,
+        "x_limite": 2880,
+        "ajuste_y": -240,
+        "ancho": 70,
+        "alto": 38,
+        "velocidad": 80,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+        "fps_animacion":6,
+
+        },
+        {
+            
+        "tipo": "bolaazul",
+        "x_inicial": 3991,
+        "x_limite": 3590,
+        "ajuste_y": 0,
+        "ancho": 100,
+        "alto": 68,
+        "velocidad": 120,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+        "fps_animacion":8,
+
+        },
+    )
     PISOS = (
         (0, LONGITUD_NIVEL),
     )

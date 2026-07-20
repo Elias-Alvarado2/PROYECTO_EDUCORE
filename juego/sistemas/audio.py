@@ -10,17 +10,17 @@ class GestorAudio(QtCore.QObject):
     """
     Gestor global de audio de EduCore.
 
-    Controla:
-    - Volumen general de 0 a 100.
-    - Silencio global.
-    - Música de fondo.
-    - Efectos de sonido.
-    - Guardado permanente del volumen.
+    Controla y guarda de forma independiente:
+    - Volumen y silencio de la música.
+    - Volumen grupal y silencio de los efectos.
+    - Volumen particular de cada efecto.
     - Sincronización entre PyQt6 y Pygame.
     """
 
     volumen_cambiado = QtCore.pyqtSignal(int)
     silencio_cambiado = QtCore.pyqtSignal(bool)
+    volumen_efectos_cambiado = QtCore.pyqtSignal(int)
+    silencio_efectos_cambiado = QtCore.pyqtSignal(bool)
 
     ORGANIZACION = "EduCore"
     APLICACION = "EduCore"
@@ -36,10 +36,13 @@ class GestorAudio(QtCore.QObject):
         self._volumen = 70
         self._ultimo_volumen = 70
         self._silenciado = False
+        self._volumen_efectos = 70
+        self._ultimo_volumen_efectos = 70
+        self._efectos_silenciados = False
 
-        # Guarda los canales creados por el gestor.
+        # Guarda cada canal junto con el volumen particular del efecto.
         self._canales_activos: list[
-            pygame.mixer.Channel
+            tuple[pygame.mixer.Channel, float]
         ] = []
 
         self.recargar(
@@ -93,8 +96,30 @@ class GestorAudio(QtCore.QObject):
         return self._volumen
 
     @property
+    def volumen_musica(self) -> int:
+        """Volumen de la musica de 0 a 100."""
+        return self._volumen
+
+    @property
+    def volumen_efectos(self) -> int:
+        """Volumen grupal de todos los efectos de 0 a 100."""
+        return self._volumen_efectos
+
+    @property
+    def ultimo_volumen_musica(self) -> int:
+        return self._ultimo_volumen
+
+    @property
+    def ultimo_volumen_efectos(self) -> int:
+        return self._ultimo_volumen_efectos
+
+    @property
     def silenciado(self) -> bool:
         return self._silenciado
+
+    @property
+    def efectos_silenciados(self) -> bool:
+        return self._efectos_silenciados
 
     @property
     def porcentaje_actual(self) -> int:
@@ -110,6 +135,17 @@ class GestorAudio(QtCore.QObject):
         return self._volumen
 
     @property
+    def porcentaje_musica_actual(self) -> int:
+        return self.porcentaje_actual
+
+    @property
+    def porcentaje_efectos_actual(self) -> int:
+        if self._efectos_silenciados:
+            return 0
+
+        return self._volumen_efectos
+
+    @property
     def volumen_normalizado(self) -> float:
         """
         Convierte el volumen de 0-100 al formato
@@ -121,13 +157,24 @@ class GestorAudio(QtCore.QObject):
 
         return self._volumen / 100.0
 
+    @property
+    def volumen_musica_normalizado(self) -> float:
+        return self.volumen_normalizado
+
+    @property
+    def volumen_efectos_normalizado(self) -> float:
+        if self._efectos_silenciados:
+            return 0.0
+
+        return self._volumen_efectos / 100.0
+
     # =========================================================
     # GUARDAR Y RECARGAR
     # =========================================================
 
     def guardar(self):
         """
-        Guarda el volumen para que se conserve al cerrar EduCore.
+        Guarda música y efectos para conservarlos al cerrar EduCore.
         """
 
         self.configuracion.setValue(
@@ -143,6 +190,21 @@ class GestorAudio(QtCore.QObject):
         self.configuracion.setValue(
             "audio/silenciado",
             self._silenciado,
+        )
+
+        self.configuracion.setValue(
+            "audio/volumen_efectos",
+            self._volumen_efectos,
+        )
+
+        self.configuracion.setValue(
+            "audio/ultimo_volumen_efectos",
+            self._ultimo_volumen_efectos,
+        )
+
+        self.configuracion.setValue(
+            "audio/efectos_silenciados",
+            self._efectos_silenciados,
         )
 
         self.configuracion.sync()
@@ -176,6 +238,23 @@ class GestorAudio(QtCore.QObject):
             False,
         )
 
+        # La primera vez se hereda el ajuste antiguo para no cambiar
+        # de golpe el audio que ya tenia configurado el jugador.
+        volumen_efectos_guardado = self.configuracion.value(
+            "audio/volumen_efectos",
+            volumen_guardado,
+        )
+
+        ultimo_efectos_guardado = self.configuracion.value(
+            "audio/ultimo_volumen_efectos",
+            ultimo_guardado,
+        )
+
+        silencio_efectos_guardado = self.configuracion.value(
+            "audio/efectos_silenciados",
+            silencio_guardado,
+        )
+
         self._volumen = self._limitar_volumen(
             volumen_guardado
         )
@@ -188,8 +267,23 @@ class GestorAudio(QtCore.QObject):
             silencio_guardado
         )
 
+        self._volumen_efectos = self._limitar_volumen(
+            volumen_efectos_guardado
+        )
+
+        self._ultimo_volumen_efectos = self._limitar_volumen(
+            ultimo_efectos_guardado
+        )
+
+        self._efectos_silenciados = self._convertir_booleano(
+            silencio_efectos_guardado
+        )
+
         if self._ultimo_volumen <= 0:
             self._ultimo_volumen = 70
+
+        if self._ultimo_volumen_efectos <= 0:
+            self._ultimo_volumen_efectos = 70
 
         if aplicar:
             self.aplicar_volumen()
@@ -201,6 +295,14 @@ class GestorAudio(QtCore.QObject):
 
             self.silencio_cambiado.emit(
                 self._silenciado
+            )
+
+            self.volumen_efectos_cambiado.emit(
+                self.porcentaje_efectos_actual
+            )
+
+            self.silencio_efectos_cambiado.emit(
+                self._efectos_silenciados
             )
 
     # =========================================================
@@ -238,9 +340,36 @@ class GestorAudio(QtCore.QObject):
             self._silenciado
         )
 
+    def establecer_volumen_musica(self, valor: int):
+        """Alias explicito del control de volumen de musica."""
+        self.establecer_volumen(valor)
+
+    def establecer_volumen_efectos(self, valor: int):
+        valor = self._limitar_volumen(valor)
+
+        if valor > 0:
+            self._volumen_efectos = valor
+            self._ultimo_volumen_efectos = valor
+            self._efectos_silenciados = False
+        else:
+            if self._volumen_efectos > 0:
+                self._ultimo_volumen_efectos = self._volumen_efectos
+
+            self._volumen_efectos = 0
+            self._efectos_silenciados = True
+
+        self.guardar()
+        self.aplicar_volumen()
+        self.volumen_efectos_cambiado.emit(
+            self.porcentaje_efectos_actual
+        )
+        self.silencio_efectos_cambiado.emit(
+            self._efectos_silenciados
+        )
+
     def silenciar(self):
         """
-        Silencia música y efectos sin perder el volumen anterior.
+        Silencia solo la música sin perder su volumen anterior.
         """
 
         if self._volumen > 0:
@@ -284,6 +413,39 @@ class GestorAudio(QtCore.QObject):
         else:
             self.silenciar()
 
+    def silenciar_efectos(self):
+        if self._volumen_efectos > 0:
+            self._ultimo_volumen_efectos = self._volumen_efectos
+
+        self._efectos_silenciados = True
+        self.guardar()
+        self.aplicar_volumen()
+        self.volumen_efectos_cambiado.emit(0)
+        self.silencio_efectos_cambiado.emit(True)
+
+    def activar_efectos(self):
+        self._efectos_silenciados = False
+
+        if self._volumen_efectos <= 0:
+            self._volumen_efectos = self._ultimo_volumen_efectos
+
+        if self._volumen_efectos <= 0:
+            self._volumen_efectos = 70
+
+        self._ultimo_volumen_efectos = self._volumen_efectos
+        self.guardar()
+        self.aplicar_volumen()
+        self.volumen_efectos_cambiado.emit(
+            self._volumen_efectos
+        )
+        self.silencio_efectos_cambiado.emit(False)
+
+    def alternar_silencio_efectos(self):
+        if self._efectos_silenciados:
+            self.activar_efectos()
+        else:
+            self.silenciar_efectos()
+
     # =========================================================
     # INICIALIZAR PYGAME MIXER
     # =========================================================
@@ -316,7 +478,7 @@ class GestorAudio(QtCore.QObject):
 
     def aplicar_volumen(self):
         """
-        Aplica el volumen general a la música y a los canales.
+        Aplica el volumen de música y el volumen grupal de efectos.
 
         No inicializa el mixer automáticamente para evitar que
         el formulario PyQt6 abierto en otro proceso intente
@@ -326,11 +488,12 @@ class GestorAudio(QtCore.QObject):
         if pygame.mixer.get_init() is None:
             return
 
-        volumen = self.volumen_normalizado
+        volumen_musica = self.volumen_musica_normalizado
+        volumen_efectos = self.volumen_efectos_normalizado
 
         try:
             pygame.mixer.music.set_volume(
-                volumen
+                volumen_musica
             )
 
             cantidad_canales = (
@@ -345,15 +508,22 @@ class GestorAudio(QtCore.QObject):
                 )
 
                 canal.set_volume(
-                    volumen
+                    volumen_efectos
                 )
 
-            # Elimina referencias a canales que ya terminaron.
-            self._canales_activos = [
-                canal
-                for canal in self._canales_activos
-                if canal.get_busy()
-            ]
+            # Conserva el volumen individual de cada efecto que sigue activo.
+            canales_activos = []
+
+            for canal, volumen_relativo in self._canales_activos:
+                if canal.get_busy():
+                    canal.set_volume(
+                        volumen_efectos * volumen_relativo
+                    )
+                    canales_activos.append(
+                        (canal, volumen_relativo)
+                    )
+
+            self._canales_activos = canales_activos
 
         except pygame.error as error:
             print(
@@ -395,7 +565,7 @@ class GestorAudio(QtCore.QObject):
             )
 
             pygame.mixer.music.set_volume(
-                self.volumen_normalizado
+                self.volumen_musica_normalizado
             )
 
             pygame.mixer.music.play(
@@ -487,7 +657,7 @@ class GestorAudio(QtCore.QObject):
         repeticiones: int = 0,
     ) -> pygame.mixer.Channel | None:
         """
-        Reproduce un efecto respetando el volumen global.
+        Reproduce un efecto respetando el volumen grupal de efectos.
 
         volumen_relativo:
             1.0 = volumen normal.
@@ -523,12 +693,12 @@ class GestorAudio(QtCore.QObject):
                 return None
 
             canal.set_volume(
-                self.volumen_normalizado
+                self.volumen_efectos_normalizado
                 * volumen_relativo
             )
 
             self._canales_activos.append(
-                canal
+                (canal, volumen_relativo)
             )
 
             return canal

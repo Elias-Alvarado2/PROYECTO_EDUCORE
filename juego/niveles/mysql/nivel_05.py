@@ -29,6 +29,85 @@ class NivelMySQL05(JuegoBase):
     "tamano":0.40,
     "mostrar_bloqueado": True,
 }
+    ENEMIGOS=(
+        {      
+        "tipo": "caracol",
+        "x_inicial": 490,
+        "x_limite": 885,
+        "ajuste_y": 0,
+        "ancho": 80,
+        "alto": 48,
+        "velocidad": 90,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+        "fps_animacion":6,
+
+        },
+        {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 1365,
+        "y_inicial": -70,
+        "y_limite": -400,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -10,
+    },
+     {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 1670,
+        "y_inicial": -70,
+        "y_limite": -400,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -10,
+    },
+    {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 1990,
+        "y_inicial": -70,
+        "y_limite": -400,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -10,
+    },
+    {
+        "tipo": "serpiente",
+        "x_inicial": 2577,
+        "x_limite": 2678,
+        "ajuste_y": -232,
+        "velocidad": 100,
+        "ancho": 80,
+        "alto": 48,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+     {
+            
+        "tipo": "bolaazul",
+        "x_inicial": 3983,
+        "x_limite": 4215,
+        "ajuste_y": 0,
+        "ancho": 70,
+        "alto": 38,
+        "velocidad": 120,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+        "fps_animacion":8,
+
+        },
+    )
     NPCS = (
         {
             "nombre": "pinguino_delete",

@@ -18,6 +18,7 @@ import subprocess
 from functools import lru_cache
 from pathlib import Path
 from juego.sistemas.audio import gestor_audio
+from juego.core.efectos import efectos
 import os
 
 import pygame
@@ -103,8 +104,6 @@ NPC_DIR = ASSETS_DIR / "personajes" / "npc"
 UI_DIR = ASSETS_DIR / "ui"
 FUENTES_DIR = ASSETS_DIR / "FUENTES"
 MUSICA_DIR = ASSETS_DIR / "musica"
-EFECTOS_DIR = ASSETS_DIR / "efectos"
-RUTA_SONIDO_MUERTE = EFECTOS_DIR / "sonido_muerte.ogg"
 RUTA_MUSICA_FONDO = MUSICA_DIR / "musicamecanicogd.ogg"
 VOLUMEN_MUSICA = 1.0
 
@@ -1919,6 +1918,7 @@ class Jugador:
             self.en_suelo = False
             self.frame_salto_actual = 0
             self.contador_salto = 0
+            efectos.reproducir_salto()
 
     def aplicar_gravedad(self):
         self.velocidad_y += self.gravedad
@@ -2752,7 +2752,6 @@ class JuegoEduCore:
         self._informar_progreso_carga(90)
 
         self.registrar_interacciones()
-        self.cargar_sonido_muerte()
         self.preparar_musica_fondo()
         self._informar_progreso_carga(97)
 
@@ -2779,6 +2778,7 @@ class JuegoEduCore:
                 pygame.mixer.init()
 
             gestor_audio.recargar()
+            efectos.recargar()
 
         except pygame.error as error:
             print("[AUDIO] No se pudo iniciar el audio:", error)
@@ -2819,7 +2819,6 @@ class JuegoEduCore:
         self.sonido_muerte_reproducido = False
         self.cierre_game_over_iniciado = False
         self.salir_por_game_over = False
-        self.sonido_muerte = None
 
         self.mostrar_hitboxes = MOSTRAR_HITBOXES
         self.mostrar_posicion_jugador = MOSTRAR_POSICION_JUGADOR
@@ -3617,22 +3616,6 @@ class JuegoEduCore:
                 interaccion.activa = False
                 interaccion.usada = True
 
-    def cargar_sonido_muerte(self):
-        self.sonido_muerte = None
-
-        if not RUTA_SONIDO_MUERTE.exists():
-            print(
-                "[AUDIO] No se encontró el sonido de muerte:",
-                RUTA_SONIDO_MUERTE,
-            )
-            return False
-
-        self.sonido_muerte = gestor_audio.cargar_efecto(
-            str(RUTA_SONIDO_MUERTE)
-        )
-
-        return self.sonido_muerte is not None
-
     def preparar_musica_fondo(self):
         self.musica_fondo_preparada = False
 
@@ -3750,12 +3733,7 @@ class JuegoEduCore:
             if pygame.mixer.get_init():
                 pygame.mixer.music.stop()
 
-            if self.sonido_muerte is not None:
-                gestor_audio.reproducir_efecto(
-                    self.sonido_muerte,
-                    volumen_relativo=0.8,
-                )
-
+            efectos.reproducir_muerte()
             self.sonido_muerte_reproducido = True
 
         self.transicion_iris.iniciar_cierre(
@@ -3809,6 +3787,7 @@ class JuegoEduCore:
             evento=evento,
             detalle_base=detalle,
         )
+        efectos.reproducir_dano()
 
         # Solo hay game over cuando la última vida llega a cero.
         if self.game_over:
@@ -4092,6 +4071,7 @@ class JuegoEduCore:
             )
 
     def restar_vida_por_respuesta_incorrecta(self):
+        efectos.reproducir_respuesta_incorrecta()
         self._restar_vida(
             evento="Respuesta incorrecta",
             detalle_base="Respondio incorrectamente una practica",
@@ -4124,6 +4104,8 @@ class JuegoEduCore:
         self.objeto_practica_actual = None
 
         if respuesta_correcta:
+            efectos.reproducir_respuesta_correcta()
+
             if objeto is not None:
                 objeto.completado = True
 

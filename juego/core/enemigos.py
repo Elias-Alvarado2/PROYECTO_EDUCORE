@@ -104,29 +104,89 @@ def _obtener_rect_visible(imagen: pygame.Surface) -> pygame.Rect:
     return rect_visible
 
 
-def _ajustar_frame(
-    imagen: pygame.Surface,
-    ancho: int,
-    alto: int,
-) -> pygame.Surface:
-    """Recorta transparencia y centra el frame en un lienzo estable."""
-    rect_visible = _obtener_rect_visible(imagen)
-    visible = imagen.subsurface(rect_visible).copy()
+def _obtener_rect_cuerpo(imagen: pygame.Surface) -> pygame.Rect:
+    """Separa el cuerpo de elementos pequenos como sombras o particulas."""
+    mascara = pygame.mask.from_surface(imagen, threshold=8)
+    componentes = mascara.get_bounding_rects()
+
+    if not componentes:
+        return imagen.get_rect()
+
+    return max(
+        componentes,
+        key=lambda rect: rect.width * rect.height,
+    ).copy()
+
+
+def _ajustar_frames_uniformemente(
+    imagenes: list[pygame.Surface],
+    ancho_cuerpo: int,
+    alto_cuerpo: int,
+) -> tuple[list[pygame.Surface], list[pygame.Rect]]:
+    """Aplica una misma escala y conserva el movimiento interno del PNG."""
+    visibles = [_obtener_rect_visible(imagen) for imagen in imagenes]
+    cuerpos = [_obtener_rect_cuerpo(imagen) for imagen in imagenes]
+
+    rect_total = visibles[0].copy()
+
+    for visible in visibles[1:]:
+        rect_total.union_ip(visible)
+
+    ancho_referencia = max(cuerpo.width for cuerpo in cuerpos)
+    alto_referencia = max(cuerpo.height for cuerpo in cuerpos)
     escala = min(
-        ancho / max(1, visible.get_width()),
-        alto / max(1, visible.get_height()),
+        ancho_cuerpo / max(1, ancho_referencia),
+        alto_cuerpo / max(1, alto_referencia),
     )
-    nuevo_tamano = (
-        max(1, round(visible.get_width() * escala)),
-        max(1, round(visible.get_height() * escala)),
-    )
-    visible = pygame.transform.scale(visible, nuevo_tamano)
-    lienzo = pygame.Surface((ancho, alto), pygame.SRCALPHA)
-    destino = visible.get_rect(
-        midbottom=(ancho // 2, alto),
-    )
-    lienzo.blit(visible, destino)
-    return lienzo
+
+    ancho_contenido = max(1, round(rect_total.width * escala))
+    alto_contenido = max(1, round(rect_total.height * escala))
+    ancho_lienzo = max(ancho_cuerpo, ancho_contenido)
+    alto_lienzo = max(alto_cuerpo, alto_contenido)
+    destino_x = (ancho_lienzo - ancho_contenido) // 2
+    destino_y = alto_lienzo - alto_contenido
+    escala_x = ancho_contenido / max(1, rect_total.width)
+    escala_y = alto_contenido / max(1, rect_total.height)
+
+    frames = []
+    cuerpos_ajustados = []
+
+    for imagen, cuerpo in zip(imagenes, cuerpos):
+        recorte = pygame.Surface(rect_total.size, pygame.SRCALPHA)
+        recorte.blit(imagen, (-rect_total.x, -rect_total.y))
+        recorte = pygame.transform.scale(
+            recorte,
+            (ancho_contenido, alto_contenido),
+        )
+        lienzo = pygame.Surface(
+            (ancho_lienzo, alto_lienzo),
+            pygame.SRCALPHA,
+        )
+        lienzo.blit(recorte, (destino_x, destino_y))
+        frames.append(lienzo)
+
+        izquierda = destino_x + round(
+            (cuerpo.left - rect_total.left) * escala_x
+        )
+        derecha = destino_x + round(
+            (cuerpo.right - rect_total.left) * escala_x
+        )
+        arriba = destino_y + round(
+            (cuerpo.top - rect_total.top) * escala_y
+        )
+        abajo = destino_y + round(
+            (cuerpo.bottom - rect_total.top) * escala_y
+        )
+        cuerpos_ajustados.append(
+            pygame.Rect(
+                izquierda,
+                arriba,
+                max(1, derecha - izquierda),
+                max(1, abajo - arriba),
+            )
+        )
+
+    return frames, cuerpos_ajustados
 
 
 class Enemigo:
@@ -166,14 +226,8 @@ class Enemigo:
         self.x = self.x_inicial
         self.suelo_y = int(suelo_y)
         self.ajuste_y = int(ajuste_y)
-        self.ancho = max(1, int(ancho))
-        self.alto = max(1, int(alto))
-        self.y_base = self.suelo_y - self.alto + self.ajuste_y
-        self.y_inicial = self.y_base + float(y_inicial)
-        self.y_limite = self.y_base + float(y_limite)
-        self.limite_superior = min(self.y_inicial, self.y_limite)
-        self.limite_inferior = max(self.y_inicial, self.y_limite)
-        self.y = self.y_inicial
+        self.ancho_cuerpo = max(1, int(ancho))
+        self.alto_cuerpo = max(1, int(alto))
         self.velocidad = max(0.0, abs(float(velocidad)))
         self.fps_animacion = max(0.1, float(fps_animacion))
         self.orientacion_original = str(
@@ -182,6 +236,29 @@ class Enemigo:
         self.tolerancia_pisada = max(0, int(tolerancia_pisada))
         self.rebote_al_pisar = float(rebote_al_pisar)
         self.hace_dano = bool(hace_dano)
+
+        self.frame_actual = 0
+        self.tiempo_animacion = 0.0
+        self.vivo = True
+        self.frames, self.rects_cuerpo = self._cargar_frames()
+        self.ancho, self.alto = self.frames[0].get_size()
+        self.frames_reflejados = [
+            pygame.transform.flip(frame, True, False)
+            for frame in self.frames
+        ]
+        self.hitboxes_locales = self._calcular_hitboxes(
+            hitbox_reducir_ancho,
+            hitbox_reducir_alto,
+            hitbox_offset_x,
+            hitbox_offset_y,
+        )
+
+        self.y_base = self.suelo_y - self.alto + self.ajuste_y
+        self.y_inicial = self.y_base + float(y_inicial)
+        self.y_limite = self.y_base + float(y_limite)
+        self.limite_superior = min(self.y_inicial, self.y_limite)
+        self.limite_inferior = max(self.y_inicial, self.y_limite)
+        self.y = self.y_inicial
 
         if self.movimiento == "vertical":
             posicion_inicial = self.y_inicial
@@ -198,21 +275,6 @@ class Enemigo:
             self.direccion_inicial = 0
 
         self.direccion = self.direccion_inicial
-        self.frame_actual = 0
-        self.tiempo_animacion = 0.0
-        self.vivo = True
-
-        self.frames = self._cargar_frames()
-        self.frames_reflejados = [
-            pygame.transform.flip(frame, True, False)
-            for frame in self.frames
-        ]
-        self.hitbox_local = self._calcular_hitbox(
-            hitbox_reducir_ancho,
-            hitbox_reducir_alto,
-            hitbox_offset_x,
-            hitbox_offset_y,
-        )
 
     @classmethod
     def desde_configuracion(
@@ -303,7 +365,9 @@ class Enemigo:
             hace_dano=config["hace_dano"],
         )
 
-    def _cargar_frames(self) -> list[pygame.Surface]:
+    def _cargar_frames(
+        self,
+    ) -> tuple[list[pygame.Surface], list[pygame.Rect]]:
         carpeta = _resolver_carpeta(self.tipo)
         rutas = sorted(
             (
@@ -319,39 +383,58 @@ class Enemigo:
                 f"El enemigo {self.tipo!r} no tiene frames PNG en {carpeta}"
             )
 
-        frames = []
+        imagenes = [
+            pygame.image.load(str(ruta)).convert_alpha()
+            for ruta in rutas
+        ]
+        return _ajustar_frames_uniformemente(
+            imagenes,
+            self.ancho_cuerpo,
+            self.alto_cuerpo,
+        )
 
-        for ruta in rutas:
-            imagen = pygame.image.load(str(ruta)).convert_alpha()
-            frames.append(_ajustar_frame(imagen, self.ancho, self.alto))
-
-        return frames
-
-    def _calcular_hitbox(
+    def _calcular_hitboxes(
         self,
         reducir_ancho: int,
         reducir_alto: int,
         offset_x: int,
         offset_y: int,
-    ) -> pygame.Rect:
-        visibles = [
-            _obtener_rect_visible(frame)
-            for frame in self.frames
-        ]
-        hitbox = visibles[0].copy()
+    ) -> list[pygame.Rect]:
+        hitboxes = []
+        limites = pygame.Rect(0, 0, self.ancho, self.alto)
 
-        for visible in visibles[1:]:
-            hitbox.union_ip(visible)
+        for cuerpo in self.rects_cuerpo:
+            hitbox = cuerpo.copy()
+            hitbox.inflate_ip(
+                -min(max(0, reducir_ancho), hitbox.width - 1),
+                -min(max(0, reducir_alto), hitbox.height - 1),
+            )
+            hitbox.move_ip(offset_x, offset_y)
+            hitbox = hitbox.clip(limites)
 
-        hitbox.inflate_ip(
-            -min(max(0, reducir_ancho), hitbox.width - 1),
-            -min(max(0, reducir_alto), hitbox.height - 1),
+            if hitbox.width <= 0 or hitbox.height <= 0:
+                hitbox = cuerpo.clip(limites)
+
+            hitboxes.append(hitbox)
+
+        return hitboxes
+
+    def _debe_reflejar_sprite(self) -> bool:
+        if self.movimiento == "vertical":
+            return False
+
+        mira_izquierda = self.direccion <= 0
+        original_mira_izquierda = (
+            self.orientacion_original != "derecha"
         )
-        hitbox.move_ip(offset_x, offset_y)
-        hitbox = hitbox.clip(pygame.Rect(0, 0, self.ancho, self.alto))
+        return mira_izquierda != original_mira_izquierda
 
-        if hitbox.width <= 0 or hitbox.height <= 0:
-            return pygame.Rect(0, 0, self.ancho, self.alto)
+    @property
+    def hitbox_local(self) -> pygame.Rect:
+        hitbox = self.hitboxes_locales[self.frame_actual].copy()
+
+        if self._debe_reflejar_sprite():
+            hitbox.x = self.ancho - hitbox.right
 
         return hitbox
 
@@ -381,15 +464,11 @@ class Enemigo:
         return rect
 
     def obtener_sprite_actual(self) -> pygame.Surface:
-        if self.movimiento == "vertical":
-            return self.frames[self.frame_actual]
-
-        mira_izquierda = self.direccion <= 0
-        original_mira_izquierda = (
-            self.orientacion_original != "derecha"
+        coleccion = (
+            self.frames_reflejados
+            if self._debe_reflejar_sprite()
+            else self.frames
         )
-        debe_reflejar = mira_izquierda != original_mira_izquierda
-        coleccion = self.frames_reflejados if debe_reflejar else self.frames
         return coleccion[self.frame_actual]
 
     def actualizar(self, dt: float):
