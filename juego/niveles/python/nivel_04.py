@@ -17,7 +17,7 @@ class NivelPython04(JuegoBase):
     # Negativo = sube.
     # Positivo = baja.
     AJUSTE_Y_JUGADOR =0
-    LONGITUD_NIVEL = 6500
+    LONGITUD_NIVEL = 7600
     NPC_X = 825
     AJUSTE_Y_NPC = -8
     AJUSTE_Y_SPRITE_MONTANAS = 2
@@ -26,7 +26,12 @@ class NivelPython04(JuegoBase):
     PISOS = (
         (0, LONGITUD_NIVEL),
     )
-    
+    CARTEL_FINAL = {
+    "x": 6000,
+    "ajuste_y": -10,
+    "tamano":0.40,
+    "mostrar_bloqueado": True,
+}
     NPCS = (
     {
         "nombre": "pinguino_1",
@@ -415,7 +420,7 @@ class NivelPython04(JuegoBase):
         "hitbox_reducir_alto": 8,
     },
     {
-  "tipo": "puas",
+    "tipo": "puas",
         "imagen": "python/puas_obstaculo.png",
         "x": 3250,
         "cantidad": 1,
@@ -615,7 +620,7 @@ class NivelPython04(JuegoBase):
     # PRÁCTICA 1: VERDADERO O FALSO
     # ====================================================
     {
-        "x": 1700,
+        "x": 1690,
         "y": 345,
         "tipo": "verdadero_falso",
         "pregunta": (
@@ -632,8 +637,8 @@ class NivelPython04(JuegoBase):
     # PRÁCTICA 2: SELECCIÓN MÚLTIPLE
     # ====================================================
     {
-        "x": 2700,
-        "y": None,
+        "x": 3275,
+        "y": 370,
         "tipo": "eleccion_multiple",
         "pregunta": (
             "¿Cuál de las siguientes instrucciones ejecuta correctamente "
@@ -652,8 +657,8 @@ class NivelPython04(JuegoBase):
     # PRÁCTICA 3: COMPLETAR CÓDIGO
     # ====================================================
     {
-        "x": 4000,
-        "y": None,
+        "x": 5170,
+        "y": 400,
         "tipo": "codigo",
         "pregunta": (
             "Arrastra las opciones correctas para completar el código. "
