@@ -1582,6 +1582,10 @@ class Obstaculo:
         self.ancho = ancho
         self.alto = alto
         self.tipo = str(tipo or "").strip().lower()
+        self.ruta_imagen = Path(ruta_imagen)
+        self.nombre_imagen_normalizado = (
+            self.ruta_imagen.name.strip().lower()
+        )
 
         # Se comprueba tanto el tipo como el nombre de la ruta. Así se ignora
         # una configuración antigua aunque el tipo no sea exactamente
@@ -1698,6 +1702,19 @@ class Obstaculo:
             return False
 
         return self.tipo in TIPOS_OBSTACULOS_DANIO
+
+    def debe_regresar_al_inicio(self):
+        """Indica si este obstáculo debe reiniciar la posición.
+
+        También reconoce el PNG de huesos aunque en el archivo del nivel
+        haya quedado configurado accidentalmente como ``puas``.
+        """
+        if self.deshabilitado:
+            return False
+
+        tipo_huesos = self.tipo in {"hueso", "huesos"}
+        imagen_huesos = "hues" in self.nombre_imagen_normalizado
+        return tipo_huesos or imagen_huesos
 
 
 # ============================================================
@@ -2915,6 +2932,15 @@ class JuegoEduCore:
         self.musica_fondo_preparada = False
         self.interacciones = []
         self.interaccion_actual = None
+
+        # Se activa cuando el jugador vuelve al inicio durante este fotograma.
+        # Permite detener inmediatamente el resto de las colisiones para que
+        # ninguna lógica posterior restaure la cámara a la posición anterior.
+        self.reinicio_posicion_en_fotograma = False
+        # Durante unos milisegundos se fuerza la posición inicial para evitar
+        # que una actualización del nivel restaure la cámara anterior.
+        self.reaparicion_forzada_hasta = 0
+
         self.mensaje_aprendido_visible = False
         self.tiempo_mensaje_aprendido = 0
         self.transicion_iris = TransicionIris(duracion=1.0)
@@ -3818,54 +3844,114 @@ class JuegoEduCore:
         )
         self.cierre_game_over_iniciado = True
 
-    def regresar_al_inicio_por_huesos(self):
-        """Devuelve al jugador al inicio después de tocar los huesos.
+    def _forzar_posicion_inicial(self):
+        """Aplica directamente la posición inicial real del nivel."""
+        self.camara_x = 0
 
-        Primero utiliza el método del nivel concreto, cuando existe, para
-        respetar JUGADOR_X_INICIAL y el piso personalizado. El bloque de
-        respaldo permite que el motor también funcione por sí solo.
-        """
-        colocar_inicio = getattr(
+        x_inicial = getattr(self, "JUGADOR_X_INICIAL", 170)
+        escalar_nivel = getattr(self, "escalar", None)
+
+        if callable(escalar_nivel):
+            x_pantalla = int(escalar_nivel(x_inicial))
+        else:
+            x_pantalla = round(float(x_inicial) * ESCALA_JUEGO)
+
+        self.jugador.x_pantalla = x_pantalla
+
+        obtener_piso_nivel = getattr(
             self,
-            "colocar_jugador_en_inicio",
+            "obtener_piso_colision_nivel",
             None,
         )
+        piso_inicio = (
+            int(obtener_piso_nivel())
+            if callable(obtener_piso_nivel)
+            else PISO_COLISION_Y
+        )
 
-        if callable(colocar_inicio):
-            colocar_inicio()
-        else:
-            self.camara_x = 0
-
-            x_inicial = getattr(
-                self,
-                "JUGADOR_X_INICIAL",
-                170,
-            )
-            self.jugador.x_pantalla = round(
-                float(x_inicial) * ESCALA_JUEGO
-            )
-
-            obtener_piso_nivel = getattr(
-                self,
-                "obtener_piso_colision_nivel",
-                None,
-            )
-            piso_inicio = (
-                int(obtener_piso_nivel())
-                if callable(obtener_piso_nivel)
-                else PISO_COLISION_Y
-            )
-            self.jugador.colocar_sobre_piso(piso_inicio)
-
-        # Elimina cualquier movimiento pendiente del fotograma del golpe.
+        self.jugador.colocar_sobre_piso(piso_inicio)
         self.jugador.velocidad_y = 0
         self.jugador.en_suelo = True
+        self.jugador.frame_actual = 0
+        self.jugador.frame_salto_actual = 0
 
-        # Evita conservar avisos o referencias de interacción del lugar
-        # donde se tocaron los huesos.
+    def regresar_al_inicio(self, motivo="daño"):
+        """Quita al jugador del peligro y lo devuelve al inicio real.
+
+        Se llama al método del nivel por compatibilidad y después se vuelve a
+        forzar la cámara y las coordenadas. Así ninguna implementación antigua
+        puede conservar la posición donde ocurrió el golpe.
+        """
+        camara_anterior = self.camara_x
+
+        colocar_inicio = getattr(self, "colocar_jugador_en_inicio", None)
+        if callable(colocar_inicio):
+            colocar_inicio()
+
+        # La aplicación directa es intencional: es la parte que garantiza
+        # que el jugador vuelva al comienzo aunque el nivel sobrescriba algo.
+        self._forzar_posicion_inicial()
+
         self.en_dialogo = False
+        self.npc_activo = None
         self.objeto_en_contacto = None
+        self.objeto_practica_actual = None
         self.interaccion_actual = None
+
+        if self.caja_dialogo is not None:
+            self.caja_dialogo.visible = False
+
+        self.reinicio_posicion_en_fotograma = True
+        ahora = pygame.time.get_ticks()
+        self.reaparicion_forzada_hasta = ahora + 250
+        self.invulnerable_danio_hasta = (
+            ahora + self.tiempo_invulnerabilidad_danio
+        )
+        self.invulnerable_puas_hasta = self.invulnerable_danio_hasta
+
+        print(
+            f"[REINICIO EDUCORE] motivo={motivo} "
+            f"camara={camara_anterior:.1f}->0 "
+            f"x={self.jugador.x_pantalla} y={self.jugador.y:.1f}"
+        )
+
+    def regresar_al_inicio_por_huesos(self):
+        """Compatibilidad con llamadas antiguas de los niveles."""
+        self.regresar_al_inicio()
+
+    def recibir_dano_caida(self):
+        """Quita una vida y devuelve al jugador al inicio al caer."""
+        if (
+            self.vidas_infinitas
+            or self.game_over
+            or self.reinicio_posicion_en_fotograma
+        ):
+            return False
+
+        self._restar_vida(
+            evento="Caída al vacío",
+            detalle_base="Cayó fuera del nivel",
+        )
+        efectos.reproducir_dano()
+
+        # Con la última vida se activa game over y no se reaparece.
+        if self.game_over:
+            return True
+
+        self.regresar_al_inicio(motivo="caida")
+        return True
+
+    def verificar_caida_fuera_del_mapa(self):
+        """Detecta cuando la hitbox completa salió por abajo."""
+        if self.game_over or self.reinicio_posicion_en_fotograma:
+            return False
+
+        jugador_rect = self.jugador.obtener_rect_pantalla()
+
+        if jugador_rect.top <= ALTO:
+            return False
+
+        return self.recibir_dano_caida()
 
     def recibir_dano_obstaculo(self, obstaculo):
         """Quita exactamente una vida al tocar un obstáculo de daño."""
@@ -3923,10 +4009,10 @@ class JuegoEduCore:
         if self.game_over:
             return True
 
-        # Los huesos tienen un comportamiento especial: después de quitar
-        # exactamente una vida, el personaje vuelve al comienzo del nivel.
-        if obstaculo.tipo == "huesos":
-            self.regresar_al_inicio_por_huesos()
+        # Los huesos regresan al inicio. También se reconoce el nombre del
+        # archivo PNG por si el nivel los declaró accidentalmente como púas.
+        if obstaculo.debe_regresar_al_inicio():
+            self.regresar_al_inicio(motivo="huesos")
             return True
 
         # Rebote corto para separar al personaje y evitar contacto continuo.
@@ -4413,6 +4499,12 @@ class JuegoEduCore:
                 ):
                     self.recibir_dano_obstaculo(obstaculo)
 
+                    # Al tocar huesos, el jugador ya regresó al inicio. Se
+                    # detiene esta revisión para no procesar obstáculos con
+                    # las posiciones antiguas ni restaurar después la cámara.
+                    if self.reinicio_posicion_en_fotograma:
+                        return False
+
                 # Un obstáculo de daño no se procesa como sólido.
                 continue
 
@@ -4526,6 +4618,18 @@ class JuegoEduCore:
             self.jugador.actualizar_animacion(0)
             return
 
+        # Se reinicia al comenzar cada fotograma jugable. Si una colisión o
+        # caída devuelve al jugador al inicio, volverá a activarse.
+        self.reinicio_posicion_en_fotograma = False
+
+        # Mantiene la reaparición fija un instante. Esto impide que el nivel,
+        # una tecla sostenida o una colisión calculada con coordenadas antiguas
+        # devuelvan la cámara al lugar de los huesos.
+        if pygame.time.get_ticks() < self.reaparicion_forzada_hasta:
+            self._forzar_posicion_inicial()
+            self.jugador.actualizar_animacion(0)
+            return
+
         direccion = self.obtener_direccion()
         self.manejar_salto()
 
@@ -4549,10 +4653,19 @@ class JuegoEduCore:
 
             # Primero se resuelven los obstáculos. Si alguno bloqueó el
             # movimiento lateral, se restaura la cámara del fotograma anterior.
-            if self.revisar_colision_obstaculos(
+            bloqueo_horizontal = self.revisar_colision_obstaculos(
                 y_anterior,
                 x_mundo_anterior,
-            ):
+            )
+
+            # Los huesos pueden regresar al jugador al inicio dentro de la
+            # revisión anterior. Se termina el fotograma para impedir que la
+            # cámara o las coordenadas antiguas sobrescriban el reinicio.
+            if self.reinicio_posicion_en_fotograma:
+                self.jugador.actualizar_animacion(0)
+                return
+
+            if bloqueo_horizontal:
                 self.camara_x = camara_anterior
 
             actualizar_enemigos = getattr(
@@ -4570,6 +4683,12 @@ class JuegoEduCore:
             # El piso se revisa al final para recuperar al personaje si una
             # colisión vertical lo dejó dentro de la superficie.
             self.revisar_colision_piso(y_anterior)
+
+            # Si no encontró piso y salió completamente por la parte inferior,
+            # pierde exactamente una vida y reaparece al inicio.
+            if self.verificar_caida_fuera_del_mapa():
+                self.jugador.actualizar_animacion(0)
+                return
 
         obtener_piso_nivel = getattr(
             self,
