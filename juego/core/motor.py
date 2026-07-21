@@ -18,6 +18,7 @@ import subprocess
 from functools import lru_cache
 from pathlib import Path
 from juego.sistemas.audio import gestor_audio
+from juego.sistemas.resultado_prueba import GestorResultadoPrueba
 from juego.core.efectos import efectos
 import os
 
@@ -2908,6 +2909,9 @@ class JuegoEduCore:
         self.enemigos = []
         self.cartel_final = None
 
+        # La lógica de resultado_prueba vive en juego/sistemas/resultado_prueba.py.
+        self.gestor_resultado_prueba = GestorResultadoPrueba(self.db)
+
         self.en_pausa = False
         self.proceso_ajustes = None
         self.boton_pausa_rects = {}
@@ -4217,8 +4221,13 @@ class JuegoEduCore:
         if self.leccion_ya_completada:
             return
 
+        # La prueba final se registra en resultado_prueba cuando el jugador
+        # abre el cartel. No debe procesarse como una lección normal.
+        es_prueba_final = self.gestor_resultado_prueba.es_prueba_final(self)
+
         if (
-            not self.es_administrador
+            not es_prueba_final
+            and not self.es_administrador
             and self.datos_jugador
             and self.id_lenguaje
             and self.leccion_actual
@@ -5901,6 +5910,8 @@ class JuegoEduCore:
         if self.cartel_final is None:
             return None
 
+        menu_estaba_visible = self.cartel_final.menu_visible
+
         resultado = self.cartel_final.manejar_evento(
             evento,
             self.jugador.obtener_rect_mundo(
@@ -5908,6 +5919,14 @@ class JuegoEduCore:
             ),
             self.camara_x,
         )
+
+        menu_se_abrio = (
+            not menu_estaba_visible
+            and self.cartel_final.menu_visible
+        )
+
+        if menu_se_abrio:
+            self.gestor_resultado_prueba.registrar_desde_juego(self)
 
         if (
             resultado == CartelFinal.EVENTO_CONSUMIDO
