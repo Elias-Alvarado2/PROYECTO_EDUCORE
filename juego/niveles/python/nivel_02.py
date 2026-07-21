@@ -14,7 +14,7 @@ class NivelPython02(JuegoBase):
     JUGADOR_X_INICIAL = 170
     AJUSTE_Y_JUGADOR = 0
 
-    LONGITUD_NIVEL = 5500
+    LONGITUD_NIVEL = 7000
 
     NPC_X = 755
     AJUSTE_Y_NPC = -8
@@ -30,7 +30,7 @@ class NivelPython02(JuegoBase):
     NPCS = (
     {
         "nombre": "pinguino_1",
-        "x": 720,
+        "x": 355,
         "ajuste_y": -8,
         "orden_leccion": 4,
         "requiere_anterior": False,
@@ -48,13 +48,20 @@ class NivelPython02(JuegoBase):
     },
       {
         "nombre": "pinguino_1",
-        "x": 4200,
-        "ajuste_y": -8,
+        "x": 4419,
+        "ajuste_y": -93,
         "orden_leccion": 6,
         "requiere_anterior": False,
         "repetible": True,
         "practica": 3,
     },
+            )
+    CARTEL_FINAL = (
+        {
+    "x": 5400,
+    "ajuste_y": -10,
+    "tamano":0.40,
+    "mostrar_bloqueado": True,}
     
 )
 
@@ -78,6 +85,34 @@ class NivelPython02(JuegoBase):
             "hitbox_reducir_ancho": 8,
             "hitbox_reducir_alto": 8,
         },
+          {
+        "tipo": "columnas",
+        "imagen": "python/columnas.png",
+        "x": 1217,
+        "ancho": 60,
+        "alto": 130,
+        "ajuste_y": -2,
+
+        "hitbox_offset_x": 6,
+        "hitbox_offset_y": 4,
+        "hitbox_reducir_ancho": 12,
+        "hitbox_reducir_alto": 8,
+    },
+           {
+        "tipo": "puas",
+        "imagen": "python/cactus.png",
+        "x": 2567,
+        "cantidad": 1,
+        "separacion": 0,
+        "ancho": 70,
+        "alto": 50,
+        "ajuste_y": -2,
+
+        "hitbox_offset_x": 12,
+        "hitbox_offset_y": 20,
+        "hitbox_reducir_ancho": 24,
+        "hitbox_reducir_alto": 22,
+    },
 
         # ========================================================
         # FRAGMENTO 2: MÁS ARRIBA
@@ -85,7 +120,7 @@ class NivelPython02(JuegoBase):
         {
             "tipo": "fragmento",
             "imagen": "python/obstaculo_fragmento.png",
-            "x": 1230,
+            "x": 1391,
             "ancho": 100,
             "alto": 35,
             "ajuste_y": -115,
@@ -134,7 +169,7 @@ class NivelPython02(JuegoBase):
             "tipo": "fragmento",
             "imagen": "python/obstaculo_fragmento2.png",
             "x": 1950,
-            "ancho": 130,
+            "ancho": 100,
             "alto": 35,
             "ajuste_y": -170,
             "hitbox_offset_x": 4,
@@ -150,7 +185,7 @@ class NivelPython02(JuegoBase):
             "tipo": "fragmento",
             "imagen": "python/obstaculo_fragmento2.png",
             "x": 2050,
-            "ancho": 130,
+            "ancho": 100,
             "alto": 35,
             "ajuste_y": -20,
             "hitbox_offset_x": 4,
@@ -332,8 +367,8 @@ class NivelPython02(JuegoBase):
 
         # Túmulo 1: abajo
         {
-            "tipo": "piedra",
-            "imagen": "python/obstaculo_tumulo.png",
+               "tipo": "arena",
+        "imagen": "python/arena.png",
             "x": 3800,
             "ancho": 100,
             "alto": 25,
@@ -344,24 +379,24 @@ class NivelPython02(JuegoBase):
             "hitbox_reducir_alto": 2,
         },
 
-        # Túmulo 2: arriba
-        {
-            "tipo": "piedra",
-            "imagen": "python/obstaculo_tumulo.png",
-            "x": 3900,
-            "ancho": 100,
-            "alto": 25,
-            "ajuste_y": -30,
-            "hitbox_offset_x": 3,
-            "hitbox_offset_y": 2,
-            "hitbox_reducir_ancho": 6,
-            "hitbox_reducir_alto": 2,
-        },
+         {
+        "tipo": "arena",
+        "imagen": "python/arena.png",
+        "x": 3900,
+        "ancho": 100,
+        "alto": 25,
+        "ajuste_y": -30,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
 
         # Túmulo 3: abajo
         {
-            "tipo": "piedra",
-            "imagen": "python/obstaculo_tumulo.png",
+            "tipo": "arena",
+        "imagen": "python/arena.png",
             "x": 4000,
             "ancho": 100,
             "alto": 25,
@@ -406,11 +441,12 @@ class NivelPython02(JuegoBase):
 
         # ========================================================
         # PÚAS DESPUÉS DE LOS DOS FRAGMENTOS
-        # ========================================================
-        {
+     
+     
+          {
             "tipo": "puas",
             "imagen": "python/puas_obstaculo.png",
-            "x": 4600,
+            "x": 613,
             "ancho": 95,
             "alto": 50,
             "ajuste_y": 8,
@@ -419,7 +455,76 @@ class NivelPython02(JuegoBase):
             "hitbox_reducir_ancho": 16,
             "hitbox_reducir_alto": 24,
         },
+               {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento2.png",
+        "x": 1539,
+        "ancho": 100,
+        "alto": 50,
+        "ajuste_y": -40,
 
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+        {
+    "tipo": "puas",
+        "imagen": "python/huesos.png",
+        "x": 1290,
+        "cantidad": 2,
+        "separacion": 70,
+        "ancho": 55,
+        "alto": 50,
+        "ajuste_y": -2,
+
+        "hitbox_offset_x": 12,
+        "hitbox_offset_y": 18,
+        "hitbox_reducir_ancho": 24,
+        "hitbox_reducir_alto": 20,
+    },
+        {
+            "tipo": "fragmento",
+            "imagen": "python/obstaculo_fragmento.png",
+            "x": 4573,
+            "ancho": 100,
+            "alto": 35,
+            "cantidad": 2,
+            "separacion": 100,
+            "ajuste_y": -15,
+            "hitbox_offset_x": 4,
+            "hitbox_offset_y": 8,
+            "hitbox_reducir_ancho": 8,
+            "hitbox_reducir_alto": 0,
+        },
+             {
+        "tipo": "puas",
+        "imagen": "python/cactus.png",
+        "x": 4010,
+        "cantidad": 1,
+        "separacion": 0,
+        "ancho": 70,
+        "alto": 50,
+        "ajuste_y": -25,
+
+        "hitbox_offset_x": 12,
+        "hitbox_offset_y": 20,
+        "hitbox_reducir_ancho": 24,
+        "hitbox_reducir_alto": 22,
+    },
+          {
+            "tipo": "puas",
+            "imagen": "python/puas_obstaculo.png",
+            "x": 4680,
+            "ancho": 95,
+            "alto": 50,
+            "ajuste_y": 8,
+            "hitbox_offset_x": 8,
+            "hitbox_offset_y": 20,
+            "hitbox_reducir_ancho": 16,
+            "hitbox_reducir_alto": 24,
+        },
+              
     )
     # ========================================================
     # PRÁCTICAS

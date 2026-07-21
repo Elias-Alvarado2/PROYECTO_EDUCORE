@@ -17,7 +17,7 @@ class NivelPython01(JuegoBase):
     # Negativo = sube.
     # Positivo = baja.
     AJUSTE_Y_JUGADOR =0
-    LONGITUD_NIVEL = 5000
+    LONGITUD_NIVEL = 7000
     NPC_X = 720
     AJUSTE_Y_NPC = -8  
     AJUSTE_Y_SPRITE_MONTANAS = 2

@@ -59,21 +59,6 @@ def abrir_nivel(
 
     # El motor devuelve el control cuando se pulsa SALIR.
     resultado = juego.ejecutar()
-
-    if resultado == "siguiente_leccion":
-        siguiente_nivel = int(numero_nivel) + 1
-
-        if siguiente_nivel <= 6:
-            return abrir_nivel(
-                id_jugador=id_jugador,
-                lenguaje=lenguaje,
-                numero_nivel=siguiente_nivel,
-                usar_pantalla_carga=usar_pantalla_carga,
-                sesion=sesion,
-            )
-
-        return "menu_niveles"
-
     return resultado
 
 
@@ -89,16 +74,23 @@ def obtener_argumentos():
     parser.add_argument(
         "--lenguaje",
         type=str,
-        default="java",
+        default="mysql",
     )
 
     parser.add_argument(
         "--nivel",
         type=int,
+
         default= 1,
+
+
+        default=1,
 
       
 
+        default= 6,
+
+    
     )
 
     parser.add_argument(

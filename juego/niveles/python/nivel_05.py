@@ -26,6 +26,7 @@ class NivelPython05(JuegoBase):
     PISOS = (
         (0, LONGITUD_NIVEL),
     )
+    
     NPCS = (
     {
         "nombre": "pinguino_1",
@@ -38,8 +39,8 @@ class NivelPython05(JuegoBase):
     },
      {
         "nombre": "pinguino_1",
-        "x": 3225,
-        "ajuste_y": -115,
+        "x": 2247,
+        "ajuste_y": -85,
         "orden_leccion": 5,
         "requiere_anterior": False,
         "repetible": True,
@@ -54,8 +55,17 @@ class NivelPython05(JuegoBase):
         "repetible": True,
         "practica": 3,
     },
-    
+        )
+    CARTEL_FINAL = (
+        {
+    "x": 6000,
+    "ajuste_y": -10,
+    "tamano":0.40,
+    "mostrar_bloqueado": True,
+    }
 )
+    
+
     OBSTACULOS = (
            {
     "tipo": "puas",
@@ -331,7 +341,7 @@ class NivelPython05(JuegoBase):
        {
         "tipo": "fragmento",
         "imagen": "python/obstaculo_fragmento2.png",
-        "x": 3159,
+        "x": 3140,
         "ancho": 100,
         "alto": 50,
         "ajuste_y": -15,
@@ -357,7 +367,7 @@ class NivelPython05(JuegoBase):
       {
         "tipo": "fragmento",
         "imagen": "python/obstaculo_fragmento.png",
-        "x": 3587,
+        "x": 3482,
         "ancho": 100,
         "alto": 35,
         "ajuste_y": -50,
@@ -396,9 +406,193 @@ class NivelPython05(JuegoBase):
         "hitbox_reducir_alto": 8,
     },
        {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento.png",
+        "x": 3561,
+        "ancho": 100,
+        "alto": 35,
+        "ajuste_y": -100,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+       {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento.png",
+        "x": 3655,
+        "ancho": 100,
+        "alto": 35,
+        "ajuste_y": -150,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+       {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento.png",
+        "x": 3901,
+        "ancho": 100,
+        "alto": 35,
+        "ajuste_y": -15,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+       {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento2.png",
+        "x": 4345,
+        "ancho": 100,
+        "alto": 50,
+        "ajuste_y": -35,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+          {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento2.png",
+        "x": 4460,
+        "ancho": 100,
+        "alto": 50,
+        "ajuste_y": -75,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+     {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento2.png",
+        "x": 4580,
+        "ancho": 100,
+        "alto": 50,
+        "ajuste_y": -80,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+     {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento2.png",
+        "x": 4720,
+        "ancho": 100,
+        "alto": 50,
+        "ajuste_y": -100,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+     {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento2.png",
+        "x": 4800,
+        "ancho": 100,
+        "alto": 50,
+        "ajuste_y": -180,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+        {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento2.png",
+        "x": 4950,
+        "ancho": 100,
+        "alto": 50,
+        "ajuste_y": -200,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+        {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento2.png",
+        "x": 5092,
+        "ancho": 100,
+        "alto": 50,
+        "ajuste_y": -170,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+    
+        {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento2.png",
+        "x": 5241,
+        "ancho": 100,
+        "alto": 50,
+        "ajuste_y": -150,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+     {
+        "tipo": "columnas",
+        "imagen": "python/columnas.png",
+        "x": 5355,
+        "ancho": 60,
+        "alto": 130,
+        "ajuste_y": -2,
+
+        "hitbox_offset_x": 6,
+        "hitbox_offset_y": 4,
+        "hitbox_reducir_ancho": 12,
+        "hitbox_reducir_alto": 8,
+    },
+            {
+    "tipo": "huesos",
+    "imagen": "python/huesos.png",
+    "x": 4456,
+    "ancho": 55,
+    "alto": 50,
+    "ajuste_y": -2,
+    "cantidad": 8,
+    "separacion": 60,
+    "hitbox_offset_x": 7,
+    "hitbox_offset_y": 4,
+    "hitbox_reducir_ancho": 14,
+    "hitbox_reducir_alto": 8,
+},
+       {
+        "tipo": "fragmento",
+        "imagen": "python/obstaculo_fragmento2.png",
+        "x": 5457,
+        "ancho": 100,
+        "alto": 50,
+        "ajuste_y": -15,
+
+        "hitbox_offset_x": 4,
+        "hitbox_offset_y": 3,
+        "hitbox_reducir_ancho": 8,
+        "hitbox_reducir_alto": 8,
+    },
+         {
         "tipo": "puas",
         "imagen": "python/cactus.png",
-        "x": 3400,
+        "x": 5695,
         "cantidad": 1,
         "separacion": 0,
         "ancho": 70,
@@ -410,17 +604,90 @@ class NivelPython05(JuegoBase):
         "hitbox_reducir_ancho": 24,
         "hitbox_reducir_alto": 22,
     },
+    
 
     )
 
     PRACTICAS = (
         {
-            "x": 1580,
-            "y": None,
-            "pregunta": 'En Python, una variable sirve para almacenar un dato que puede utilizarse después.',
-            "respuesta_correcta": True,
-            "nombre": "practica_python_05",
+            "x": 1630,
+            "y": 350,
+            "tipo": "verdadero_falso",
+        "pregunta": (
+            "Observa el siguiente código:\n\n"
+            'frutas = ["manzana", "pera", "uva"]\n\n'
+            "¿La variable frutas contiene una lista de tres elementos?"
+        ),
+        "respuesta_correcta": True,
+        "nombre": "python_listas_vf_01",
+    },
+     {
+        "x": 3935,
+        "y": 450,
+        "tipo": "eleccion_multiple",
+        "pregunta": (
+            "Observa el siguiente código:\n"
+            'frutas = ["manzana", "pera", "uva"]\n'
+            "print(frutas[0])\n"
+            "¿Qué elemento mostrará el programa?"
+        ),
+        "opciones": [
+            "manzana",
+            "pera",
+            "uva",
+        ],
+        "respuesta_correcta": 1,
+        "nombre": "python_listas_multiple_02",
+    },
+
+    # ====================================================
+    # PRÁCTICA 3: COMPLETAR CÓDIGO
+    # ====================================================
+    {
+        "x": 4976,
+        "y": 261,
+        "tipo": "codigo",
+        "pregunta": (
+            "Arrastra las opciones correctas para completar el código. "
+            "Agrega uva al final de la lista y después muestra la lista."
+        ),
+        "nombre": "python_listas_codigo_03",
+        "respuestas": {
+            "metodo": "append",
+            "funcion": "print",
         },
+        "codigo": [
+            {
+                "indentacion": 0,
+                "segmentos": [
+                    {"texto": 'frutas = ["manzana", "pera"]'},
+                ],
+            },
+            {
+                "indentacion": 0,
+                "segmentos": [
+                    {"texto": "frutas."},
+                    {"hueco": "metodo"},
+                    {"texto": '("uva")'},
+                ],
+            },
+            {
+                "indentacion": 0,
+                "segmentos": [
+                    {"hueco": "funcion"},
+                    {"texto": "(frutas)"},
+                ],
+            },
+        ],
+        "opciones": [
+            "append",
+            "print",
+            "remove",
+            "input",
+            "while",
+            "if",
+        ],
+    },
     )
 
 

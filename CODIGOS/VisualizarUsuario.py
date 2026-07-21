@@ -239,6 +239,57 @@ class EfectoHoverBoton(QtCore.QObject):
             evento
         )
 
+class DelegadoFilasEspaciadas(QtWidgets.QStyledItemDelegate):
+    """
+    Reduce el área pintada de cada celda para dejar
+    un espacio transparente entre usuarios.
+    """
+
+    def __init__(
+        self,
+        espacio_vertical=20,
+        parent=None
+    ):
+        super().__init__(parent)
+
+        self.espacio_vertical = espacio_vertical
+
+    def paint(self, painter, option, index):
+        opcion = QtWidgets.QStyleOptionViewItem(
+            option
+        )
+
+        mitad_espacio = (
+            self.espacio_vertical // 2
+        )
+
+        opcion.rect = option.rect.adjusted(
+            0,
+            mitad_espacio,
+            0,
+            -mitad_espacio
+        )
+
+        super().paint(
+            painter,
+            opcion,
+            index
+        )
+
+    def establecer_espacio(self, espacio):
+        """
+        Permite modificar la separación después de
+        crear el delegado.
+        """
+
+        self.espacio_vertical = max(
+            0,
+            int(espacio)
+        )
+
+        if self.parent() is not None:
+            self.parent().viewport().update()
+
 
 class VisualizarUsuario(QtWidgets.QWidget):
     def __init__(self, ventana_anterior=None):
@@ -376,6 +427,10 @@ class VisualizarUsuario(QtWidgets.QWidget):
         # Aquí se almacenan todos los usuarios de la BD.
         self.lista_usuarios = []
 
+        # Configuración visual de las filas.
+        self.alto_contenido_usuario = 50
+        self.espacio_entre_usuarios = 32
+
         self.configurar_tabla()
         self.posicionar_elementos()
         self.conectar_eventos()
@@ -498,29 +553,30 @@ class VisualizarUsuario(QtWidgets.QWidget):
 
     def posicionar_elementos(self):
         escala_x = (
-            self.width()
-            / self.ANCHO_BASE
+                self.width()
+                / self.ANCHO_BASE
         )
 
         escala_y = (
-            self.height()
-            / self.ALTO_BASE
+                self.height()
+                / self.ALTO_BASE
         )
 
+        # Tabla un poco más pequeña y centrada.
         x_tabla = int(
-            185 * escala_x
+            201 * escala_x
         )
 
         y_tabla = int(
-            455 * escala_y
+            435 * escala_y
         )
 
         ancho_tabla = int(
-            1550 * escala_x
+            1530 * escala_x
         )
 
         alto_tabla = int(
-            370 * escala_y
+            700 * escala_y
         )
 
         self.dgv_visualizarusuarios.setGeometry(
@@ -534,6 +590,39 @@ class VisualizarUsuario(QtWidgets.QWidget):
 
         self.ajustar_columnas()
         self.ajustar_altura_filas()
+
+        if hasattr(self, "lbl_totalusuarios"):
+            x_total = int(
+                510 * escala_x
+            )
+
+            y_total = int(
+                882 * escala_y
+            )
+
+            ancho_total = int(
+                80 * escala_x
+            )
+
+            alto_total = int(
+                35 * escala_y
+            )
+
+            self.lbl_totalusuarios.setGeometry(
+                x_total,
+                y_total,
+                ancho_total,
+                alto_total
+            )
+
+            self.lbl_totalusuarios.setStyleSheet("""
+                QLabel {
+                    background: transparent;
+                    color: #082B5F;
+                }
+            """)
+
+            self.lbl_totalusuarios.raise_()
 
         if hasattr(self, "lbl_totalusuarios"):
             x_total = int(
@@ -592,6 +681,15 @@ class VisualizarUsuario(QtWidgets.QWidget):
             self.modelo
         )
 
+        self.delegado_filas = DelegadoFilasEspaciadas(
+            espacio_vertical=self.espacio_entre_usuarios,
+            parent=self.dgv_visualizarusuarios
+        )
+
+        self.dgv_visualizarusuarios.setItemDelegate(
+            self.delegado_filas
+        )
+
         self.dgv_visualizarusuarios.setEditTriggers(
             QtWidgets.QAbstractItemView
             .EditTrigger
@@ -648,19 +746,21 @@ class VisualizarUsuario(QtWidgets.QWidget):
                 border: none;
                 color: #082B5F;
                 gridline-color: transparent;
-                selection-background-color: #0B73D9;
+                selection-background-color: transparent;
                 selection-color: white;
+                outline: none;
             }
 
             QTableView::item {
                 background: transparent;
                 border: none;
-                padding: 2px;
+                padding: 4px 6px;
             }
 
             QTableView::item:selected {
                 background-color: #0B73D9;
                 color: white;
+                border: none;
             }
         """)
 
@@ -984,39 +1084,77 @@ class VisualizarUsuario(QtWidgets.QWidget):
 
     def ajustar_altura_filas(self):
         """
-        Divide la altura disponible de la tabla entre las
-        cinco filas mostradas por página.
+        Ajusta la altura real de las filas y deja espacio
+        visible entre cada usuario.
         """
 
-        if not hasattr(self, "dgv_visualizarusuarios"):
+        if not hasattr(
+                self,
+                "dgv_visualizarusuarios"
+        ):
             return
 
-        if not hasattr(self, "modelo"):
+        if not hasattr(
+                self,
+                "modelo"
+        ):
             return
 
-        # Altura interior disponible dentro del QTableView.
-        alto_disponible = (
-            self.dgv_visualizarusuarios.viewport().height()
+        escala_y = (
+                self.height()
+                / self.ALTO_BASE
         )
 
-        if alto_disponible <= 0:
-            return
-
-        # Como aparecen 5 usuarios por página, divide
-        # todo el espacio de la tabla entre 5.
-        alto_fila = int(
-            alto_disponible / self.usuarios_por_pagina
+        # Evita que las filas queden demasiado pequeñas.
+        escala_y = max(
+            0.70,
+            escala_y
         )
 
-        self.dgv_visualizarusuarios.verticalHeader().setDefaultSectionSize(
+        alto_contenido = int(
+            self.alto_contenido_usuario
+            * escala_y
+        )
+
+        espacio = int(
+            self.espacio_entre_usuarios
+            * escala_y
+        )
+
+        # La altura total incluye el contenido y el espacio.
+        alto_fila = (
+                alto_contenido
+                + espacio
+        )
+
+        encabezado_vertical = (
+            self.dgv_visualizarusuarios
+            .verticalHeader()
+        )
+
+        encabezado_vertical.setMinimumSectionSize(
+            1
+        )
+
+        encabezado_vertical.setDefaultSectionSize(
             alto_fila
         )
 
-        # Aplicar la altura a cada fila que se está mostrando.
-        for fila in range(self.modelo.rowCount()):
+        for fila in range(
+                self.modelo.rowCount()
+        ):
             self.dgv_visualizarusuarios.setRowHeight(
                 fila,
                 alto_fila
+            )
+
+        # Mantiene sincronizado el delegado.
+        if hasattr(
+                self,
+                "delegado_filas"
+        ):
+            self.delegado_filas.establecer_espacio(
+                espacio
             )
 
     def actualizar_interfaz(self):

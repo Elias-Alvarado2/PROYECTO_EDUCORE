@@ -54,7 +54,14 @@ class NivelPython03(JuegoBase):
         "repetible": True,
         "practica": 3,
     },
-    
+            )
+    CARTEL_FINAL = (
+        {
+    "x": 5200,
+    "ajuste_y": -10,
+    "tamano":0.40,
+    "mostrar_bloqueado": True,
+    }
 )
     OBSTACULOS = (
     # =========================================================
