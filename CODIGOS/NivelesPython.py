@@ -100,13 +100,44 @@ class PintorImagenBoton(QtCore.QObject):
 
     @staticmethod
     def recortar_transparencia(pixmap):
-        """Elimina el espacio transparente exterior de un PNG."""
+        """
+        Elimina el espacio transparente exterior del PNG.
+
+        Primero utiliza createAlphaMask(), QBitmap y QRegion, que ejecutan
+        el cálculo internamente en Qt y son mucho más rápidos que recorrer
+        cada píxel desde Python. El recorrido manual queda solamente como
+        respaldo de compatibilidad.
+        """
         if pixmap.isNull():
             return pixmap
 
         imagen = pixmap.toImage().convertToFormat(
             QtGui.QImage.Format.Format_ARGB32
         )
+
+        try:
+            mascara_alpha = imagen.createAlphaMask()
+            mapa_bits = QtGui.QBitmap.fromImage(
+                mascara_alpha
+            )
+            region_visible = QtGui.QRegion(
+                mapa_bits
+            )
+            rectangulo_visible = (
+                region_visible.boundingRect()
+            )
+
+            if not rectangulo_visible.isEmpty():
+                return QtGui.QPixmap.fromImage(
+                    imagen.copy(
+                        rectangulo_visible
+                    )
+                )
+
+        except Exception:
+            # Algunas instalaciones antiguas de Qt pueden no aceptar
+            # directamente QRegion(QBitmap). En ese caso se usa respaldo.
+            pass
 
         ancho = imagen.width()
         alto = imagen.height()
@@ -118,13 +149,26 @@ class PintorImagenBoton(QtCore.QObject):
 
         for y in range(alto):
             for x in range(ancho):
-                if QtGui.qAlpha(imagen.pixel(x, y)) > 0:
-                    izquierda = min(izquierda, x)
-                    derecha = max(derecha, x)
-                    arriba = min(arriba, y)
-                    abajo = max(abajo, y)
+                if QtGui.qAlpha(
+                    imagen.pixel(x, y)
+                ) > 0:
+                    izquierda = min(
+                        izquierda,
+                        x,
+                    )
+                    derecha = max(
+                        derecha,
+                        x,
+                    )
+                    arriba = min(
+                        arriba,
+                        y,
+                    )
+                    abajo = max(
+                        abajo,
+                        y,
+                    )
 
-        # Conserva la imagen original si está completamente transparente.
         if derecha < izquierda or abajo < arriba:
             return pixmap
 
@@ -136,7 +180,9 @@ class PintorImagenBoton(QtCore.QObject):
         )
 
         return QtGui.QPixmap.fromImage(
-            imagen.copy(rectangulo_visible)
+            imagen.copy(
+                rectangulo_visible
+            )
         )
 
     def eventFilter(self, objeto, evento):
@@ -344,6 +390,136 @@ class EfectoHoverBoton(QtCore.QObject):
         )
 
 
+class SenalesCargaProgreso(QtCore.QObject):
+    """Señales enviadas desde la tarea que consulta la base de datos."""
+
+    terminado = QtCore.pyqtSignal(object)
+    error = QtCore.pyqtSignal(str)
+
+
+class TareaCargaProgreso(QtCore.QRunnable):
+    """
+    Consulta progreso_jugador en un hilo del QThreadPool.
+
+    La tarea no modifica widgets. Únicamente obtiene un diccionario y lo
+    entrega a la ventana principal mediante una señal.
+    """
+
+    def __init__(
+        self,
+        id_jugador,
+        lenguaje,
+    ):
+        super().__init__()
+
+        self.id_jugador = int(id_jugador)
+        self.lenguaje = str(lenguaje)
+        self.senales = SenalesCargaProgreso()
+
+        self.setAutoDelete(
+            True
+        )
+
+    @QtCore.pyqtSlot()
+    def run(self):
+        try:
+            progreso = self.consultar_progreso()
+            self.senales.terminado.emit(
+                progreso
+            )
+
+        except Exception as error:
+            self.senales.error.emit(
+                str(error)
+            )
+
+    def consultar_progreso(self):
+        base_datos = ConexionBD()
+
+        # Primera opción: utiliza el método compartido con Perfil.
+        if hasattr(
+            base_datos,
+            "obtener_progreso_perfil",
+        ):
+            try:
+                registros = (
+                    base_datos.obtener_progreso_perfil(
+                        self.id_jugador
+                    )
+                    or []
+                )
+
+                for registro in registros:
+                    lenguaje_registro = str(
+                        registro.get("lenguaje")
+                        or ""
+                    ).strip().casefold()
+
+                    if (
+                        lenguaje_registro
+                        == self.lenguaje.casefold()
+                    ):
+                        return dict(
+                            registro
+                        )
+
+            except Exception:
+                # Si ese método falla, se intenta la consulta directa.
+                pass
+
+        conexion = None
+        cursor = None
+
+        try:
+            conexion = base_datos.conectar()
+
+            if conexion is None:
+                return {}
+
+            cursor = conexion.cursor(
+                dictionary=True
+            )
+            cursor.execute(
+                """
+                SELECT
+                    pj.leccion_actual,
+                    pj.lecciones_completadas,
+                    pj.porcentaje_avance,
+                    pj.prueba_desbloqueada,
+                    pj.prueba_completada
+                FROM progreso_jugador AS pj
+                INNER JOIN lenguaje AS l
+                    ON l.id_lenguaje = pj.id_lenguaje
+                WHERE pj.id_jugador = %s
+                  AND LOWER(TRIM(l.nombre)) = LOWER(%s)
+                ORDER BY pj.ultima_actualizacion DESC
+                LIMIT 1;
+                """,
+                (
+                    self.id_jugador,
+                    self.lenguaje,
+                ),
+            )
+
+            return (
+                cursor.fetchone()
+                or {}
+            )
+
+        finally:
+            if cursor is not None:
+                try:
+                    cursor.close()
+                except Exception:
+                    pass
+
+            if conexion is not None:
+                try:
+                    conexion.close()
+                except Exception:
+                    pass
+
+
 class NivelesPython(QtWidgets.QWidget):
     """Menú de Python con desbloqueo progresivo de niveles."""
 
@@ -379,6 +555,13 @@ class NivelesPython(QtWidgets.QWidget):
         # Evita ejecutar varias actualizaciones iguales en el mismo ciclo.
         self._actualizacion_programada = False
         self._debe_cargar_progreso = False
+
+        # La consulta de progreso se ejecuta fuera del hilo de la interfaz.
+        # De esta manera NivelesPython termina de construirse rápidamente y
+        # FormTransicion puede comenzar apenas se hace clic.
+        self._carga_progreso_en_curso = False
+        self._recarga_progreso_pendiente = False
+        self._tarea_carga_progreso = None
 
         self.base_dir = Path(__file__).resolve().parent
         self.proyecto_dir = self.base_dir.parent
@@ -448,9 +631,9 @@ class NivelesPython(QtWidgets.QWidget):
             self.btnComenzar,
         ]
 
-        self.indice_imagenes_botones = (
-            self.crear_indice_imagenes_botones()
-        )
+        # Se crea solamente cuando se necesita aplicar la primera imagen.
+        # Esto reduce el trabajo realizado antes de FormTransicion.
+        self.indice_imagenes_botones = None
 
         # Mantiene vivos los filtros que dibujan cada imagen.
         self.pintores_imagen_botones = {}
@@ -488,10 +671,9 @@ class NivelesPython(QtWidgets.QWidget):
         self.conectar_eventos()
         self.poner_controles_al_frente()
 
-        # No agrega espera real: 0 significa el siguiente ciclo de eventos.
-        self.programar_actualizacion_interfaz(
-            cargar_progreso=True
-        )
+        # Estado seguro mientras la consulta asíncrona todavía no termina.
+        # Las imágenes definidas en Designer permanecen visibles.
+        self.preparar_estado_temporal()
 
     # ========================================================
     # ACTUALIZACIÓN COORDINADA DE LA INTERFAZ
@@ -723,6 +905,11 @@ class NivelesPython(QtWidgets.QWidget):
         return puntaje
 
     def obtener_ruta_imagen_boton(self, nombre_imagen):
+        if self.indice_imagenes_botones is None:
+            self.indice_imagenes_botones = (
+                self.crear_indice_imagenes_botones()
+            )
+
         clave = str(
             nombre_imagen
         ).strip().casefold()
@@ -1081,7 +1268,126 @@ class NivelesPython(QtWidgets.QWidget):
     def nombre_imagen_nivel_desbloqueado(numero_nivel):
         return f"BotonDesPython_{numero_nivel}"
 
+    def preparar_estado_temporal(self):
+        """
+        Mantiene la ventana lista para aparecer durante la transición.
+
+        No consulta la base de datos ni recorta imágenes. Los botones de
+        Designer siguen visibles, pero permanecen deshabilitados hasta que
+        llega el progreso real.
+        """
+        self.btnVolver.setEnabled(
+            True
+        )
+        self.btnVolver.setCursor(
+            QtGui.QCursor(
+                QtCore.Qt.CursorShape.PointingHandCursor
+            )
+        )
+
+        for boton in self.botones_niveles:
+            boton.setEnabled(
+                False
+            )
+            boton.setCursor(
+                QtGui.QCursor(
+                    QtCore.Qt.CursorShape.ArrowCursor
+                )
+            )
+
     def cargar_estado_niveles(self):
+        """
+        Inicia la carga del progreso sin bloquear la interfaz.
+
+        La transición puede comenzar inmediatamente porque la consulta a
+        MySQL se ejecuta en QThreadPool.
+        """
+        if self.nivel_en_ejecucion:
+            self._recarga_progreso_pendiente = True
+            return
+
+        if self.es_sesion_administrador():
+            self.aplicar_estado_niveles(
+                {}
+            )
+            return
+
+        id_jugador = self.obtener_id_jugador()
+
+        if id_jugador is None:
+            self.aplicar_estado_niveles(
+                {}
+            )
+            return
+
+        if self._carga_progreso_en_curso:
+            self._recarga_progreso_pendiente = True
+            return
+
+        self._carga_progreso_en_curso = True
+        self._recarga_progreso_pendiente = False
+
+        tarea = TareaCargaProgreso(
+            id_jugador=id_jugador,
+            lenguaje=self.LENGUAJE,
+        )
+        tarea.senales.terminado.connect(
+            self._al_recibir_progreso
+        )
+        tarea.senales.error.connect(
+            self._al_fallar_carga_progreso
+        )
+
+        # Mantiene una referencia mientras la tarea está ejecutándose.
+        self._tarea_carga_progreso = tarea
+
+        QtCore.QThreadPool.globalInstance().start(
+            tarea
+        )
+
+    @QtCore.pyqtSlot(object)
+    def _al_recibir_progreso(self, progreso):
+        self._carga_progreso_en_curso = False
+        self._tarea_carga_progreso = None
+
+        if not self.nivel_en_ejecucion:
+            self.aplicar_estado_niveles(
+                progreso or {}
+            )
+
+        if self._recarga_progreso_pendiente:
+            self._recarga_progreso_pendiente = False
+            self.cargar_estado_niveles()
+
+    @QtCore.pyqtSlot(str)
+    def _al_fallar_carga_progreso(self, detalle):
+        self._carga_progreso_en_curso = False
+        self._tarea_carga_progreso = None
+
+        print(
+            "[NIVELES PYTHON] No se pudo cargar el progreso "
+            "en segundo plano:",
+            detalle,
+        )
+
+        # Mantiene habilitado al menos el primer nivel si no fue posible
+        # consultar la base de datos.
+        if not self.nivel_en_ejecucion:
+            self.aplicar_estado_niveles(
+                {}
+            )
+
+        if self._recarga_progreso_pendiente:
+            self._recarga_progreso_pendiente = False
+            self.cargar_estado_niveles()
+
+    def aplicar_estado_niveles(self, progreso):
+        """
+        Aplica imágenes y habilitación usando un progreso ya obtenido.
+
+        Este método se ejecuta en el hilo principal porque modifica widgets,
+        pero ya no realiza consultas lentas a la base de datos.
+        """
         if self.nivel_en_ejecucion:
             return
 
@@ -1108,9 +1414,9 @@ class NivelesPython(QtWidgets.QWidget):
                     True,
                 )
                 self.poner_controles_al_frente()
+                self.actualizar_hover_botones()
                 return
 
-            progreso = self.consultar_progreso_python()
             niveles_completados = (
                 self.calcular_niveles_completados(
                     progreso
@@ -1180,7 +1486,9 @@ class NivelesPython(QtWidgets.QWidget):
                 self.btnComenzar,
                 prueba_desbloqueada,
             )
+
             self.poner_controles_al_frente()
+            self.actualizar_hover_botones()
 
         except Exception as error:
             QtWidgets.QMessageBox.critical(
@@ -1481,6 +1789,8 @@ class NivelesPython(QtWidgets.QWidget):
     def showEvent(self, event):
         super().showEvent(event)
 
+        # La transición ya puede pintar su primer cuadro. La consulta de
+        # progreso iniciada aquí se ejecuta en segundo plano.
         self.programar_actualizacion_interfaz(
             cargar_progreso=not self.nivel_en_ejecucion
         )
