@@ -517,6 +517,182 @@ class ConexionBD:
             if conexion:
                 conexion.close()
 
+    def registrar_nivel_completado(
+            self,
+            id_jugador,
+            id_lenguaje,
+            numero_nivel,
+    ):
+        """
+        Guarda el progreso de los cuatro niveles y la prueba final.
+
+        Nivel 1 = 20%
+        Nivel 2 = 40%
+        Nivel 3 = 60%
+        Nivel 4 = 80%
+        Prueba final = 100%
+        """
+
+        conexion = None
+        cursor = None
+
+        try:
+            numero_nivel = int(numero_nivel)
+            numero_nivel = max(1, min(numero_nivel, 5))
+
+            porcentaje = numero_nivel * 20
+            porcentaje = min(porcentaje, 100)
+
+            siguiente_nivel = min(
+                numero_nivel + 1,
+                5,
+            )
+
+            prueba_desbloqueada = (
+                1 if numero_nivel >= 4 else 0
+            )
+
+            prueba_completada = (
+                1 if numero_nivel >= 5 else 0
+            )
+
+            conexion = self.conectar()
+
+            cursor = conexion.cursor(
+                dictionary=True
+            )
+
+            cursor.execute(
+                """
+                SELECT
+                    id_progreso,
+                    leccion_actual,
+                    lecciones_completadas,
+                    porcentaje_avance,
+                    prueba_desbloqueada,
+                    prueba_completada
+                FROM progreso_jugador
+                WHERE id_jugador = %s
+                  AND id_lenguaje = %s
+                LIMIT 1
+                FOR UPDATE;
+                """,
+                (
+                    id_jugador,
+                    id_lenguaje,
+                ),
+            )
+
+            progreso = cursor.fetchone()
+
+            if progreso is None:
+                cursor.execute(
+                    """
+                    INSERT INTO progreso_jugador (
+                        id_jugador,
+                        id_lenguaje,
+                        leccion_actual,
+                        lecciones_completadas,
+                        puntos,
+                        prueba_desbloqueada,
+                        prueba_completada,
+                        porcentaje_avance,
+                        ultima_actualizacion
+                    )
+                    VALUES (
+                        %s,
+                        %s,
+                        %s,
+                        %s,
+                        0,
+                        %s,
+                        %s,
+                        %s,
+                        CURRENT_TIMESTAMP
+                    );
+                    """,
+                    (
+                        id_jugador,
+                        id_lenguaje,
+                        siguiente_nivel,
+                        numero_nivel,
+                        prueba_desbloqueada,
+                        prueba_completada,
+                        porcentaje,
+                    ),
+                )
+
+            else:
+                cursor.execute(
+                    """
+                    UPDATE progreso_jugador
+                    SET
+                        leccion_actual = GREATEST(
+                            leccion_actual,
+                            %s
+                        ),
+
+                        lecciones_completadas = GREATEST(
+                            lecciones_completadas,
+                            %s
+                        ),
+
+                        porcentaje_avance = GREATEST(
+                            porcentaje_avance,
+                            %s
+                        ),
+
+                        prueba_desbloqueada = GREATEST(
+                            prueba_desbloqueada,
+                            %s
+                        ),
+
+                        prueba_completada = GREATEST(
+                            prueba_completada,
+                            %s
+                        ),
+
+                        ultima_actualizacion =
+                            CURRENT_TIMESTAMP
+
+                    WHERE id_jugador = %s
+                      AND id_lenguaje = %s;
+                    """,
+                    (
+                        siguiente_nivel,
+                        numero_nivel,
+                        porcentaje,
+                        prueba_desbloqueada,
+                        prueba_completada,
+                        id_jugador,
+                        id_lenguaje,
+                    ),
+                )
+
+            conexion.commit()
+            return True
+
+        except Error as error:
+            if conexion is not None:
+                try:
+                    conexion.rollback()
+                except Error:
+                    pass
+
+            print(
+                "[BD] Error al registrar el nivel completado:",
+                error,
+            )
+
+            return False
+
+        finally:
+            if cursor is not None:
+                cursor.close()
+
+            if conexion is not None:
+                conexion.close()
+
 
     # ======================================================
     # OBTENER PROGRESO DEL JUGADOR

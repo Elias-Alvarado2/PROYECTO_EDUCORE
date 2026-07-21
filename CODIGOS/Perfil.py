@@ -53,7 +53,8 @@ TOTAL_NIVELES = 5
 # Configuración de las vidas del jugador.
 MAX_VIDAS = 5
 MINUTOS_RECUPERACION_VIDAS = 5
-INTERVALO_ACTUALIZACION_VIDAS_MS = 5000
+# Consulta vidas y progreso cada 2 segundos mientras el perfil esté visible.
+INTERVALO_ACTUALIZACION_PERFIL_MS = 2000
 
 
 # ==========================================================
@@ -375,6 +376,13 @@ class PerfilWindow(QtWidgets.QWidget):
         self.pixmap_personaje_original = None
         self.transicion_volver = None
 
+        # Evita ejecutar dos consultas simultáneas si una actualización
+        # tarda más de lo esperado.
+        self._actualizacion_en_curso = False
+
+        # Mantiene vivas las animaciones de las barras de progreso.
+        self.animaciones_progreso = {}
+
         if not RUTA_UI.exists():
             raise FileNotFoundError(
                 "No se encontró el formulario Perfil.ui:\n"
@@ -416,7 +424,7 @@ class PerfilWindow(QtWidgets.QWidget):
         self.subir_controles_sobre_fondo()
         self.configurar_formulario()
         self.configurar_responsividad()
-        self.configurar_actualizacion_vidas()
+        self.configurar_actualizacion_tiempo_real()
 
         QtCore.QTimer.singleShot(
             0,
@@ -1285,22 +1293,49 @@ class PerfilWindow(QtWidgets.QWidget):
         self.ajustar_tabla_responsiva()
 
     # ======================================================
-    # ACTUALIZACIÓN AUTOMÁTICA DE VIDAS
+    # ACTUALIZACIÓN AUTOMÁTICA DE VIDAS Y PROGRESO
     # ======================================================
 
-    def configurar_actualizacion_vidas(self):
+    def configurar_actualizacion_tiempo_real(self):
         """
-        Configura un temporizador que vuelve a consultar las vidas
-        mientras el perfil permanece visible.
+        Consulta periódicamente las vidas y el progreso mientras
+        el perfil permanece visible.
+
+        De esta forma, si otro formulario completa una lección o
+        modifica las vidas, el perfil refleja el cambio sin tener
+        que cerrarse y abrirse otra vez.
         """
 
-        self.timer_actualizar_vidas = QtCore.QTimer(self)
-        self.timer_actualizar_vidas.setInterval(
-            INTERVALO_ACTUALIZACION_VIDAS_MS
+        self.timer_actualizar_perfil = QtCore.QTimer(self)
+        self.timer_actualizar_perfil.setInterval(
+            INTERVALO_ACTUALIZACION_PERFIL_MS
         )
-        self.timer_actualizar_vidas.timeout.connect(
-            self.actualizar_vidas_perfil
+        self.timer_actualizar_perfil.timeout.connect(
+            self.actualizar_datos_en_tiempo_real
         )
+
+    def actualizar_datos_en_tiempo_real(self):
+        """Actualiza únicamente los datos que pueden cambiar."""
+
+        if self._actualizacion_en_curso:
+            return
+
+        if not self.isVisible():
+            return
+
+        self._actualizacion_en_curso = True
+
+        try:
+            self.actualizar_vidas_perfil()
+            self.actualizar_progreso_lenguajes()
+
+        finally:
+            self._actualizacion_en_curso = False
+
+    # Se conserva este nombre por compatibilidad con cualquier
+    # parte del proyecto que todavía lo llame directamente.
+    def configurar_actualizacion_vidas(self):
+        self.configurar_actualizacion_tiempo_real()
 
     def aplicar_recuperacion_vidas_si_corresponde(self) -> bool:
         """
@@ -1898,22 +1933,76 @@ class PerfilWindow(QtWidgets.QWidget):
     # PROGRESO DE LENGUAJES
     # ======================================================
 
-    def cargar_progreso_lenguajes(self):
+    def animar_barra_progreso(
+        self,
+        barra: QtWidgets.QProgressBar,
+        porcentaje: int,
+    ):
+        """Cambia el porcentaje con una animación corta y fluida."""
+
+        porcentaje = max(0, min(int(porcentaje), 100))
+        valor_actual = barra.value()
+
+        if valor_actual == porcentaje:
+            barra.setFormat(f"{porcentaje}%")
+            return
+
+        animacion_anterior = self.animaciones_progreso.get(barra)
+
+        if animacion_anterior is not None:
+            animacion_anterior.stop()
+
+        animacion = QtCore.QPropertyAnimation(
+            barra,
+            b"value",
+            self,
+        )
+        animacion.setDuration(350)
+        animacion.setStartValue(valor_actual)
+        animacion.setEndValue(porcentaje)
+        animacion.setEasingCurve(
+            QtCore.QEasingCurve.Type.OutCubic
+        )
+
+        animacion.valueChanged.connect(
+            lambda valor, b=barra: b.setFormat(
+                f"{int(valor)}%"
+            )
+        )
+
+        animacion.finished.connect(
+            lambda b=barra, p=porcentaje: b.setFormat(
+                f"{p}%"
+            )
+        )
+
+        self.animaciones_progreso[barra] = animacion
+        animacion.start()
+
+    def actualizar_progreso_lenguajes(self):
+        """
+        Vuelve a consultar el progreso sin reiniciar visualmente
+        las barras, evitando que parpadeen cada pocos segundos.
+        """
+
+        try:
+            self.cargar_progreso_lenguajes(animar=True)
+
+        except Exception as error:
+            print(
+                "No se pudo actualizar el progreso del perfil:",
+                error
+            )
+
+    def cargar_progreso_lenguajes(self, animar: bool = False):
         barras = {
             "python": self.pb_python,
             "java": self.pb_java,
             "mysql": self.pb_mysql,
         }
 
-        # Reiniciar todas las barras.
-        for barra in {
-            self.pb_python,
-            self.pb_java,
-            self.pb_mysql,
-        }:
+        for barra in barras.values():
             barra.setRange(0, 100)
-            barra.setValue(0)
-            barra.setFormat("0%")
             barra.setTextVisible(True)
 
         registros = (
@@ -1923,18 +2012,23 @@ class PerfilWindow(QtWidgets.QWidget):
             )
         )
 
+        # Empieza en cero para que un lenguaje sin registro se
+        # muestre correctamente, pero sin reiniciar la interfaz
+        # antes de terminar la consulta.
+        datos_progreso = {
+            lenguaje: {
+                "porcentaje": 0,
+                "lecciones_completadas": 0,
+            }
+            for lenguaje in barras
+        }
+
         for registro in registros:
-            lenguaje = (
-                str(registro.get("lenguaje") or "")
-                .strip()
-                .lower()
+            lenguaje = self.normalizar_texto(
+                registro.get("lenguaje") or ""
             )
 
-            barra = barras.get(
-                lenguaje
-            )
-
-            if barra is None:
+            if lenguaje not in barras:
                 continue
 
             porcentaje = float(
@@ -1950,13 +2044,9 @@ class PerfilWindow(QtWidgets.QWidget):
             if prueba_completada:
                 porcentaje = 100
 
-            porcentaje = round(
-                porcentaje
-            )
-
             porcentaje = max(
                 0,
-                min(porcentaje, 100)
+                min(round(porcentaje), 100)
             )
 
             lecciones_completadas = int(
@@ -1964,13 +2054,24 @@ class PerfilWindow(QtWidgets.QWidget):
                 or 0
             )
 
-            barra.setValue(
-                porcentaje
-            )
+            datos_progreso[lenguaje] = {
+                "porcentaje": porcentaje,
+                "lecciones_completadas": lecciones_completadas,
+            }
 
-            barra.setFormat(
-                f"{porcentaje}%"
-            )
+        for lenguaje, barra in barras.items():
+            datos = datos_progreso[lenguaje]
+            porcentaje = datos["porcentaje"]
+            lecciones_completadas = datos["lecciones_completadas"]
+
+            if animar:
+                self.animar_barra_progreso(
+                    barra,
+                    porcentaje,
+                )
+            else:
+                barra.setValue(porcentaje)
+                barra.setFormat(f"{porcentaje}%")
 
             barra.setToolTip(
                 "Lecciones completadas: "
@@ -2127,14 +2228,15 @@ class PerfilWindow(QtWidgets.QWidget):
     def showEvent(self, evento):
         super().showEvent(evento)
 
-        # Actualiza las vidas cada vez que se entra al perfil.
+        # Al entrar al perfil, consulta inmediatamente las vidas
+        # y el progreso por si cambiaron en otro formulario.
         QtCore.QTimer.singleShot(
             0,
-            self.actualizar_vidas_perfil,
+            self.actualizar_datos_en_tiempo_real,
         )
 
-        if hasattr(self, "timer_actualizar_vidas"):
-            self.timer_actualizar_vidas.start()
+        if hasattr(self, "timer_actualizar_perfil"):
+            self.timer_actualizar_perfil.start()
 
         QtCore.QTimer.singleShot(
             0,
@@ -2152,14 +2254,21 @@ class PerfilWindow(QtWidgets.QWidget):
         )
 
     def hideEvent(self, evento):
-        if hasattr(self, "timer_actualizar_vidas"):
-            self.timer_actualizar_vidas.stop()
+        if hasattr(self, "timer_actualizar_perfil"):
+            self.timer_actualizar_perfil.stop()
 
         super().hideEvent(evento)
 
     def closeEvent(self, evento):
-        if hasattr(self, "timer_actualizar_vidas"):
-            self.timer_actualizar_vidas.stop()
+        if hasattr(self, "timer_actualizar_perfil"):
+            self.timer_actualizar_perfil.stop()
+
+        for animacion in getattr(
+            self,
+            "animaciones_progreso",
+            {}
+        ).values():
+            animacion.stop()
 
         super().closeEvent(evento)
 
