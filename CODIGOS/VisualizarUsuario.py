@@ -429,7 +429,7 @@ class VisualizarUsuario(QtWidgets.QWidget):
 
         # Configuración visual de las filas.
         self.alto_contenido_usuario = 50
-        self.espacio_entre_usuarios = 30
+        self.espacio_entre_usuarios = 32
 
         self.configurar_tabla()
         self.posicionar_elementos()
