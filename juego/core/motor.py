@@ -18,15 +18,21 @@ import subprocess
 from functools import lru_cache
 from pathlib import Path
 from juego.sistemas.audio import gestor_audio
+from juego.sistemas.resultado_prueba import GestorResultadoPrueba
 from juego.core.efectos import efectos
 import os
-
-import pygame
-
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+# motor.py está dentro de juego/core. Se agrega la raíz del proyecto antes
+# de importar cualquier módulo del paquete juego. Esto permite ejecutar el
+# motor tanto desde PyCharm como directamente desde Python.
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
+
+from juego.sistemas.audio import gestor_audio
+from juego.core.efectos import efectos
+
+import pygame
 
 from juego.interfaz.practica import (
     PantallaPractica,
@@ -48,7 +54,6 @@ except ImportError:
 else:
     mysql = mysql.connector
 
-
 # ============================================================
 # 0. CONFIGURACION DE MYSQL
 # ============================================================
@@ -59,7 +64,6 @@ DB_CONFIG = {
     "password": "123456789",
     "database": "educore_db",
 }
-
 
 # ============================================================
 # 1. RUTAS DEL PROYECTO
@@ -187,17 +191,15 @@ MARGEN_COLISION_VERTICAL = round(20 * ESCALA_JUEGO)
 
 VIDAS_MAXIMAS = 5
 
-TIPOS_OBSTACULOS_SOLIDOS = frozenset({"caja", "fragmento", "arena","tronco","cofre","bloque","piedra", "bloque", "columnas"})
+TIPOS_OBSTACULOS_SOLIDOS = frozenset(
+    {"caja", "fragmento", "arena", "tronco", "cofre", "bloque", "piedra", "bloque", "columnas"})
 TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser", "cactus", "huesos"})
 
-
-
-
-# Las vidas se restauran completamente una hora después de perder la
+# Las vidas se restauran completamente cinco minutos después de perder la
 # primera vida. El motor consulta MySQL cada 30 segundos mientras el nivel
 # está abierto. El tiempo real se calcula en MySQL, por lo que también
 # continúa avanzando aunque el juego esté cerrado.
-INTERVALO_RECUPERACION_VIDAS_MINUTOS = 60
+INTERVALO_RECUPERACION_VIDAS_MINUTOS = 5
 INTERVALO_COMPROBACION_VIDAS_MS = 30_000
 
 ALIAS_PERSONAJES = {
@@ -235,7 +237,6 @@ _CAPAS_FONDO_CONFIG = (
     ),
 )
 
-
 # ============================================================
 # 3. CONFIGURACION DE PERSONAJES
 # ============================================================
@@ -249,14 +250,14 @@ _FRAMES_PATO = tuple(f"Pato_Caminar{i}.png" for i in range(1, 6))
 
 
 def _crear_config_personaje(
-    carpetas,
-    frames_caminar,
-    frames_saltar=(),
-    escala=5.1,
-    hitbox_izquierda=36,
-    hitbox_derecha=36,
-    hitbox_arriba=36,
-    hitbox_abajo=18,
+        carpetas,
+        frames_caminar,
+        frames_saltar=(),
+        escala=5.1,
+        hitbox_izquierda=36,
+        hitbox_derecha=36,
+        hitbox_arriba=36,
+        hitbox_abajo=18,
 ):
     """Crea configuraciones independientes con la estructura publica original."""
     return {
@@ -344,7 +345,7 @@ PERSONAJES_CONFIG = {
         hitbox_abajo=30,
     ),
 }
-#============================================================
+# ============================================================
 # 3.1 CONFIGURACION DEL PERSONAJE EN EL MENU DE PAUSA
 # Solo se configuraron: pato, gato y cerdo.
 # ============================================================
@@ -470,11 +471,11 @@ def limpiar_transparencia_falsa(superficie):
         azul = datos[indice + 2]
 
         if (
-            rojo >= 155
-            and verde >= 155
-            and azul >= 155
-            and _CANALES_SIMILARES[(rojo << 8) | verde]
-            and _CANALES_SIMILARES[(verde << 8) | azul]
+                rojo >= 155
+                and verde >= 155
+                and azul >= 155
+                and _CANALES_SIMILARES[(rojo << 8) | verde]
+                and _CANALES_SIMILARES[(verde << 8) | azul]
         ):
             datos[indice + 3] = 0
 
@@ -519,11 +520,11 @@ def asegurar_borde_inferior(superficie, color=COLOR_RELLENO_INFERIOR, alto_franj
 
 @lru_cache(maxsize=24)
 def _cargar_capa_procesada(
-    ruta_texto,
-    ancho,
-    alto,
-    limpiar_fondo_falso,
-    cortar_arriba_y,
+        ruta_texto,
+        ancho,
+        alto,
+        limpiar_fondo_falso,
+        cortar_arriba_y,
 ):
     """Carga y procesa una capa una sola vez por archivo y configuracion."""
     ruta_imagen = Path(ruta_texto)
@@ -557,8 +558,8 @@ def _cargar_capa_procesada(
         tiene_alpha = True
 
     if (
-        cortar_arriba_y is not None
-        or "suelo" in ruta_imagen.name.lower()
+            cortar_arriba_y is not None
+            or "suelo" in ruta_imagen.name.lower()
     ):
         escalada = asegurar_borde_inferior(escalada)
         tiene_alpha = True
@@ -592,8 +593,8 @@ def _cargar_capa_procesada(
             pass
 
         if (
-            visible.height > 0
-            and visible.height < escalada.get_height()
+                visible.height > 0
+                and visible.height < escalada.get_height()
         ):
             recorte = pygame.Rect(
                 0,
@@ -613,9 +614,9 @@ def _cargar_capa_procesada(
 
 @lru_cache(maxsize=256)
 def _cargar_recurso_obstaculo(
-    ruta_texto,
-    ancho,
-    alto,
+        ruta_texto,
+        ancho,
+        alto,
 ):
     """Comparte imagen y mascara entre obstaculos visualmente identicos."""
     imagen = pygame.image.load(ruta_texto).convert_alpha()
@@ -633,9 +634,9 @@ def _cargar_recurso_obstaculo(
 
 @lru_cache(maxsize=8)
 def _cargar_moneda_practica(
-    ruta_texto,
-    ancho,
-    alto,
+        ruta_texto,
+        ancho,
+        alto,
 ):
     imagen = pygame.image.load(ruta_texto).convert_alpha()
     imagen = recortar_transparencia_png(imagen, margen=0)
@@ -669,8 +670,8 @@ def _cargar_frames_npc(escala, rutas_texto):
 
 @lru_cache(maxsize=8)
 def _cargar_burbuja_dialogo_escalada(
-    ruta_texto,
-    tamano,
+        ruta_texto,
+        tamano,
 ):
     ruta = Path(ruta_texto)
 
@@ -778,7 +779,6 @@ def construir_paginas_leccion(leccion, nombre_lenguaje):
 
     contenido_final = normalizar_texto(leccion.get("contenido_final"))
 
-
     paginas = []
 
     if titulo:
@@ -808,8 +808,8 @@ def construir_paginas_leccion(leccion, nombre_lenguaje):
             posible = bloque + linea + "\n"
 
             if (
-                len(posible) > 115
-                and bloque.strip() != "Ejemplo:"
+                    len(posible) > 115
+                    and bloque.strip() != "Ejemplo:"
             ):
                 paginas.append(bloque.rstrip())
                 bloque = "Ejemplo:\n" + linea + "\n"
@@ -818,7 +818,6 @@ def construir_paginas_leccion(leccion, nombre_lenguaje):
 
         if bloque.strip():
             paginas.append(bloque.rstrip())
-
 
     # 3. Texto posterior al ejemplo, solamente cuando existe.
     if contenido_final:
@@ -837,7 +836,6 @@ def construir_paginas_leccion(leccion, nombre_lenguaje):
             max_caracteres=105,
         )
     )
-
 
     return paginas
 
@@ -1025,7 +1023,7 @@ class ConexionEduCore:
             cursor.close()
 
     def obtener_jugador(self, id_jugador):
-        # Antes de cargar al jugador se comprueba si ya transcurrió la hora.
+        # Antes de cargar al jugador se comprueba si ya transcurrieron los 5 minutos.
         # Esto también hace que la recuperación funcione después de cerrar
         # y volver a abrir el programa.
         self.recuperar_vidas_si_corresponde(id_jugador)
@@ -1044,7 +1042,7 @@ class ConexionEduCore:
     def recuperar_vidas_si_corresponde(self, id_jugador):
         """
         Devuelve las vidas actuales del jugador y restaura las cinco vidas
-        cuando ha pasado una hora desde la primera pérdida.
+        cuando han pasado cinco minutos desde la primera pérdida.
 
         Si el jugador ya tenía menos de cinco vidas antes de agregar la nueva
         columna, el contador se inicia automáticamente al consultar su cuenta.
@@ -1073,9 +1071,9 @@ class ConexionEduCore:
                 (id_jugador, VIDAS_MAXIMAS),
             )
 
-            # Si ya pasó una hora, se restauran todas las vidas.
+            # Si ya pasaron cinco minutos, se restauran todas las vidas.
             cursor.execute(
-                """
+                f"""
                 UPDATE jugador
                 SET vidas = %s,
                     fecha_recuperacion_vidas = NULL
@@ -1084,7 +1082,7 @@ class ConexionEduCore:
                   AND fecha_recuperacion_vidas IS NOT NULL
                   AND fecha_recuperacion_vidas <= DATE_SUB(
                       NOW(),
-                      INTERVAL 1 HOUR
+                      INTERVAL {INTERVALO_RECUPERACION_VIDAS_MINUTOS} MINUTE
                   )
                 """,
                 (VIDAS_MAXIMAS, id_jugador, VIDAS_MAXIMAS),
@@ -1271,10 +1269,10 @@ class ConexionEduCore:
         )
 
     def restar_vida(
-        self,
-        id_jugador,
-        evento="Vida perdida",
-        detalle_base="Perdio una vida",
+            self,
+            id_jugador,
+            evento="Vida perdida",
+            detalle_base="Perdio una vida",
     ):
         cursor = self.obtener_cursor()
 
@@ -1282,10 +1280,10 @@ class ConexionEduCore:
             return None
 
         try:
-            # Si la hora se cumplió justo antes de recibir daño, primero se
+            # Si los cinco minutos se cumplieron justo antes de recibir daño, primero se
             # restauran las vidas y después se descuenta la vida actual.
             cursor.execute(
-                """
+                f"""
                 UPDATE jugador
                 SET vidas = %s,
                     fecha_recuperacion_vidas = NULL
@@ -1294,14 +1292,14 @@ class ConexionEduCore:
                   AND fecha_recuperacion_vidas IS NOT NULL
                   AND fecha_recuperacion_vidas <= DATE_SUB(
                       NOW(),
-                      INTERVAL 1 HOUR
+                      INTERVAL {INTERVALO_RECUPERACION_VIDAS_MINUTOS} MINUTE
                   )
                 """,
                 (VIDAS_MAXIMAS, id_jugador, VIDAS_MAXIMAS),
             )
 
             # El contador comienza con la primera vida perdida. Si ya estaba
-            # corriendo, las pérdidas posteriores no reinician la hora.
+            # corriendo, las pérdidas posteriores no reinician los cinco minutos.
             cursor.execute(
                 """
                 UPDATE jugador
@@ -1438,6 +1436,64 @@ class ConexionEduCore:
         finally:
             cursor.close()
 
+    def registrar_nivel_completado(
+            self,
+            id_jugador,
+            id_lenguaje,
+            numero_nivel,
+    ):
+        """
+        Actualiza el porcentaje correspondiente al nivel completo.
+
+        No modifica leccion_actual, lecciones_completadas ni puntos porque
+        esos datos los administra completar_leccion() con el orden real de
+        la última lección/NPC del nivel.
+        """
+        if id_jugador is None or id_lenguaje is None:
+            return False
+
+        try:
+            numero_nivel = int(numero_nivel)
+        except (TypeError, ValueError):
+            numero_nivel = 1
+
+        numero_nivel = max(1, min(numero_nivel, 5))
+        porcentaje = min(numero_nivel * 20, 100)
+        prueba_desbloqueada = 1 if numero_nivel >= 4 else 0
+        prueba_completada = 1 if numero_nivel >= 5 else 0
+
+        if not self.asegurar_progreso(id_jugador, id_lenguaje):
+            return False
+
+        return self.ejecutar(
+            """
+            UPDATE progreso_jugador
+            SET
+                porcentaje_avance = GREATEST(
+                    porcentaje_avance,
+                    %s
+                ),
+                prueba_desbloqueada = GREATEST(
+                    prueba_desbloqueada,
+                    %s
+                ),
+                prueba_completada = GREATEST(
+                    prueba_completada,
+                    %s
+                ),
+                ultima_actualizacion = CURRENT_TIMESTAMP
+            WHERE id_jugador = %s
+              AND id_lenguaje = %s
+            """,
+            (
+                porcentaje,
+                prueba_desbloqueada,
+                prueba_completada,
+                id_jugador,
+                id_lenguaje,
+            ),
+        )
+
     def cerrar(self):
         try:
             if self.conexion and self.conexion.is_connected():
@@ -1460,15 +1516,15 @@ class CapaParallax:
     """
 
     def __init__(
-        self,
-        ruta_imagen,
-        factor,
-        ancho,
-        alto,
-        color_fallback,
-        limpiar_fondo_falso=False,
-        cortar_arriba_y=None,
-        offset_y=0,
+            self,
+            ruta_imagen,
+            factor,
+            ancho,
+            alto,
+            color_fallback,
+            limpiar_fondo_falso=False,
+            cortar_arriba_y=None,
+            offset_y=0,
     ):
         self.ruta_imagen = ruta_imagen
         self.factor = factor
@@ -1504,7 +1560,7 @@ class CapaParallax:
             self.cortar_arriba_y,
         )
         self.offset_dibujo_y = (
-            self.offset_y + offset_recorte_y
+                self.offset_y + offset_recorte_y
         )
         self.ancho = self.imagen.get_width()
         self.alto = self.imagen.get_height()
@@ -1519,8 +1575,8 @@ class CapaParallax:
         # solamente al dibujar. El módulo final evita que round() produzca
         # exactamente self.ancho en el borde de repetición.
         desplazamiento = (
-            round((float(camara_x) * self.factor) % self.ancho)
-            % self.ancho
+                round((float(camara_x) * self.factor) % self.ancho)
+                % self.ancho
         )
         ancho_primera = self.ancho - desplazamiento
 
@@ -1565,17 +1621,17 @@ class PlataformaInvisible:
 
 class Obstaculo:
     def __init__(
-        self,
-        x,
-        y,
-        ancho,
-        alto,
-        tipo,
-        ruta_imagen,
-        hitbox_offset_x=0,
-        hitbox_offset_y=0,
-        hitbox_ancho=None,
-        hitbox_alto=None,
+            self,
+            x,
+            y,
+            ancho,
+            alto,
+            tipo,
+            ruta_imagen,
+            hitbox_offset_x=0,
+            hitbox_offset_y=0,
+            hitbox_ancho=None,
+            hitbox_alto=None,
     ):
         self.x = x
         self.y = y
@@ -1592,8 +1648,8 @@ class Obstaculo:
         # "cactus", por ejemplo si todavía apunta a cactus_obstaculo.png.
         ruta_normalizada = str(ruta_imagen).lower().replace("\\", "/")
         self.deshabilitado = (
-            self.tipo in TIPOS_OBSTACULOS_DESHABILITADOS
-            
+                self.tipo in TIPOS_OBSTACULOS_DESHABILITADOS
+
         )
 
         if self.deshabilitado:
@@ -1638,9 +1694,9 @@ class Obstaculo:
         )
 
     def toca_pixeles_visibles(
-        self,
-        jugador_rect_mundo,
-        mascara_jugador=None,
+            self,
+            jugador_rect_mundo,
+            mascara_jugador=None,
     ):
         """Comprueba una colisión píxel a píxel con el obstáculo.
 
@@ -1723,16 +1779,16 @@ class Obstaculo:
 
 class ObjetoPractica:
     def __init__(
-        self,
-        x,
-        y,
-        pregunta,
-        respuesta_correcta=True,
-        nombre="objeto",
-        tipo="verdadero_falso",
-        configuracion_codigo=None,
-        configuracion_eleccion=None,
-        configuracion_ejemplo=None,
+            self,
+            x,
+            y,
+            pregunta,
+            respuesta_correcta=True,
+            nombre="objeto",
+            tipo="verdadero_falso",
+            configuracion_codigo=None,
+            configuracion_eleccion=None,
+            configuracion_ejemplo=None,
     ):
         self.nombre = nombre
         self.pregunta = pregunta
@@ -1801,6 +1857,7 @@ class ObjetoPractica:
             int(self.rect.width),
             int(self.rect.height)
         )
+
 
 # ============================================================
 # 11. JUGADOR CON PERSONAJE VARIABLE
@@ -2091,6 +2148,7 @@ class Jugador:
             (round(self.x_pantalla), round(self.y)),
         )
 
+
 # ============================================================
 # 12. NPC ANIMADO
 # ============================================================
@@ -2258,9 +2316,9 @@ class CajaDialogo:
             )
 
             while (
-                self._capacidad_lineas(alto_caja, salto_linea)
-                < len(lineas)
-                and alto_caja < alto_maximo
+                    self._capacidad_lineas(alto_caja, salto_linea)
+                    < len(lineas)
+                    and alto_caja < alto_maximo
             ):
                 alto_caja = min(
                     alto_caja + salto_linea,
@@ -2421,14 +2479,14 @@ class CajaDialogo:
 
 class Interaccion:
     def __init__(
-        self,
-        nombre,
-        obtener_rect,
-        mensaje,
-        accion,
-        requiere_suelo=True,
-        activa=True,
-        usar_una_vez=False,
+            self,
+            nombre,
+            obtener_rect,
+            mensaje,
+            accion,
+            requiere_suelo=True,
+            activa=True,
+            usar_una_vez=False,
     ):
         self.nombre = nombre
         self.obtener_rect = obtener_rect
@@ -2450,9 +2508,9 @@ class Interaccion:
             return False
 
         if (
-            hasattr(juego, "cartel_final")
-            and juego.cartel_final is not None
-            and juego.cartel_final.menu_visible
+                hasattr(juego, "cartel_final")
+                and juego.cartel_final is not None
+                and juego.cartel_final.menu_visible
         ):
             return False
 
@@ -2463,8 +2521,8 @@ class Interaccion:
             return False
 
         if (
-            hasattr(juego, "hay_practica_visible")
-            and juego.hay_practica_visible()
+                hasattr(juego, "hay_practica_visible")
+                and juego.hay_practica_visible()
         ):
             return False
 
@@ -2490,6 +2548,7 @@ class Interaccion:
             self.usada = True
 
         return True
+
 
 # ============================================================
 # 15.1 BOTON DE IMAGEN PARA MENU DE PAUSA
@@ -2614,6 +2673,7 @@ class BotonImagenPausa:
 
         self.imagen_actual = imagen
         pantalla.blit(self.imagen_actual, self.rect.topleft)
+
 
 # ============================================================
 # 16. INTEGRACION DE LA PANTALLA DE CARGA
@@ -2789,12 +2849,12 @@ def _cerrar_pantalla_carga(proceso, progreso, carga_finalizada):
 
 class JuegoEduCore:
     def __init__(
-        self,
-        id_jugador=1,
-        sesion=None,
-        nombre_lenguaje="Python",
-        orden_leccion=None,
-        actualizar_progreso_carga=None,
+            self,
+            id_jugador=1,
+            sesion=None,
+            nombre_lenguaje="Python",
+            orden_leccion=None,
+            actualizar_progreso_carga=None,
     ):
         self._actualizar_progreso_carga = actualizar_progreso_carga
         self._informar_progreso_carga(2)
@@ -2925,6 +2985,9 @@ class JuegoEduCore:
         self.enemigos = []
         self.cartel_final = None
 
+        # La lógica de resultado_prueba vive en juego/sistemas/resultado_prueba.py.
+        self.gestor_resultado_prueba = GestorResultadoPrueba(self.db)
+
         self.en_pausa = False
         self.proceso_ajustes = None
         self.boton_pausa_rects = {}
@@ -2964,9 +3027,9 @@ class JuegoEduCore:
         self.datos_jugador = None
 
         if (
-            not self.es_administrador
-            and self.id_jugador is not None
-            and self.db.activa
+                not self.es_administrador
+                and self.id_jugador is not None
+                and self.db.activa
         ):
             self.datos_jugador = self.db.obtener_jugador(self.id_jugador)
 
@@ -2977,13 +3040,13 @@ class JuegoEduCore:
         if self.es_administrador:
             self.nombre_jugador = self.sesion.get("nombre") or "Administrador"
             self.personaje_elegido = (
-                self.sesion.get("personaje") or PERSONAJE_DEFAULT
+                    self.sesion.get("personaje") or PERSONAJE_DEFAULT
             )
             self.vidas = VIDAS_MAXIMAS
         elif self.datos_jugador:
             self.nombre_jugador = self.datos_jugador.get("nombre") or "Jugador"
             self.personaje_elegido = (
-                self.datos_jugador.get("personaje") or PERSONAJE_DEFAULT
+                    self.datos_jugador.get("personaje") or PERSONAJE_DEFAULT
             )
             self.vidas = int(self.datos_jugador.get("vidas") or 0)
         else:
@@ -2994,19 +3057,19 @@ class JuegoEduCore:
         if self.datos_lenguaje:
             self.id_lenguaje = int(self.datos_lenguaje.get("id_lenguaje"))
             self.nombre_lenguaje = (
-                self.datos_lenguaje.get("nombre") or nombre_lenguaje
+                    self.datos_lenguaje.get("nombre") or nombre_lenguaje
             )
         else:
             self.id_lenguaje = None
             self.nombre_lenguaje = nombre_lenguaje
 
         puede_cargar_leccion = (
-            self.id_lenguaje
-            and self.db.activa
-            and (
-                self.orden_leccion_solicitado is not None
-                or self.datos_jugador is not None
-            )
+                self.id_lenguaje
+                and self.db.activa
+                and (
+                        self.orden_leccion_solicitado is not None
+                        or self.datos_jugador is not None
+                )
         )
 
         if puede_cargar_leccion:
@@ -3051,7 +3114,6 @@ class JuegoEduCore:
             )
         ]
         self.jugador.colocar_sobre_piso(PISO_COLISION_Y)
-        
 
         # Crea todos los pingüinos configurados por el nivel.
         self.cargar_npcs_desde_nivel()
@@ -3108,8 +3170,8 @@ class JuegoEduCore:
         self.npcs = []
 
         for indice_config, configuracion in enumerate(
-            configuraciones_validas,
-            start=1,
+                configuraciones_validas,
+                start=1,
         ):
             x_config = configuracion.get("x")
 
@@ -3195,8 +3257,8 @@ class JuegoEduCore:
             if valores_practica is None:
                 valores_practica = ()
             elif not isinstance(
-                valores_practica,
-                (list, tuple, set),
+                    valores_practica,
+                    (list, tuple, set),
             ):
                 valores_practica = (valores_practica,)
 
@@ -3213,8 +3275,8 @@ class JuegoEduCore:
                     continue
 
                 if (
-                    numero_practica > 0
-                    and numero_practica not in npc.numeros_practica
+                        numero_practica > 0
+                        and numero_practica not in npc.numeros_practica
                 ):
                     npc.numeros_practica.append(numero_practica)
 
@@ -3257,7 +3319,6 @@ class JuegoEduCore:
 
         if not self.npcs:
             print("[NPCS] No se creó ningún pingüino válido.")
-
 
     def obtener_practicas_asociadas_npc(self, npc):
         """Devuelve las practicas validas que pertenecen a un pinguino."""
@@ -3306,8 +3367,8 @@ class JuegoEduCore:
         indice = getattr(npc, "indice_npc", 0)
 
         if (
-            indice <= 0
-            or not getattr(npc, "requiere_anterior", False)
+                indice <= 0
+                or not getattr(npc, "requiere_anterior", False)
         ):
             return True
 
@@ -3323,8 +3384,8 @@ class JuegoEduCore:
             return None
 
         if (
-            not getattr(npc, "repetible", True)
-            and getattr(npc, "dialogo_terminado", False)
+                not getattr(npc, "repetible", True)
+                and getattr(npc, "dialogo_terminado", False)
         ):
             return None
 
@@ -3363,9 +3424,9 @@ class JuegoEduCore:
             if y_config is None:
                 alto_moneda = round(35 * ESCALA_JUEGO)
                 y = (
-                    PISO_COLISION_Y
-                    - alto_moneda
-                    - round(18 * ESCALA_JUEGO)
+                        PISO_COLISION_Y
+                        - alto_moneda
+                        - round(18 * ESCALA_JUEGO)
                 )
             else:
                 y = round(float(y_config) * ESCALA_JUEGO)
@@ -3477,35 +3538,35 @@ class JuegoEduCore:
         return bool(
             (hasattr(self, "practica") and self.practica.visible)
             or (
-                hasattr(self, "practica_codigo")
-                and self.practica_codigo.visible
+                    hasattr(self, "practica_codigo")
+                    and self.practica_codigo.visible
             )
             or (
-                hasattr(self, "practica_eleccion")
-                and self.practica_eleccion.visible
+                    hasattr(self, "practica_eleccion")
+                    and self.practica_eleccion.visible
             )
             or (
-                hasattr(self, "practica_ejemplo")
-                and self.practica_ejemplo.visible
+                    hasattr(self, "practica_ejemplo")
+                    and self.practica_ejemplo.visible
             )
         )
 
     def obtener_practica_visible(self):
         if (
-            hasattr(self, "practica_codigo")
-            and self.practica_codigo.visible
+                hasattr(self, "practica_codigo")
+                and self.practica_codigo.visible
         ):
             return self.practica_codigo
 
         if (
-            hasattr(self, "practica_eleccion")
-            and self.practica_eleccion.visible
+                hasattr(self, "practica_eleccion")
+                and self.practica_eleccion.visible
         ):
             return self.practica_eleccion
 
         if (
-            hasattr(self, "practica_ejemplo")
-            and self.practica_ejemplo.visible
+                hasattr(self, "practica_ejemplo")
+                and self.practica_ejemplo.visible
         ):
             return self.practica_ejemplo
 
@@ -3632,7 +3693,7 @@ class JuegoEduCore:
             (0, 0, 0, 0),
             limpiar_fondo_falso=True,
             cortar_arriba_y=(
-                PISO_COLISION_Y - round(70 * ESCALA_JUEGO)
+                    PISO_COLISION_Y - round(70 * ESCALA_JUEGO)
             ),
         )
 
@@ -3964,7 +4025,7 @@ class JuegoEduCore:
             return False
 
         self.invulnerable_danio_hasta = (
-            ahora + self.tiempo_invulnerabilidad_danio
+                ahora + self.tiempo_invulnerabilidad_danio
         )
         # Mantiene sincronizado el alias usado por código antiguo.
         self.invulnerable_puas_hasta = self.invulnerable_danio_hasta
@@ -4045,19 +4106,19 @@ class JuegoEduCore:
     def verificar_recuperacion_vidas(self, forzar=False):
         """Sincroniza las vidas del jugador con la recuperación de MySQL."""
         if (
-            self.es_administrador
-            or self.vidas_infinitas
-            or self.id_jugador is None
-            or not self.db.activa
+                self.es_administrador
+                or self.vidas_infinitas
+                or self.id_jugador is None
+                or not self.db.activa
         ):
             return False
 
         ahora = pygame.time.get_ticks()
 
         if (
-            not forzar
-            and ahora - self.ultimo_chequeo_recuperacion_vidas
-            < INTERVALO_COMPROBACION_VIDAS_MS
+                not forzar
+                and ahora - self.ultimo_chequeo_recuperacion_vidas
+                < INTERVALO_COMPROBACION_VIDAS_MS
         ):
             return False
 
@@ -4130,15 +4191,15 @@ class JuegoEduCore:
 
     def obtener_direccion(self):
         if (
-            self.en_dialogo
-            or self.en_pausa
-            or self.game_over
-            or self.transicion_iris.activa()
-            or self.hay_practica_visible()
-            or (
+                self.en_dialogo
+                or self.en_pausa
+                or self.game_over
+                or self.transicion_iris.activa()
+                or self.hay_practica_visible()
+                or (
                 self.cartel_final is not None
                 and self.cartel_final.menu_visible
-            )
+        )
         ):
             return 0
 
@@ -4159,22 +4220,22 @@ class JuegoEduCore:
         teclas = pygame.key.get_pressed()
 
         salto_actual = (
-            teclas[pygame.K_SPACE]
-            or teclas[pygame.K_w]
-            or teclas[pygame.K_UP]
+                teclas[pygame.K_SPACE]
+                or teclas[pygame.K_w]
+                or teclas[pygame.K_UP]
         )
 
         if salto_actual and not self.salto_presionado_anterior:
             if (
-                not self.game_over
-                and not self.en_dialogo
-                and not self.en_pausa
-                and not self.transicion_iris.activa()
-                and not self.hay_practica_visible()
-                and not (
+                    not self.game_over
+                    and not self.en_dialogo
+                    and not self.en_pausa
+                    and not self.transicion_iris.activa()
+                    and not self.hay_practica_visible()
+                    and not (
                     self.cartel_final is not None
                     and self.cartel_final.menu_visible
-                )
+            )
             ):
                 self.jugador.saltar()
 
@@ -4244,10 +4305,10 @@ class JuegoEduCore:
         practica_activa = self.obtener_practica_activa()
 
         if (
-            objeto is None
-            or objeto.completado
-            or self.game_over
-            or objeto is not practica_activa
+                objeto is None
+                or objeto.completado
+                or self.game_over
+                or objeto is not practica_activa
         ):
             return
 
@@ -4264,8 +4325,8 @@ class JuegoEduCore:
             # con una versión anterior del motor que todavía no inicializaba
             # esta pantalla. Se crea aquí antes de intentar abrirla.
             if (
-                not hasattr(self, "practica_eleccion")
-                or self.practica_eleccion is None
+                    not hasattr(self, "practica_eleccion")
+                    or self.practica_eleccion is None
             ):
                 self.practica_eleccion = (
                     PantallaPracticaEleccionMultiple()
@@ -4277,8 +4338,8 @@ class JuegoEduCore:
             )
         elif objeto.tipo == "ejemplo":
             if (
-                not hasattr(self, "practica_ejemplo")
-                or self.practica_ejemplo is None
+                    not hasattr(self, "practica_ejemplo")
+                    or self.practica_ejemplo is None
             ):
                 self.practica_ejemplo = PantallaPracticaEjemplo()
 
@@ -4299,27 +4360,150 @@ class JuegoEduCore:
             detalle_base="Respondio incorrectamente una practica",
         )
 
-    def completar_leccion_desde_practica(self):
-        if self.leccion_ya_completada:
-            return
+    def obtener_numero_nivel_actual(self):
+        """Obtiene el número de nivel definido por la clase concreta."""
+        posibles_valores = (
+            getattr(self, "NIVEL_ACTUAL", None),
+            getattr(self, "NUMERO_NIVEL", None),
+            getattr(self, "nivel_actual", None),
+        )
 
-        if (
-            not self.es_administrador
-            and self.datos_jugador
-            and self.id_lenguaje
-            and self.leccion_actual
-            and self.db.activa
+
+        for valor in posibles_valores:
+            if valor is None:
+                continue
+
+            try:
+                return max(1, min(int(valor), 5))
+            except (TypeError, ValueError):
+                continue
+
+        # Respaldo para niveles antiguos que no definían NIVEL_ACTUAL.
+        # Cada nivel normal del proyecto utiliza tres lecciones/NPC.
+        ordenes_npc = [
+            int(getattr(npc, "orden_leccion", 0) or 0)
+            for npc in getattr(self, "npcs", ())
+            if int(getattr(npc, "orden_leccion", 0) or 0) > 0
+        ]
+
+        if ordenes_npc:
+            return max(1, min(((min(ordenes_npc) - 1) // 3) + 1, 5))
+
+        try:
+            orden = int(self.orden_leccion_solicitado or 1)
+        except (TypeError, ValueError):
+            orden = 1
+
+        return max(1, min(((orden - 1) // 3) + 1, 5))
+
+    def verificar_finalizacion_practicas(self):
+        """
+        Comprueba continuamente si todas las prácticas terminaron.
+
+        Esta comprobación adicional evita que el cartel quede bloqueado si
+        una pantalla de práctica se cerró en un fotograma distinto al esperado.
+        """
+        if self.leccion_ya_completada:
+            if self.cartel_final is not None:
+                self.cartel_final.desbloquear()
+            return True
+
+        if not self.objetos_practica:
+            return False
+
+        if not all(
+                practica.completado
+                for practica in self.objetos_practica
         ):
-            self.db.completar_leccion(
-                self.id_jugador,
-                self.id_lenguaje,
-                self.leccion_actual,
-            )
+            return False
+
+        self.completar_leccion_desde_practica()
+        return True
+
+    def completar_leccion_desde_practica(self):
+        """
+        Desbloquea el cartel y guarda el avance del nivel.
+
+        El cartel se desbloquea antes de consultar MySQL, de modo que un
+        problema de conexión nunca impide que el jugador termine el nivel.
+        """
+        if self.leccion_ya_completada:
+            if self.cartel_final is not None:
+                self.cartel_final.desbloquear()
+            return
 
         self.leccion_ya_completada = True
 
         if self.cartel_final is not None:
             self.cartel_final.desbloquear()
+        else:
+            print("[NIVEL] No existe el componente cartel_final.")
+
+        print("[NIVEL] Todas las prácticas fueron completadas.")
+        print("[NIVEL] Cartel final desbloqueado.")
+
+        # Los administradores pueden probar los niveles sin guardar progreso.
+        if self.es_administrador:
+            return
+
+        if self.id_jugador is None:
+            print("[PROGRESO] No existe id_jugador.")
+            return
+
+        if self.id_lenguaje is None:
+            print("[PROGRESO] No existe id_lenguaje.")
+            return
+
+        if not self.db.activa:
+            print(
+                "[PROGRESO] No se guardó el nivel porque MySQL "
+                "no está conectado."
+            )
+            return
+
+        numero_nivel = self.obtener_numero_nivel_actual()
+
+        # El motor puede mostrar varias lecciones/NPC dentro de un mismo
+        # nivel. Se guarda la de mayor orden para avanzar correctamente
+        # leccion_actual, lecciones_completadas y puntos.
+        lecciones_npc = [
+            npc.leccion
+            for npc in getattr(self, "npcs", ())
+            if isinstance(getattr(npc, "leccion", None), dict)
+        ]
+
+        if lecciones_npc:
+            leccion_a_guardar = max(
+                lecciones_npc,
+                key=lambda leccion: int(leccion.get("orden") or 0),
+            )
+        else:
+            leccion_a_guardar = self.leccion_actual
+
+        guardado_leccion = self.db.completar_leccion(
+            self.id_jugador,
+            self.id_lenguaje,
+            leccion_a_guardar,
+        )
+
+        guardado_nivel = self.db.registrar_nivel_completado(
+            id_jugador=self.id_jugador,
+            id_lenguaje=self.id_lenguaje,
+            numero_nivel=numero_nivel,
+        )
+
+        if guardado_leccion and guardado_nivel:
+            print(
+                f"[PROGRESO] Nivel {numero_nivel} guardado "
+                "correctamente."
+            )
+        else:
+            print(
+                f"[PROGRESO] El nivel {numero_nivel} terminó, "
+                "pero una parte del progreso no se pudo guardar. "
+                f"Lección: {guardado_leccion}; "
+                f"porcentaje: {guardado_nivel}."
+            )
 
     def finalizar_practica_objeto(self, respuesta_correcta):
         objeto = self.objeto_practica_actual
@@ -4333,11 +4517,7 @@ class JuegoEduCore:
 
             self.objeto_en_contacto = None
 
-            if self.objetos_practica and all(
-                practica.completado
-                for practica in self.objetos_practica
-            ):
-                self.completar_leccion_desde_practica()
+            self.verificar_finalizacion_practicas()
             return
 
         # No se crea ningun pozo y tampoco se reinicia la posicion.
@@ -4347,11 +4527,11 @@ class JuegoEduCore:
     def revisar_colision_objeto_practica(self):
         """Detecta solamente la primera práctica pendiente."""
         if (
-            self.game_over
-            or self.en_dialogo
-            or self.en_pausa
-            or self.hay_practica_visible()
-            or self.transicion_iris.activa()
+                self.game_over
+                or self.en_dialogo
+                or self.en_pausa
+                or self.hay_practica_visible()
+                or self.transicion_iris.activa()
         ):
             self.objeto_en_contacto = None
             return
@@ -4375,7 +4555,6 @@ class JuegoEduCore:
             self.objeto_en_contacto = objeto
         else:
             self.objeto_en_contacto = None
-
 
     def revisar_colision_piso(self, y_anterior):
         """Corrige la caída sobre el suelo y recupera penetraciones accidentales.
@@ -4408,20 +4587,20 @@ class JuegoEduCore:
             rect = plataforma.obtener_rect_mundo()
 
             coincide_horizontalmente = (
-                jugador_rect_mundo.right > rect.left
-                and jugador_rect_mundo.left < rect.right
+                    jugador_rect_mundo.right > rect.left
+                    and jugador_rect_mundo.left < rect.right
             )
 
             cruzo_desde_arriba = (
-                bottom_anterior <= rect.top + 1
-                and jugador_rect_mundo.bottom >= rect.top
+                    bottom_anterior <= rect.top + 1
+                    and jugador_rect_mundo.bottom >= rect.top
             )
 
             penetro_el_piso = jugador_rect_mundo.colliderect(rect)
 
             if (
-                coincide_horizontalmente
-                and (cruzo_desde_arriba or penetro_el_piso)
+                    coincide_horizontalmente
+                    and (cruzo_desde_arriba or penetro_el_piso)
             ):
                 pisos_posibles.append(rect)
 
@@ -4435,13 +4614,13 @@ class JuegoEduCore:
             rect = obstaculo.rect
 
             coincide_horizontalmente = (
-                jugador_rect_mundo.right > rect.left
-                and jugador_rect_mundo.left < rect.right
+                    jugador_rect_mundo.right > rect.left
+                    and jugador_rect_mundo.left < rect.right
             )
 
             cruzo_desde_arriba = (
-                bottom_anterior <= rect.top + 1
-                and jugador_rect_mundo.bottom >= rect.top
+                    bottom_anterior <= rect.top + 1
+                    and jugador_rect_mundo.bottom >= rect.top
             )
 
             if coincide_horizontalmente and cruzo_desde_arriba:
@@ -4452,9 +4631,9 @@ class JuegoEduCore:
             self.jugador.colocar_sobre_piso(piso.top)
 
     def revisar_colision_obstaculos(
-        self,
-        y_anterior,
-        x_mundo_anterior,
+            self,
+            y_anterior,
+            x_mundo_anterior,
     ):
         """Resuelve obstáculos usando la posición del fotograma anterior.
 
@@ -4494,8 +4673,8 @@ class JuegoEduCore:
                     )
 
                 if obstaculo.toca_pixeles_visibles(
-                    rect_sprite_mundo,
-                    mascara_jugador,
+                        rect_sprite_mundo,
+                        mascara_jugador,
                 ):
                     self.recibir_dano_obstaculo(obstaculo)
 
@@ -4517,17 +4696,17 @@ class JuegoEduCore:
                 continue
 
             coincide_horizontalmente = (
-                jugador_rect_mundo.right > rect.left
-                and jugador_rect_mundo.left < rect.right
+                    jugador_rect_mundo.right > rect.left
+                    and jugador_rect_mundo.left < rect.right
             )
 
             # Solo aterriza si en el fotograma anterior estaba arriba y ahora
             # cruzó la superficie del obstáculo mientras venía cayendo.
             cayo_encima = (
-                self.jugador.velocidad_y >= 0
-                and rect_anterior.bottom <= rect.top + 1
-                and jugador_rect_mundo.bottom >= rect.top
-                and coincide_horizontalmente
+                    self.jugador.velocidad_y >= 0
+                    and rect_anterior.bottom <= rect.top + 1
+                    and jugador_rect_mundo.bottom >= rect.top
+                    and coincide_horizontalmente
             )
 
             if cayo_encima:
@@ -4542,15 +4721,15 @@ class JuegoEduCore:
             # Solo es golpe de techo si antes estaba completamente debajo del
             # obstáculo y durante este fotograma cruzó su borde inferior.
             toco_techo = (
-                self.jugador.velocidad_y < 0
-                and rect_anterior.top >= rect.bottom - 1
-                and jugador_rect_mundo.top <= rect.bottom
-                and coincide_horizontalmente
+                    self.jugador.velocidad_y < 0
+                    and rect_anterior.top >= rect.bottom - 1
+                    and jugador_rect_mundo.top <= rect.bottom
+                    and coincide_horizontalmente
             )
 
             if toco_techo:
                 self.jugador.y = (
-                    rect.bottom - hitbox_local.top
+                        rect.bottom - hitbox_local.top
                 )
                 self.jugador.velocidad_y = 0
                 self.jugador.en_suelo = False
@@ -4565,12 +4744,12 @@ class JuegoEduCore:
             # cámara. Se bloquea únicamente cuando la hitbox cruzó uno de los
             # laterales desde fuera.
             cruzo_lado_izquierdo = (
-                rect_anterior.right <= rect.left
-                and jugador_rect_mundo.right > rect.left
+                    rect_anterior.right <= rect.left
+                    and jugador_rect_mundo.right > rect.left
             )
             cruzo_lado_derecho = (
-                rect_anterior.left >= rect.right
-                and jugador_rect_mundo.left < rect.right
+                    rect_anterior.left >= rect.right
+                    and jugador_rect_mundo.left < rect.right
             )
 
             if cruzo_lado_izquierdo or cruzo_lado_derecho:
@@ -4580,7 +4759,7 @@ class JuegoEduCore:
 
     def actualizar(self, dt):
         # La consulta se limita a una vez cada 30 segundos. MySQL decide si
-        # ya transcurrió la hora real desde la primera vida perdida.
+        # ya transcurrieron los cinco minutos desde la primera vida perdida.
         self.verificar_recuperacion_vidas()
 
         if self.en_pausa:
@@ -4591,9 +4770,14 @@ class JuegoEduCore:
             self.jugador.actualizar_animacion(0)
             return
 
+        # Respaldo por fotograma: si todas las prácticas están completas,
+        # el cartel se desbloquea aunque el último formulario haya cerrado
+        # fuera del flujo normal del evento.
+        self.verificar_finalizacion_practicas()
+
         if (
-            self.cartel_final is not None
-            and self.cartel_final.menu_visible
+                self.cartel_final is not None
+                and self.cartel_final.menu_visible
         ):
             self.jugador.actualizar_animacion(0)
             return
@@ -4653,19 +4837,10 @@ class JuegoEduCore:
 
             # Primero se resuelven los obstáculos. Si alguno bloqueó el
             # movimiento lateral, se restaura la cámara del fotograma anterior.
-            bloqueo_horizontal = self.revisar_colision_obstaculos(
-                y_anterior,
-                x_mundo_anterior,
-            )
-
-            # Los huesos pueden regresar al jugador al inicio dentro de la
-            # revisión anterior. Se termina el fotograma para impedir que la
-            # cámara o las coordenadas antiguas sobrescriban el reinicio.
-            if self.reinicio_posicion_en_fotograma:
-                self.jugador.actualizar_animacion(0)
-                return
-
-            if bloqueo_horizontal:
+            if self.revisar_colision_obstaculos(
+                    y_anterior,
+                    x_mundo_anterior,
+            ):
                 self.camara_x = camara_anterior
 
             actualizar_enemigos = getattr(
@@ -4817,8 +4992,8 @@ class JuegoEduCore:
         # Renderizar texto crea una superficie nueva. Se actualiza solo cuatro
         # veces por segundo, no sesenta veces por segundo.
         if (
-            self._fps_superficie is None
-            or ahora - self._fps_ultima_actualizacion >= 250
+                self._fps_superficie is None
+                or ahora - self._fps_ultima_actualizacion >= 250
         ):
             fps = int(self.clock.get_fps())
             self._fps_superficie = self.fuente_fps.render(
@@ -4870,9 +5045,9 @@ class JuegoEduCore:
         separacion_practica = round(18 * ESCALA_JUEGO)
         y_practicas = round(
             (
-                rect_hitbox.bottom
-                - altura_referencia_practica
-                - separacion_practica
+                    rect_hitbox.bottom
+                    - altura_referencia_practica
+                    - separacion_practica
             )
             / ESCALA_JUEGO
         )
@@ -4901,13 +5076,13 @@ class JuegoEduCore:
         margen_y = 14
         separacion = 7
         ancho_panel = (
-            max(texto.get_width() for texto in textos)
-            + margen_x * 2
+                max(texto.get_width() for texto in textos)
+                + margen_x * 2
         )
         alto_panel = (
-            sum(texto.get_height() for texto in textos)
-            + separacion * (len(textos) - 1)
-            + margen_y * 2
+                sum(texto.get_height() for texto in textos)
+                + separacion * (len(textos) - 1)
+                + margen_y * 2
         )
         panel = pygame.Surface(
             (ancho_panel, alto_panel),
@@ -4997,13 +5172,13 @@ class JuegoEduCore:
 
     def dibujar_instruccion_interaccion(self):
         if (
-            self.en_dialogo
-            or self.game_over
-            or self.hay_practica_visible()
-            or (
+                self.en_dialogo
+                or self.game_over
+                or self.hay_practica_visible()
+                or (
                 self.cartel_final is not None
                 and self.cartel_final.menu_visible
-            )
+        )
         ):
             return
 
@@ -5113,14 +5288,14 @@ class JuegoEduCore:
             self._fondo_pausa_cache = None
 
     def dibujar_rect_pixel(
-        self,
-        pantalla,
-        rect,
-        color_fondo,
-        color_borde=(5, 8, 18),
-        grosor_borde=5,
-        corte=18,
-        sombra=True,
+            self,
+            pantalla,
+            rect,
+            color_fondo,
+            color_borde=(5, 8, 18),
+            grosor_borde=5,
+            corte=18,
+            sombra=True,
     ):
         puntos_sombra = obtener_puntos_rect_pixel(rect.move(8, 8), corte)
         puntos = obtener_puntos_rect_pixel(rect, corte)
@@ -5401,7 +5576,6 @@ class JuegoEduCore:
 
         fuente = cargar_fuente_pixel(50)
         texto_vidas = fuente.render("VIDAS:", False, (15, 42, 78))
-
 
         pantalla.blit(texto_vidas, (panel.x + 78, panel.y + 415))
 
@@ -5950,8 +6124,8 @@ class JuegoEduCore:
             npc_x = round(npc.rect.x - camara_px)
 
             if (
-                npc_x + npc.rect.width >= -margen
-                and npc_x <= ANCHO + margen
+                    npc_x + npc.rect.width >= -margen
+                    and npc_x <= ANCHO + margen
             ):
                 npc.dibujar(surface, camara_px)
 
@@ -5961,8 +6135,8 @@ class JuegoEduCore:
             )
 
             if (
-                rect_cartel.right >= -margen
-                and rect_cartel.left <= ANCHO + margen
+                    rect_cartel.right >= -margen
+                    and rect_cartel.left <= ANCHO + margen
             ):
                 self.cartel_final.dibujar_mundo(
                     surface,
@@ -6020,6 +6194,8 @@ class JuegoEduCore:
         if self.cartel_final is None:
             return None
 
+        menu_estaba_visible = self.cartel_final.menu_visible
+
         resultado = self.cartel_final.manejar_evento(
             evento,
             self.jugador.obtener_rect_mundo(
@@ -6028,9 +6204,17 @@ class JuegoEduCore:
             self.camara_x,
         )
 
-        if (
-            resultado == CartelFinal.EVENTO_CONSUMIDO
+        menu_se_abrio = (
+            not menu_estaba_visible
             and self.cartel_final.menu_visible
+        )
+
+        if menu_se_abrio:
+            self.gestor_resultado_prueba.registrar_desde_juego(self)
+
+        if (
+                resultado == CartelFinal.EVENTO_CONSUMIDO
+                and self.cartel_final.menu_visible
         ):
             self.interaccion_actual = None
 
@@ -6057,8 +6241,8 @@ class JuegoEduCore:
         # Cerrar con X o cerrar después de fallar no descuenta otra vida.
         if estaba_visible and not practica_visible.visible:
             if (
-                practica_visible.respondido
-                and practica_visible.respuesta_final is True
+                    practica_visible.respondido
+                    and practica_visible.respuesta_final is True
             ):
                 self.finalizar_practica_objeto(True)
             else:
@@ -6082,9 +6266,9 @@ class JuegoEduCore:
             return False
 
         if (
-            evento.key == pygame.K_r
-            and not self.game_over
-            and not self.transicion_iris.activa()
+                evento.key == pygame.K_r
+                and not self.game_over
+                and not self.transicion_iris.activa()
         ):
             self.reiniciar()
 
@@ -6121,8 +6305,8 @@ class JuegoEduCore:
 
     def _cerrar(self):
         if (
-            self.proceso_ajustes is not None
-            and self.proceso_ajustes.poll() is None
+                self.proceso_ajustes is not None
+                and self.proceso_ajustes.poll() is None
         ):
             self.proceso_ajustes.terminate()
 
@@ -6180,9 +6364,9 @@ class JuegoEduCore:
                     continue
 
                 if (
-                    evento.type == pygame.MOUSEBUTTONDOWN
-                    and evento.button == 1
-                    and self.en_pausa
+                        evento.type == pygame.MOUSEBUTTONDOWN
+                        and evento.button == 1
+                        and self.en_pausa
                 ):
                     accion_pausa = self.manejar_click_pausa(
                         evento.pos
@@ -6194,8 +6378,8 @@ class JuegoEduCore:
                         break
 
                 if (
-                    evento.type == pygame.KEYDOWN
-                    and self._manejar_evento_teclado(evento)
+                        evento.type == pygame.KEYDOWN
+                        and self._manejar_evento_teclado(evento)
                 ):
                     motivo_salida = "menu_niveles"
                     ejecutando = False

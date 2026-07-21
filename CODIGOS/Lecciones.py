@@ -664,14 +664,12 @@ class Lecciones(QtWidgets.QWidget):
         self.botones_lenguaje = [
             self.btnPython,
             self.btnJava,
-            self.btnC,
             self.btnMySQL,
         ]
 
         self.botones_interactivos = [
             self.btnPython,
             self.btnJava,
-            self.btnC,
             self.btnMySQL,
             self.btnComenzar,
             self.btn_volver,
@@ -793,12 +791,6 @@ class Lecciones(QtWidgets.QWidget):
             )
         )
 
-        self.btnC.clicked.connect(
-            lambda: self.seleccionar_lenguaje(
-                "C"
-            )
-        )
-
         self.btnMySQL.clicked.connect(
             lambda: self.seleccionar_lenguaje(
                 "MySQL"
@@ -819,7 +811,6 @@ class Lecciones(QtWidgets.QWidget):
         botones = {
             "Python": self.btnPython,
             "Java": self.btnJava,
-            "C": self.btnC,
             "MySQL": self.btnMySQL,
         }
 
@@ -917,15 +908,6 @@ class Lecciones(QtWidgets.QWidget):
                 self.ventana_niveles = (
                     self.crear_ventana_niveles(
                         NivelesJava
-                    )
-                )
-
-            elif self.lenguaje_seleccionado == "C":
-                from NivelesC import NivelesC
-
-                self.ventana_niveles = (
-                    self.crear_ventana_niveles(
-                        NivelesC
                     )
                 )
 

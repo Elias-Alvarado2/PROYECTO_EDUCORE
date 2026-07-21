@@ -41,7 +41,7 @@ background-color: transparent;
       <x>520</x>
       <y>465</y>
       <width>151</width>
-      <height>155</height>
+      <height>165</height>
      </rect>
     </property>
     <property name="cursor">
@@ -75,7 +75,7 @@ border: none;
       <x>700</x>
       <y>465</y>
       <width>150</width>
-      <height>155</height>
+      <height>165</height>
      </rect>
     </property>
     <property name="cursor">
@@ -111,7 +111,7 @@ border: none;
       <x>880</x>
       <y>465</y>
       <width>150</width>
-      <height>155</height>
+      <height>165</height>
      </rect>
     </property>
     <property name="cursor">
@@ -144,7 +144,7 @@ border: none;
       <x>1060</x>
       <y>465</y>
       <width>150</width>
-      <height>155</height>
+      <height>165</height>
      </rect>
     </property>
     <property name="cursor">
@@ -177,7 +177,7 @@ border: none;
       <x>1246</x>
       <y>465</y>
       <width>150</width>
-      <height>155</height>
+      <height>165</height>
      </rect>
     </property>
     <property name="cursor">
@@ -210,7 +210,7 @@ border: none;
      <rect>
       <x>690</x>
       <y>670</y>
-      <width>533</width>
+      <width>537</width>
       <height>130</height>
      </rect>
     </property>

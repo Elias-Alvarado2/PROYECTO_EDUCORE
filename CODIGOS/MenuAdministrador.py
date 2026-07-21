@@ -314,7 +314,6 @@ class MenuAdministrador(QtWidgets.QWidget):
             self.btnCerrarSesion,
             self.btnGestionUsuarios,
             self.btnJugar,
-            self.btnPerfil,
         ]
 
         # Hace responsivos todos los botones del menú.
@@ -519,7 +518,6 @@ class MenuAdministrador(QtWidgets.QWidget):
             self.btnCerrarSesion,
             self.btnGestionUsuarios,
             self.btnJugar,
-            self.btnPerfil,
         ]
 
         for boton in botones:
