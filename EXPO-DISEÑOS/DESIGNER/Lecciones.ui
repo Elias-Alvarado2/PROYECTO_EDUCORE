@@ -38,7 +38,7 @@ background-color: transparent;
    <widget class="QPushButton" name="btnPython">
     <property name="geometry">
      <rect>
-      <x>290</x>
+      <x>400</x>
       <y>355</y>
       <width>291</width>
       <height>446</height>
@@ -70,7 +70,7 @@ background-color: transparent;
    <widget class="QPushButton" name="btnJava">
     <property name="geometry">
      <rect>
-      <x>625</x>
+      <x>800</x>
       <y>356</y>
       <width>304</width>
       <height>446</height>
@@ -99,44 +99,10 @@ background-color: transparent;
      </size>
     </property>
    </widget>
-   <widget class="QPushButton" name="btnC">
-    <property name="geometry">
-     <rect>
-      <x>980</x>
-      <y>355</y>
-      <width>294</width>
-      <height>446</height>
-     </rect>
-    </property>
-    <property name="cursor">
-     <cursorShape>PointingHandCursor</cursorShape>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">QPushButton {
-    background-color: transparent;
-    border: none;
-}
-
-</string>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="icon">
-     <iconset>
-      <normaloff>../Botones/botones_lecciones/boton_C.png</normaloff>../Botones/botones_lecciones/boton_C.png</iconset>
-    </property>
-    <property name="iconSize">
-     <size>
-      <width>440</width>
-      <height>440</height>
-     </size>
-    </property>
-   </widget>
    <widget class="QPushButton" name="btnMySQL">
     <property name="geometry">
      <rect>
-      <x>1335</x>
+      <x>1220</x>
       <y>355</y>
       <width>294</width>
       <height>446</height>
