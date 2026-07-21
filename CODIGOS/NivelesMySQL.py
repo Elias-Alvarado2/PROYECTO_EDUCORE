@@ -49,6 +49,283 @@ class FondoImagen(QtWidgets.QLabel):
         self.lower()
 
 
+class PintorImagenBoton(QtCore.QObject):
+    """
+    Dibuja la imagen directamente sobre el QPushButton.
+
+    Antes de dibujarla recorta los márgenes transparentes del PNG. Esto
+    evita que una imagen se vea más pequeña aunque todos los QPushButton
+    tengan exactamente el mismo ancho y alto.
+    """
+
+    def __init__(self, boton):
+        super().__init__(boton)
+        self.boton = boton
+        self.pixmap = QtGui.QPixmap()
+        boton.installEventFilter(self)
+
+    def establecer_pixmap(self, pixmap):
+        self.pixmap = self.recortar_transparencia(pixmap)
+        self.boton.update()
+
+    @staticmethod
+    def recortar_transparencia(pixmap):
+        if pixmap.isNull():
+            return pixmap
+
+        imagen = pixmap.toImage().convertToFormat(
+            QtGui.QImage.Format.Format_ARGB32
+        )
+
+        ancho = imagen.width()
+        alto = imagen.height()
+
+        izquierda = ancho
+        derecha = -1
+        arriba = alto
+        abajo = -1
+
+        for y in range(alto):
+            for x in range(ancho):
+                if QtGui.qAlpha(imagen.pixel(x, y)) > 0:
+                    if x < izquierda:
+                        izquierda = x
+                    if x > derecha:
+                        derecha = x
+                    if y < arriba:
+                        arriba = y
+                    if y > abajo:
+                        abajo = y
+
+        # Si no encontró píxeles visibles, conserva la imagen original.
+        if derecha < izquierda or abajo < arriba:
+            return pixmap
+
+        rectangulo_visible = QtCore.QRect(
+            izquierda,
+            arriba,
+            derecha - izquierda + 1,
+            abajo - arriba + 1,
+        )
+
+        return QtGui.QPixmap.fromImage(
+            imagen.copy(rectangulo_visible)
+        )
+
+    def eventFilter(self, objeto, event):
+        if (
+            objeto is self.boton
+            and event.type() == QtCore.QEvent.Type.Paint
+            and not self.pixmap.isNull()
+        ):
+            pintor = QtGui.QPainter(self.boton)
+
+            # Se mantiene el aspecto pixel art, sin suavizado.
+            pintor.setRenderHint(
+                QtGui.QPainter.RenderHint.SmoothPixmapTransform,
+                False,
+            )
+
+            pintor.drawPixmap(
+                self.boton.rect(),
+                self.pixmap,
+                self.pixmap.rect(),
+            )
+            pintor.end()
+            return True
+
+        return super().eventFilter(objeto, event)
+
+
+class EfectoHoverBoton(QtCore.QObject):
+    """
+    Agranda ligeramente un botón y aumenta su sombra cuando el cursor
+    pasa sobre él. Los botones deshabilitados no reciben la animación.
+    """
+
+    def __init__(
+        self,
+        boton,
+        factor=1.035,
+        duracion=120,
+        parent=None,
+    ):
+        super().__init__(
+            parent if parent is not None else boton
+        )
+
+        self.boton = boton
+        self.factor = factor
+        self.duracion = duracion
+        self.cursor_encima = False
+
+        # Se actualiza después de que BotonesResponsivos coloque
+        # cada botón en su posición y tamaño correctos.
+        self.geometria_normal = QtCore.QRect(
+            boton.geometry()
+        )
+
+        self.animacion_geometria = QtCore.QPropertyAnimation(
+            boton,
+            b"geometry",
+            self,
+        )
+        self.animacion_geometria.setDuration(
+            self.duracion
+        )
+        self.animacion_geometria.setEasingCurve(
+            QtCore.QEasingCurve.Type.OutCubic
+        )
+
+        self.sombra = QtWidgets.QGraphicsDropShadowEffect(
+            boton
+        )
+        self.sombra.setColor(
+            QtGui.QColor(0, 0, 0, 180)
+        )
+        self.sombra.setBlurRadius(10)
+        self.sombra.setOffset(0, 3)
+
+        boton.setGraphicsEffect(
+            self.sombra
+        )
+
+        self.animacion_sombra = QtCore.QPropertyAnimation(
+            self.sombra,
+            b"blurRadius",
+            self,
+        )
+        self.animacion_sombra.setDuration(
+            self.duracion
+        )
+        self.animacion_sombra.setEasingCurve(
+            QtCore.QEasingCurve.Type.OutCubic
+        )
+
+        boton.installEventFilter(
+            self
+        )
+
+    def obtener_geometria_grande(self):
+        rectangulo = self.geometria_normal
+
+        ancho_nuevo = round(
+            rectangulo.width() * self.factor
+        )
+        alto_nuevo = round(
+            rectangulo.height() * self.factor
+        )
+
+        diferencia_ancho = (
+            ancho_nuevo - rectangulo.width()
+        )
+        diferencia_alto = (
+            alto_nuevo - rectangulo.height()
+        )
+
+        return QtCore.QRect(
+            rectangulo.x() - diferencia_ancho // 2,
+            rectangulo.y() - diferencia_alto // 2,
+            ancho_nuevo,
+            alto_nuevo,
+        )
+
+    def animar_geometria(self, destino):
+        self.animacion_geometria.stop()
+        self.animacion_geometria.setStartValue(
+            self.boton.geometry()
+        )
+        self.animacion_geometria.setEndValue(
+            destino
+        )
+        self.animacion_geometria.start()
+
+    def animar_sombra(self, radio):
+        self.animacion_sombra.stop()
+        self.animacion_sombra.setStartValue(
+            self.sombra.blurRadius()
+        )
+        self.animacion_sombra.setEndValue(
+            radio
+        )
+        self.animacion_sombra.start()
+
+    def restaurar_sin_animacion(self):
+        """
+        Restaura inmediatamente el botón cuando se deshabilita o cuando
+        la ventana responsiva necesita recalcular su geometría.
+        """
+        self.animacion_geometria.stop()
+        self.animacion_sombra.stop()
+
+        self.cursor_encima = False
+        self.boton.setGeometry(
+            self.geometria_normal
+        )
+        self.sombra.setBlurRadius(10)
+
+    def actualizar_geometria_base(self):
+        """
+        Guarda la nueva geometría responsiva para que el efecto hover
+        siga funcionando después de redimensionar la ventana.
+        """
+        self.animacion_geometria.stop()
+
+        self.geometria_normal = QtCore.QRect(
+            self.boton.geometry()
+        )
+
+        if (
+            self.cursor_encima
+            and self.boton.isEnabled()
+        ):
+            self.boton.setGeometry(
+                self.obtener_geometria_grande()
+            )
+
+    def eventFilter(self, objeto, evento):
+        if objeto is self.boton:
+            tipo_evento = evento.type()
+
+            if (
+                tipo_evento == QtCore.QEvent.Type.Enter
+                and self.boton.isEnabled()
+            ):
+                self.cursor_encima = True
+
+                # Guarda la posición actual establecida por
+                # BotonesResponsivos.
+                self.geometria_normal = QtCore.QRect(
+                    self.boton.geometry()
+                )
+
+                # Evita que el botón agrandado quede detrás
+                # de los demás controles.
+                self.boton.raise_()
+
+                self.animar_geometria(
+                    self.obtener_geometria_grande()
+                )
+                self.animar_sombra(28)
+
+            elif tipo_evento == QtCore.QEvent.Type.Leave:
+                if self.cursor_encima:
+                    self.cursor_encima = False
+                    self.animar_geometria(
+                        self.geometria_normal
+                    )
+                    self.animar_sombra(10)
+
+            elif tipo_evento == QtCore.QEvent.Type.EnabledChange:
+                if not self.boton.isEnabled():
+                    self.restaurar_sin_animacion()
+
+        return super().eventFilter(
+            objeto,
+            evento,
+        )
+
+
 class NivelesMySQL(QtWidgets.QWidget):
     """Menú de niveles de MySQL con desbloqueo progresivo."""
 
@@ -148,6 +425,11 @@ class NivelesMySQL(QtWidgets.QWidget):
             5: self.btnNivel5,
         }
 
+        # Iguala el ancho y el alto de los cinco botones antes de crear
+        # BotonesResponsivos. Así todos conservan exactamente el mismo
+        # tamaño al maximizar o cambiar la resolución de la ventana.
+        self.igualar_tamano_botones_nivel()
+
         self.botones_niveles = [
             *self.botones_por_nivel.values(),
             self.btnComenzar,
@@ -159,28 +441,45 @@ class NivelesMySQL(QtWidgets.QWidget):
             self.crear_indice_imagenes_botones()
         )
 
+        # Mantiene un pintor por botón. Los pintores recortan los márgenes
+        # transparentes de cada PNG y ocupan todo el tamaño del QPushButton.
+        self.pintores_imagen_botones = {}
+
+        # Evita volver a recortar la misma imagen cada vez que se actualiza
+        # el progreso. Esto elimina pausas innecesarias al mostrar el menú.
+        self.cache_pixmaps_recortados = {}
+
         # Guarda qué botones deben estar habilitados según el progreso.
         self.habilitacion_por_progreso = {
             boton: False
             for boton in self.botones_niveles
         }
 
+        self.botones_hover = [
+            self.btnVolver,
+            *self.botones_niveles,
+        ]
+
         self.botones_responsivos = BotonesResponsivos(
             ventana=self,
-            botones=[
-                self.btnVolver,
-                self.btnNivel1,
-                self.btnNivel2,
-                self.btnNivel3,
-                self.btnNivel4,
-                self.btnNivel5,
-                self.btnComenzar,
-            ],
+            botones=self.botones_hover,
             ancho_base=1920,
             alto_base=1080,
             escalar_iconos=True,
             escalar_fuentes=False,
         )
+
+        # Efecto hover del otro código: agranda suavemente el botón y
+        # aumenta su sombra. Los botones bloqueados no se animan.
+        self.efectos_hover = [
+            EfectoHoverBoton(
+                boton=boton,
+                factor=1.035,
+                duracion=120,
+                parent=self,
+            )
+            for boton in self.botones_hover
+        ]
 
         self.configurar_botones()
         self.conectar_eventos()
@@ -188,9 +487,65 @@ class NivelesMySQL(QtWidgets.QWidget):
         # Carga las imágenes correctas al abrir el formulario.
         self.cargar_estado_niveles()
 
+        # Guarda las geometrías finales después de que Qt termine de
+        # procesar el formulario. El valor 0 no agrega una espera visible.
+        QtCore.QTimer.singleShot(
+            0,
+            self.actualizar_hover_botones,
+        )
+
     # ========================================================
     # RUTAS E IMÁGENES
     # ========================================================
+
+    def igualar_tamano_botones_nivel(self):
+        """
+        Hace que btnNivel1, btnNivel2, btnNivel3, btnNivel4 y btnNivel5
+        tengan exactamente el mismo ancho y alto de btnNivel1.
+
+        Se conserva el centro de cada botón para que las posiciones del
+        formulario no cambien. La prueba final mantiene su tamaño propio.
+        """
+        if not hasattr(self, "botones_por_nivel"):
+            return
+
+        boton_referencia = self.botones_por_nivel.get(1)
+
+        if boton_referencia is None:
+            return
+
+        ancho_uniforme = boton_referencia.width()
+        alto_uniforme = boton_referencia.height()
+
+        if ancho_uniforme <= 0 or alto_uniforme <= 0:
+            return
+
+        for numero_nivel, boton in self.botones_por_nivel.items():
+            if numero_nivel == 1:
+                continue
+
+            geometria = boton.geometry()
+            centro_x = geometria.x() + geometria.width() // 2
+            centro_y = geometria.y() + geometria.height() // 2
+
+            nueva_x = centro_x - ancho_uniforme // 2
+            nueva_y = centro_y - alto_uniforme // 2
+
+            boton.setMinimumSize(0, 0)
+            boton.setMaximumSize(
+                16777215,
+                16777215,
+            )
+            boton.setGeometry(
+                nueva_x,
+                nueva_y,
+                ancho_uniforme,
+                alto_uniforme,
+            )
+
+        # Obliga a repintar las imágenes después de cambiar geometrías.
+        for boton in self.botones_por_nivel.values():
+            boton.update()
 
     def validar_rutas_principales(self):
         if not self.ruta_ui.exists():
@@ -256,41 +611,75 @@ class NivelesMySQL(QtWidgets.QWidget):
         return ruta
 
     def aplicar_imagen_boton(self, boton, nombre_imagen):
-        """Coloca una imagen como border-image sin deformar el botón."""
+        """
+        Coloca la imagen sin márgenes transparentes y la dibuja ocupando
+        exactamente todo el ancho y alto del QPushButton.
+
+        El recorte se guarda en caché para no repetir el recorrido de
+        píxeles cada vez que se actualiza el progreso.
+        """
         ruta_imagen = self.obtener_ruta_imagen_boton(
             nombre_imagen
         )
-        ruta_qss = ruta_imagen.as_posix()
+
+        clave_cache = str(ruta_imagen.resolve())
+
+        pixmap_recortado = self.cache_pixmaps_recortados.get(
+            clave_cache
+        )
+
+        if pixmap_recortado is None:
+            pixmap_original = QtGui.QPixmap(
+                str(ruta_imagen)
+            )
+
+            if pixmap_original.isNull():
+                raise FileNotFoundError(
+                    "No se pudo cargar la imagen del botón:\n"
+                    f"{ruta_imagen}"
+                )
+
+            pixmap_recortado = (
+                PintorImagenBoton.recortar_transparencia(
+                    pixmap_original
+                )
+            )
+            self.cache_pixmaps_recortados[
+                clave_cache
+            ] = pixmap_recortado
 
         boton.setText("")
         boton.setIcon(QtGui.QIcon())
         boton.setStyleSheet(
-            f"""
-            QPushButton {{
-                background-color: transparent;
+            """
+            QPushButton {
+                background: transparent;
                 border: none;
-                border-image: url(\"{ruta_qss}\") 0 0 0 0 stretch stretch;
-            }}
+                margin: 0px;
+                padding: 0px;
+            }
 
-            QPushButton:hover {{
-                background-color: transparent;
+            QPushButton:hover,
+            QPushButton:pressed,
+            QPushButton:disabled {
+                background: transparent;
                 border: none;
-                border-image: url(\"{ruta_qss}\") 0 0 0 0 stretch stretch;
-            }}
-
-            QPushButton:pressed {{
-                background-color: transparent;
-                border: none;
-                border-image: url(\"{ruta_qss}\") 0 0 0 0 stretch stretch;
-            }}
-
-            QPushButton:disabled {{
-                background-color: transparent;
-                border: none;
-                border-image: url(\"{ruta_qss}\") 0 0 0 0 stretch stretch;
-            }}
+                margin: 0px;
+                padding: 0px;
+            }
             """
         )
+
+        pintor = self.pintores_imagen_botones.get(boton)
+
+        if pintor is None:
+            pintor = PintorImagenBoton(boton)
+            self.pintores_imagen_botones[boton] = pintor
+
+        # El pixmap ya está recortado; se asigna directamente para evitar
+        # ejecutar nuevamente el recorte dentro del pintor.
+        pintor.pixmap = pixmap_recortado
+        boton.update()
 
     def corregir_rutas_stylesheet(self, ruta_botones):
         """
@@ -853,12 +1242,22 @@ class NivelesMySQL(QtWidgets.QWidget):
     def showEvent(self, event):
         super().showEvent(event)
 
-        # También actualiza los botones cuando se regresa desde otro form.
-        if not self.nivel_en_ejecucion:
-            QtCore.QTimer.singleShot(
-                0,
-                self.cargar_estado_niveles,
-            )
+        def actualizar_despues_de_mostrar():
+            # Primero aplica el tamaño uniforme del botón 1 a los demás.
+            self.igualar_tamano_botones_nivel()
+
+            if not self.nivel_en_ejecucion:
+                self.cargar_estado_niveles()
+
+            # Después guarda esas geometrías como base del hover.
+            self.actualizar_hover_botones()
+
+        # Se ejecuta en el siguiente ciclo de Qt. No añade un delay a
+        # FormTransicion; únicamente espera a que termine el showMaximized.
+        QtCore.QTimer.singleShot(
+            0,
+            actualizar_despues_de_mostrar,
+        )
 
     def resizeEvent(self, event):
         if hasattr(self, "fondo"):
@@ -867,12 +1266,47 @@ class NivelesMySQL(QtWidgets.QWidget):
                 self.height(),
             )
 
+        # Detiene cualquier hover activo antes de recalcular posiciones.
+        for efecto in getattr(
+            self,
+            "efectos_hover",
+            [],
+        ):
+            efecto.restaurar_sin_animacion()
+
         if hasattr(self, "botones_responsivos"):
             self.botones_responsivos.ajustar()
 
+        # BotonesResponsivos puede recuperar tamaños diferentes de Designer.
+        # Se vuelven a igualar al tamaño actual de btnNivel1.
+        if hasattr(self, "botones_por_nivel"):
+            self.igualar_tamano_botones_nivel()
+
+        # Actualiza inmediatamente la geometría base del hover. No se usa
+        # un temporizador adicional, por lo que no se añade espera.
+        if hasattr(self, "efectos_hover"):
+            self.actualizar_hover_botones()
+
         super().resizeEvent(event)
 
+    def actualizar_hover_botones(self):
+        """
+        Guarda la posición y el tamaño actuales como geometría normal de
+        cada efecto hover después del ajuste responsivo y uniforme.
+        """
+        for efecto in getattr(
+            self,
+            "efectos_hover",
+            [],
+        ):
+            efecto.actualizar_geometria_base()
+
     def configurar_botones(self):
+        for boton in self.botones_hover:
+            boton.setFocusPolicy(
+                QtCore.Qt.FocusPolicy.NoFocus
+            )
+
         self.btnVolver.setCursor(
             QtGui.QCursor(
                 QtCore.Qt.CursorShape.PointingHandCursor
@@ -881,9 +1315,6 @@ class NivelesMySQL(QtWidgets.QWidget):
 
         for boton in self.botones_niveles:
             boton.setText("")
-            boton.setFocusPolicy(
-                QtCore.Qt.FocusPolicy.NoFocus
-            )
 
 
 if __name__ == "__main__":
