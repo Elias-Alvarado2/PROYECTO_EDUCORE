@@ -193,11 +193,11 @@ TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser", "cactus", "huesos"})
 
 
 
-# Las vidas se restauran completamente una hora después de perder la
+# Las vidas se restauran completamente cinco minutos después de perder la
 # primera vida. El motor consulta MySQL cada 30 segundos mientras el nivel
 # está abierto. El tiempo real se calcula en MySQL, por lo que también
 # continúa avanzando aunque el juego esté cerrado.
-INTERVALO_RECUPERACION_VIDAS_MINUTOS = 60
+INTERVALO_RECUPERACION_VIDAS_MINUTOS = 5
 INTERVALO_COMPROBACION_VIDAS_MS = 30_000
 
 ALIAS_PERSONAJES = {
@@ -1025,7 +1025,7 @@ class ConexionEduCore:
             cursor.close()
 
     def obtener_jugador(self, id_jugador):
-        # Antes de cargar al jugador se comprueba si ya transcurrió la hora.
+        # Antes de cargar al jugador se comprueba si ya transcurrieron los 5 minutos.
         # Esto también hace que la recuperación funcione después de cerrar
         # y volver a abrir el programa.
         self.recuperar_vidas_si_corresponde(id_jugador)
@@ -1044,7 +1044,7 @@ class ConexionEduCore:
     def recuperar_vidas_si_corresponde(self, id_jugador):
         """
         Devuelve las vidas actuales del jugador y restaura las cinco vidas
-        cuando ha pasado una hora desde la primera pérdida.
+        cuando han pasado cinco minutos desde la primera pérdida.
 
         Si el jugador ya tenía menos de cinco vidas antes de agregar la nueva
         columna, el contador se inicia automáticamente al consultar su cuenta.
@@ -1073,9 +1073,9 @@ class ConexionEduCore:
                 (id_jugador, VIDAS_MAXIMAS),
             )
 
-            # Si ya pasó una hora, se restauran todas las vidas.
+            # Si ya pasaron cinco minutos, se restauran todas las vidas.
             cursor.execute(
-                """
+                f"""
                 UPDATE jugador
                 SET vidas = %s,
                     fecha_recuperacion_vidas = NULL
@@ -1084,7 +1084,7 @@ class ConexionEduCore:
                   AND fecha_recuperacion_vidas IS NOT NULL
                   AND fecha_recuperacion_vidas <= DATE_SUB(
                       NOW(),
-                      INTERVAL 1 HOUR
+                      INTERVAL {INTERVALO_RECUPERACION_VIDAS_MINUTOS} MINUTE
                   )
                 """,
                 (VIDAS_MAXIMAS, id_jugador, VIDAS_MAXIMAS),
@@ -1282,10 +1282,10 @@ class ConexionEduCore:
             return None
 
         try:
-            # Si la hora se cumplió justo antes de recibir daño, primero se
+            # Si los cinco minutos se cumplieron justo antes de recibir daño, primero se
             # restauran las vidas y después se descuenta la vida actual.
             cursor.execute(
-                """
+                f"""
                 UPDATE jugador
                 SET vidas = %s,
                     fecha_recuperacion_vidas = NULL
@@ -1294,14 +1294,14 @@ class ConexionEduCore:
                   AND fecha_recuperacion_vidas IS NOT NULL
                   AND fecha_recuperacion_vidas <= DATE_SUB(
                       NOW(),
-                      INTERVAL 1 HOUR
+                      INTERVAL {INTERVALO_RECUPERACION_VIDAS_MINUTOS} MINUTE
                   )
                 """,
                 (VIDAS_MAXIMAS, id_jugador, VIDAS_MAXIMAS),
             )
 
             # El contador comienza con la primera vida perdida. Si ya estaba
-            # corriendo, las pérdidas posteriores no reinician la hora.
+            # corriendo, las pérdidas posteriores no reinician los cinco minutos.
             cursor.execute(
                 """
                 UPDATE jugador
@@ -4488,7 +4488,7 @@ class JuegoEduCore:
 
     def actualizar(self, dt):
         # La consulta se limita a una vez cada 30 segundos. MySQL decide si
-        # ya transcurrió la hora real desde la primera vida perdida.
+        # ya transcurrieron los cinco minutos desde la primera vida perdida.
         self.verificar_recuperacion_vidas()
 
         if self.en_pausa:
