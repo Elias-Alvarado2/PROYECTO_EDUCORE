@@ -17,10 +17,8 @@ import multiprocessing
 import subprocess
 from functools import lru_cache
 from pathlib import Path
-from juego.sistemas.audio import gestor_audio
-from juego.sistemas.resultado_prueba import GestorResultadoPrueba
-from juego.core.efectos import efectos
 import os
+
 # motor.py está dentro de juego/core. Se agrega la raíz del proyecto antes
 # de importar cualquier módulo del paquete juego. Esto permite ejecutar el
 # motor tanto desde PyCharm como directamente desde Python.
@@ -30,6 +28,7 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 from juego.sistemas.audio import gestor_audio
+from juego.sistemas.resultado_prueba import GestorResultadoPrueba
 from juego.core.efectos import efectos
 
 import pygame
@@ -4441,6 +4440,15 @@ class JuegoEduCore:
 
         print("[NIVEL] Todas las prácticas fueron completadas.")
         print("[NIVEL] Cartel final desbloqueado.")
+
+        # La prueba final no se procesa como una lección normal. Su resultado
+        # se guarda al abrir el cartel mediante GestorResultadoPrueba.
+        if self.gestor_resultado_prueba.es_prueba_final(self):
+            print(
+                "[PRUEBA FINAL] El resultado se guardará al abrir "
+                "el cartel final."
+            )
+            return
 
         # Los administradores pueden probar los niveles sin guardar progreso.
         if self.es_administrador:

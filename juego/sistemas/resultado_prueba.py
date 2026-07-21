@@ -44,11 +44,10 @@ class GestorResultadoPrueba:
 
         fila = self.db.seleccionar_uno(
             """
-            SELECT
-                COALESCE(
-                    SUM(COALESCE(puntos, 0)),
-                    0
-                ) AS puntaje_total
+            SELECT COALESCE(
+                SUM(COALESCE(puntos, 0)),
+                0
+            ) AS puntaje_total
             FROM leccion
             WHERE id_lenguaje = %s
               AND estado = 'Activa'
@@ -69,10 +68,10 @@ class GestorResultadoPrueba:
         puntaje_obtenido: int,
     ) -> bool:
         """
-        Inserta o actualiza resultado_prueba en una sola transacción.
+        Inserta o actualiza resultado_prueba.
 
-        La tabla real no posee una columna llamada ``puntaje``. Por eso la
-        suma de los puntos se guarda únicamente en ``puntaje_obtenido``.
+        La tabla resultado_prueba no posee una columna ``puntaje``. La suma
+        de leccion.puntos se guarda únicamente en ``puntaje_obtenido``.
         """
         if (
             id_jugador is None
@@ -158,7 +157,8 @@ class GestorResultadoPrueba:
                 (id_jugador, id_lenguaje),
             )
 
-            # Solo registra el historial la primera vez que se crea el resultado.
+            # Evita duplicar el historial si el jugador abre nuevamente
+            # una prueba final que ya había terminado.
             if not existente:
                 cursor.execute(
                     """
@@ -187,12 +187,10 @@ class GestorResultadoPrueba:
 
         except Exception as error:
             rollback = getattr(self.db, "_rollback_seguro", None)
-
             if callable(rollback):
                 rollback()
 
             registrar_error = getattr(self.db, "_registrar_error", None)
-
             if callable(registrar_error):
                 registrar_error(
                     "Error al guardar resultado de prueba",
