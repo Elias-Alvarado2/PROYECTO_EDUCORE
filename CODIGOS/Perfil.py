@@ -376,6 +376,9 @@ class PerfilWindow(QtWidgets.QWidget):
         self.pixmap_personaje_original = None
         self.transicion_volver = None
 
+        # Evita ejecutar dos veces la transición por doble clic.
+        self._transicion_en_curso = False
+
         # Evita ejecutar dos consultas simultáneas si una actualización
         # tarda más de lo esperado.
         self._actualizacion_en_curso = False
@@ -1174,7 +1177,9 @@ class PerfilWindow(QtWidgets.QWidget):
         # --------------------------------------------------
 
         if hasattr(self, "btn_volver"):
-            self.btn_volver.clicked.connect(
+            # pressed se ejecuta al presionar el botón, sin esperar a que
+            # el usuario suelte el clic. La transición comienza de inmediato.
+            self.btn_volver.pressed.connect(
                 self.volver
             )
 
@@ -2153,31 +2158,69 @@ class PerfilWindow(QtWidgets.QWidget):
     # ======================================================
 
     def volver(self):
+        """
+        Inicia la transición inmediatamente al presionar btn_volver.
+
+        Antes de crear FormTransicion se detienen únicamente las tareas
+        visuales y periódicas que podrían competir con la animación.
+        """
+        if self._transicion_en_curso:
+            return
+
         if self.formulario_anterior is None:
             self.close()
             return
 
+        self._transicion_en_curso = True
+
+        # Evita que una actualización automática del perfil se ejecute
+        # mientras está comenzando la transición.
+        if hasattr(self, "timer_actualizar_perfil"):
+            self.timer_actualizar_perfil.stop()
+
+        # Detiene las animaciones de las barras para liberar el ciclo
+        # gráfico durante la transición.
+        for animacion in getattr(
+            self,
+            "animaciones_progreso",
+            {},
+        ).values():
+            animacion.stop()
+
+        # Restaura inmediatamente el botón si estaba agrandado por hover.
+        for efecto in getattr(
+            self,
+            "efectos_hover",
+            [],
+        ):
+            if efecto.boton is self.btn_volver:
+                efecto.restaurar_inmediatamente()
+                break
+
+        self.btn_volver.setEnabled(
+            False
+        )
+
         if FormTransicion is not None:
             try:
-                self.transicion_volver = (
-                    FormTransicion(
-                        self,
-                        self.formulario_anterior
-                    )
+                # Se crea directamente, sin QTimer ni espera adicional.
+                # La referencia evita que la animación sea destruida.
+                self.transicion_volver = FormTransicion(
+                    self,
+                    self.formulario_anterior,
                 )
-
                 return
 
             except Exception as error:
                 print(
                     "No se pudo utilizar la transición:",
-                    error
+                    error,
                 )
 
+        # Respaldo cuando FormTransicion no está disponible o falla.
         self.formulario_anterior.show()
         self.formulario_anterior.raise_()
         self.formulario_anterior.activateWindow()
-
         self.close()
 
     # ======================================================
@@ -2227,6 +2270,15 @@ class PerfilWindow(QtWidgets.QWidget):
 
     def showEvent(self, evento):
         super().showEvent(evento)
+
+        # Permite volver a utilizar la transición si el usuario regresa
+        # posteriormente a esta misma instancia del perfil.
+        self._transicion_en_curso = False
+
+        if hasattr(self, "btn_volver"):
+            self.btn_volver.setEnabled(
+                True
+            )
 
         # Al entrar al perfil, consulta inmediatamente las vidas
         # y el progreso por si cambiaron en otro formulario.
