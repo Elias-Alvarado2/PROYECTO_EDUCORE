@@ -8,7 +8,6 @@ from pantalla_carga import PantallaCarga
 
 PERSONAJE_ADMIN_PREDETERMINADO = "pato"
 
-# HOLAAAAAAAAAA
 class FondoImagen(QtWidgets.QLabel):
     def __init__(self, ventana, ruta_imagen):
         super().__init__(ventana)
