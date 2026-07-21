@@ -89,13 +89,13 @@ def obtener_argumentos():
     parser.add_argument(
         "--lenguaje",
         type=str,
-        default="python",
+        default="java",
     )
 
     parser.add_argument(
         "--nivel",
         type=int,
-        default= 5,
+        default= 1,
 
       
 
