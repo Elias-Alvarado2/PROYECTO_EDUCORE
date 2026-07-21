@@ -50,6 +50,11 @@ RUTA_FUENTE_BOLD = (
 # El proyecto tiene 4 niveles y una prueba final.
 TOTAL_NIVELES = 5
 
+# Configuración de las vidas del jugador.
+MAX_VIDAS = 5
+MINUTOS_RECUPERACION_VIDAS = 5
+INTERVALO_ACTUALIZACION_VIDAS_MS = 5000
+
 
 # ==========================================================
 # FONDO RESPONSIVO
@@ -411,6 +416,7 @@ class PerfilWindow(QtWidgets.QWidget):
         self.subir_controles_sobre_fondo()
         self.configurar_formulario()
         self.configurar_responsividad()
+        self.configurar_actualizacion_vidas()
 
         QtCore.QTimer.singleShot(
             0,
@@ -513,6 +519,30 @@ class PerfilWindow(QtWidgets.QWidget):
 
         control.setFont(fuente)
 
+    def obtener_labels_responsivos(self):
+        """
+        Obtiene todos los QLabel creados en Qt Designer.
+        Su posición y tamaño originales se toman directamente
+        del archivo Perfil.ui.
+        """
+
+        labels = []
+
+        for label in self.contenedor_principal.findChildren(
+                QtWidgets.QLabel
+        ):
+            # No incluir el fondo creado desde Python.
+            if label is self.fondo:
+                continue
+
+            # Ignorar labels internos sin nombre.
+            if not label.objectName():
+                continue
+
+            labels.append(label)
+
+        return labels
+
     def cargar_y_aplicar_fuentes(self):
         """
         Aplica PixelOperator a labels, botones, barras, tabla,
@@ -582,7 +612,6 @@ class PerfilWindow(QtWidgets.QWidget):
         for nombre_barra in (
             "pb_python",
             "pb_java",
-            "pb_c",
             "pb_mysql",
         ):
             barra = getattr(self, nombre_barra, None)
@@ -621,16 +650,16 @@ class PerfilWindow(QtWidgets.QWidget):
     # ======================================================
 
     def configurar_responsividad(self):
-        """
-        BotonesResponsivos se encarga del botón Volver.
-        ElementosResponsivos se encarga del resto de controles
-        creados en Qt Designer.
-        """
+        # ======================================================
+        # BOTÓN VOLVER
+        # ======================================================
 
         self.botones_perfil = []
 
         if hasattr(self, "btn_volver"):
-            self.botones_perfil.append(self.btn_volver)
+            self.botones_perfil.append(
+                self.btn_volver
+            )
 
         self.botones_responsivos = BotonesResponsivos(
             ventana=self,
@@ -641,15 +670,39 @@ class PerfilWindow(QtWidgets.QWidget):
             escalar_fuentes=False,
         )
 
+        # ======================================================
+        # LABELS DEL DESIGNER
+        # ======================================================
+
+        self.labels_perfil = (
+            self.obtener_labels_responsivos()
+        )
+
+        self.labels_responsivos = ElementosResponsivos(
+            ventana=self.contenedor_principal,
+            elementos=self.labels_perfil,
+            ancho_base=self.ANCHO_BASE,
+            alto_base=self.ALTO_BASE,
+            escalar_fuentes=True,
+        )
+
+        # ======================================================
+        # RESTO DE ELEMENTOS
+        # ======================================================
+
         elementos = self.obtener_elementos_responsivos()
 
         self.elementos_responsivos = ElementosResponsivos(
-            ventana=self,
+            ventana=self.contenedor_principal,
             elementos=elementos,
             ancho_base=self.ANCHO_BASE,
             alto_base=self.ALTO_BASE,
             escalar_fuentes=True,
         )
+
+        # ======================================================
+        # HOVER
+        # ======================================================
 
         self.efectos_hover = [
             EfectoHoverBoton(
@@ -689,20 +742,20 @@ class PerfilWindow(QtWidgets.QWidget):
             excluidos.add(boton)
 
         for elemento in self.contenedor_principal.findChildren(
-            QtWidgets.QWidget
+                QtWidgets.QWidget
         ):
             if elemento in excluidos:
                 continue
 
+            # Los QLabel se ajustan mediante labels_responsivos.
+            if isinstance(elemento, QtWidgets.QLabel):
+                continue
+
             nombre = elemento.objectName() or ""
 
-            # Qt crea internamente estos controles dentro de las
-            # tablas y áreas de desplazamiento. No deben escalarse
-            # manualmente.
             if nombre.startswith("qt_"):
                 continue
 
-            # Los controles sin objectName suelen ser internos.
             if not nombre:
                 continue
 
@@ -715,6 +768,9 @@ class PerfilWindow(QtWidgets.QWidget):
             efecto.actualizar_geometria_base()
 
     def actualizar_interfaz_responsiva(self):
+        if hasattr(self, "labels_responsivos"):
+            self.labels_responsivos.ajustar()
+
         if hasattr(self, "elementos_responsivos"):
             self.elementos_responsivos.ajustar()
 
@@ -728,11 +784,8 @@ class PerfilWindow(QtWidgets.QWidget):
 
     def ajustar_tabla_responsiva(self):
         """
-        Posiciona y redimensiona la tabla respecto al diseño base
-        de 1920 x 1080. También ajusta fuente, filas y columnas.
-
-        Modifica los valores base de x, y, ancho y alto para mover
-        o cambiar el tamaño de la tabla dentro del formulario.
+        Ajusta la tabla exactamente al espacio disponible dentro
+        del cuadro dibujado en el fondo del perfil.
         """
 
         if not hasattr(self, "dgv_perfil"):
@@ -742,16 +795,14 @@ class PerfilWindow(QtWidgets.QWidget):
         escala_y = self.height() / self.ALTO_BASE
         escala_fuente = min(escala_x, escala_y)
 
-        # --------------------------------------------------
-        # POSICIÓN Y TAMAÑO BASE DE LA TABLA
-        # --------------------------------------------------
-        # x: mueve izquierda/derecha.
-        # y: mueve arriba/abajo.
-        # ancho y alto: cambian el tamaño total.
-        x_base = 250
-        y_base = 610
-        ancho_base = 1400
-        alto_base = 300
+        # ======================================================
+        # POSICIÓN EXACTA DENTRO DEL CUADRO
+        # ======================================================
+        # Valores calibrados para el fondo de 1920 x 1080.
+        x_base = 242
+        y_base = 620
+        ancho_base = 1408
+        alto_base = 325
 
         self.dgv_perfil.setGeometry(
             round(x_base * escala_x),
@@ -760,57 +811,172 @@ class PerfilWindow(QtWidgets.QWidget):
             max(1, round(alto_base * escala_y)),
         )
 
-        # El diseño de fondo ya contiene FECHA, EVENTO, DETALLE,
-        # LENGUAJE y ACCIÓN, por eso se ocultan los encabezados
-        # propios del QTableWidget.
+        # Elimina el borde propio del QTableWidget.
+        self.dgv_perfil.setFrameShape(
+            QtWidgets.QFrame.Shape.NoFrame
+        )
+
+        self.dgv_perfil.setContentsMargins(0, 0, 0, 0)
+
+        # Los encabezados ya están dibujados en el fondo.
         self.dgv_perfil.horizontalHeader().setVisible(False)
         self.dgv_perfil.verticalHeader().setVisible(False)
 
-        self.dgv_perfil.setWordWrap(False)
         self.dgv_perfil.setShowGrid(True)
+        self.dgv_perfil.setWordWrap(False)
         self.dgv_perfil.setAlternatingRowColors(False)
 
         self.dgv_perfil.setHorizontalScrollBarPolicy(
             QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff
         )
+
         self.dgv_perfil.setVerticalScrollBarPolicy(
             QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded
         )
 
-        # --------------------------------------------------
-        # FUENTE DE LOS DATOS
-        # --------------------------------------------------
-        tamano_fuente = max(10, round(15 * escala_fuente))
+        self.dgv_perfil.setTextElideMode(
+            QtCore.Qt.TextElideMode.ElideRight
+        )
 
-        fuente_tabla = QtGui.QFont(self.dgv_perfil.font())
-        fuente_tabla.setFamily(
-            getattr(
-                self,
-                "familia_pixel_normal",
-                fuente_tabla.family(),
+        # Fondo transparente para conservar el diseño.
+        self.dgv_perfil.setAttribute(
+            QtCore.Qt.WidgetAttribute.WA_TranslucentBackground,
+            True
+        )
+
+        self.dgv_perfil.viewport().setAttribute(
+            QtCore.Qt.WidgetAttribute.WA_TranslucentBackground,
+            True
+        )
+
+        self.dgv_perfil.viewport().setAutoFillBackground(False)
+
+        self.dgv_perfil.setStyleSheet("""
+            QTableWidget {
+                background-color: transparent;
+                alternate-background-color: transparent;
+                border: none;
+                gridline-color: #6f604d;
+                selection-background-color: rgba(243, 205, 169, 180);
+                selection-color: #102b68;
+            }
+
+            QTableWidget::viewport {
+                background-color: transparent;
+                border: none;
+            }
+
+            QTableWidget::item {
+                background-color: transparent;
+                padding-left: 6px;
+                padding-right: 6px;
+                border: none;
+                color: #102b68;
+            }
+
+            QTableWidget::item:selected {
+                background-color: rgba(243, 205, 169, 180);
+                color: #102b68;
+            }
+
+            /* Barra vertical completa */
+            QScrollBar:vertical {
+                background-color: transparent;
+                width: 12px;
+                margin: 0px;
+                border: none;
+            }
+
+            /* Parte móvil azul */
+            QScrollBar::handle:vertical {
+                background-color: #102b68;
+                min-height: 25px;
+                border: none;
+                border-radius: 5px;
+            }
+
+            QScrollBar::handle:vertical:hover {
+                background-color: #173b86;
+            }
+
+            /* Fondo superior e inferior de la barra */
+            QScrollBar::add-page:vertical,
+            QScrollBar::sub-page:vertical {
+                background-color: transparent;
+                border: none;
+            }
+
+            /* Quita los botones con flechas */
+            QScrollBar::add-line:vertical,
+            QScrollBar::sub-line:vertical {
+                background-color: transparent;
+                border: none;
+                height: 0px;
+            }
+
+            QScrollBar::up-arrow:vertical,
+            QScrollBar::down-arrow:vertical {
+                background: transparent;
+                width: 0px;
+                height: 0px;
+            }
+
+            /* Esquina que puede aparecer gris */
+            QAbstractScrollArea::corner {
+                background-color: transparent;
+                border: none;
+            }
+        """)
+
+        # ======================================================
+        # MISMA FUENTE QUE LOS LABELS
+        # ======================================================
+
+        if hasattr(self, "lbl_usuario"):
+            fuente_tabla = QtGui.QFont(
+                self.lbl_usuario.font()
             )
+
+        elif hasattr(self, "lbl_personaje"):
+            fuente_tabla = QtGui.QFont(
+                self.lbl_personaje.font()
+            )
+
+        else:
+            fuente_tabla = QtGui.QFont(
+                self.dgv_perfil.font()
+            )
+
+        # Tamaño independiente para que el texto siga cabiendo.
+        tamano_fuente = max(
+            9,
+            round(14 * escala_fuente)
         )
-        fuente_tabla.setPointSize(tamano_fuente)
-        fuente_tabla.setBold(False)
-        self.dgv_perfil.setFont(fuente_tabla)
 
-        # --------------------------------------------------
-        # ALTURA DE LAS FILAS
-        # --------------------------------------------------
-        alto_fila = max(25, round(34 * escala_y))
-
-        self.dgv_perfil.verticalHeader().setDefaultSectionSize(
-            alto_fila
+        fuente_tabla.setPointSize(
+            tamano_fuente
         )
 
-        for fila in range(self.dgv_perfil.rowCount()):
-            self.dgv_perfil.setRowHeight(fila, alto_fila)
+        # Conserva el estilo de la fuente de los labels.
+        fuente_tabla.setBold(
+            self.lbl_usuario.font().bold()
+            if hasattr(self, "lbl_usuario")
+            else False
+        )
 
-        # --------------------------------------------------
-        # ANCHO DE LAS COLUMNAS
-        # --------------------------------------------------
-        encabezado = self.dgv_perfil.horizontalHeader()
-        encabezado.setSectionResizeMode(
+        self.dgv_perfil.setFont(
+            fuente_tabla
+        )
+
+        # ======================================================
+        # ANCHO EXACTO DE LAS COLUMNAS
+        # ======================================================
+
+        encabezado_horizontal = (
+            self.dgv_perfil.horizontalHeader()
+        )
+
+        encabezado_horizontal.setSectionResizeMode(
             QtWidgets.QHeaderView.ResizeMode.Fixed
         )
 
@@ -819,21 +985,79 @@ class PerfilWindow(QtWidgets.QWidget):
         if ancho_util <= 0:
             ancho_util = self.dgv_perfil.width()
 
-        # Fecha, Evento, Detalle, Lenguaje y Acción.
-        # La suma debe quedar aproximadamente en 1.00.
+        # FECHA, EVENTO, DETALLE, LENGUAJE.
         porcentajes = [
-            0.17,
-            0.22,
-            0.39,
-            0.10,
-            0.12,
+            0.135,  # FECHA
+            0.210,  # EVENTO
+            0.330,  # DETALLE
+            0.180,  # LENGUAJE
         ]
 
-        for columna, porcentaje in enumerate(porcentajes):
+        anchos_calculados = []
+
+        for porcentaje in porcentajes:
+            ancho_columna = round(
+                ancho_util * porcentaje
+            )
+
+            anchos_calculados.append(
+                ancho_columna
+            )
+
+        # La última columna utiliza exactamente el espacio restante.
+        ancho_ultima_columna = max(
+            1,
+            ancho_util - sum(anchos_calculados)
+        )
+
+        anchos_calculados.append(
+            ancho_ultima_columna
+        )
+
+        for columna, ancho_columna in enumerate(
+                anchos_calculados
+        ):
             self.dgv_perfil.setColumnWidth(
                 columna,
-                max(1, round(ancho_util * porcentaje)),
+                ancho_columna
             )
+
+        # ======================================================
+        # ALTURA DE LAS FILAS
+        # ======================================================
+
+        encabezado_vertical = (
+            self.dgv_perfil.verticalHeader()
+        )
+
+        cantidad_filas = self.dgv_perfil.rowCount()
+
+        # Cuando hay entre 6 y 10 registros, las filas ocupan todo
+        # el alto disponible, evitando el espacio vacío inferior.
+        if 6 <= cantidad_filas <= 10:
+            encabezado_vertical.setSectionResizeMode(
+                QtWidgets.QHeaderView.ResizeMode.Stretch
+            )
+
+        else:
+            encabezado_vertical.setSectionResizeMode(
+                QtWidgets.QHeaderView.ResizeMode.Fixed
+            )
+
+            alto_fila = max(
+                25,
+                round(34 * escala_y)
+            )
+
+            encabezado_vertical.setDefaultSectionSize(
+                alto_fila
+            )
+
+            for fila in range(cantidad_filas):
+                self.dgv_perfil.setRowHeight(
+                    fila,
+                    alto_fila
+                )
 
         self.dgv_perfil.raise_()
 
@@ -985,7 +1209,6 @@ class PerfilWindow(QtWidgets.QWidget):
         barras = [
             self.pb_python,
             self.pb_java,
-            self.pb_c,
             self.pb_mysql,
         ]
 
@@ -1060,6 +1283,129 @@ class PerfilWindow(QtWidgets.QWidget):
         )
 
         self.ajustar_tabla_responsiva()
+
+    # ======================================================
+    # ACTUALIZACIÓN AUTOMÁTICA DE VIDAS
+    # ======================================================
+
+    def configurar_actualizacion_vidas(self):
+        """
+        Configura un temporizador que vuelve a consultar las vidas
+        mientras el perfil permanece visible.
+        """
+
+        self.timer_actualizar_vidas = QtCore.QTimer(self)
+        self.timer_actualizar_vidas.setInterval(
+            INTERVALO_ACTUALIZACION_VIDAS_MS
+        )
+        self.timer_actualizar_vidas.timeout.connect(
+            self.actualizar_vidas_perfil
+        )
+
+    def aplicar_recuperacion_vidas_si_corresponde(self) -> bool:
+        """
+        Recupera las cinco vidas cuando el jugador llegó a cero y
+        ya transcurrió el tiempo configurado en la base de datos.
+
+        Devuelve True cuando la consulta restauró las vidas.
+        """
+
+        conexion = None
+        cursor = None
+
+        try:
+            conexion = self.obtener_conexion()
+            cursor = conexion.cursor()
+
+            cursor.execute(
+                f"""
+                UPDATE jugador
+                SET
+                    vidas = %s,
+                    fecha_recuperacion_vidas = NULL
+                WHERE id_jugador = %s
+                  AND vidas <= 0
+                  AND fecha_recuperacion_vidas IS NOT NULL
+                  AND DATE_ADD(
+                        fecha_recuperacion_vidas,
+                        INTERVAL {MINUTOS_RECUPERACION_VIDAS} MINUTE
+                      ) <= NOW()
+                """,
+                (
+                    MAX_VIDAS,
+                    self.id_jugador,
+                ),
+            )
+
+            vidas_restauradas = cursor.rowcount > 0
+            conexion.commit()
+
+            return vidas_restauradas
+
+        except Exception as error:
+            if conexion is not None:
+                try:
+                    conexion.rollback()
+                except Exception:
+                    pass
+
+            print(
+                "No se pudo comprobar la recuperación de vidas:",
+                error
+            )
+
+            return False
+
+        finally:
+            if cursor is not None:
+                try:
+                    cursor.close()
+                except Exception:
+                    pass
+
+            if conexion is not None:
+                try:
+                    conexion.close()
+                except Exception:
+                    pass
+
+    def actualizar_vidas_perfil(self):
+        """
+        Consulta las vidas actuales y actualiza lbl_vidas. Antes de
+        leer el dato, comprueba si ya corresponde restaurarlas.
+        """
+
+        try:
+            self.aplicar_recuperacion_vidas_si_corresponde()
+
+            jugador = self.base_datos.obtener_datos_perfil(
+                self.id_jugador
+            )
+
+            if jugador is None:
+                return
+
+            vidas = int(
+                jugador.get("vidas") or 0
+            )
+
+            vidas = max(
+                0,
+                min(vidas, MAX_VIDAS)
+            )
+
+            texto_vidas = str(vidas)
+
+            if self.lbl_vidas.text() != texto_vidas:
+                self.lbl_vidas.setText(
+                    texto_vidas
+                )
+
+        except Exception as error:
+            print(
+                "No se pudieron actualizar las vidas del perfil:",
+                error
+            )
 
     # ======================================================
     # CONEXIÓN
@@ -1200,6 +1546,10 @@ class PerfilWindow(QtWidgets.QWidget):
     # ======================================================
 
     def cargar_datos_jugador(self):
+        # Antes de mostrar las vidas, comprueba si ya pasó el
+        # tiempo necesario para recuperar las cinco.
+        self.aplicar_recuperacion_vidas_si_corresponde()
+
         jugador = self.base_datos.obtener_datos_perfil(
             self.id_jugador
         )
@@ -1213,6 +1563,7 @@ class PerfilWindow(QtWidgets.QWidget):
         nombre = jugador.get("nombre") or "Sin nombre"
         personaje = jugador.get("personaje") or "pato"
         vidas = int(jugador.get("vidas") or 0)
+        vidas = max(0, min(vidas, MAX_VIDAS))
 
         self.lbl_usuario.setText(
             str(nombre).upper()
@@ -1500,11 +1851,6 @@ class PerfilWindow(QtWidgets.QWidget):
             "python": self.pb_python,
             "java": self.pb_java,
             "mysql": self.pb_mysql,
-
-            "c#": self.pb_c,
-            "csharp": self.pb_c,
-            "c_sharp": self.pb_c,
-            "c": self.pb_c,
         }
 
         return barras.get(
@@ -1556,9 +1902,6 @@ class PerfilWindow(QtWidgets.QWidget):
         barras = {
             "python": self.pb_python,
             "java": self.pb_java,
-            "c#": self.pb_c,
-            "csharp": self.pb_c,
-            "c sharp": self.pb_c,
             "mysql": self.pb_mysql,
         }
 
@@ -1566,7 +1909,6 @@ class PerfilWindow(QtWidgets.QWidget):
         for barra in {
             self.pb_python,
             self.pb_java,
-            self.pb_c,
             self.pb_mysql,
         }:
             barra.setRange(0, 100)
@@ -1696,7 +2038,10 @@ class PerfilWindow(QtWidgets.QWidget):
                 )
 
         # Mantiene una altura uniforme y una fuente legible.
-        self.ajustar_tabla_responsiva()
+        QtCore.QTimer.singleShot(
+            0,
+            self.ajustar_tabla_responsiva
+        )
 
         self.dgv_perfil.setSortingEnabled(
             True
@@ -1740,8 +2085,8 @@ class PerfilWindow(QtWidgets.QWidget):
 
     def resizeEvent(self, evento):
         if (
-            hasattr(self, "Perfil")
-            and self.Perfil is not self
+                hasattr(self, "Perfil")
+                and self.Perfil is not self
         ):
             self.Perfil.setGeometry(
                 0,
@@ -1753,6 +2098,9 @@ class PerfilWindow(QtWidgets.QWidget):
         if hasattr(self, "fondo"):
             self.fondo.actualizar_tamano()
             self.fondo.lower()
+
+        if hasattr(self, "labels_responsivos"):
+            self.labels_responsivos.ajustar()
 
         if hasattr(self, "elementos_responsivos"):
             self.elementos_responsivos.ajustar()
@@ -1779,6 +2127,15 @@ class PerfilWindow(QtWidgets.QWidget):
     def showEvent(self, evento):
         super().showEvent(evento)
 
+        # Actualiza las vidas cada vez que se entra al perfil.
+        QtCore.QTimer.singleShot(
+            0,
+            self.actualizar_vidas_perfil,
+        )
+
+        if hasattr(self, "timer_actualizar_vidas"):
+            self.timer_actualizar_vidas.start()
+
         QtCore.QTimer.singleShot(
             0,
             self.mostrar_pantalla_completa,
@@ -1793,6 +2150,18 @@ class PerfilWindow(QtWidgets.QWidget):
             100,
             self.actualizar_vista,
         )
+
+    def hideEvent(self, evento):
+        if hasattr(self, "timer_actualizar_vidas"):
+            self.timer_actualizar_vidas.stop()
+
+        super().hideEvent(evento)
+
+    def closeEvent(self, evento):
+        if hasattr(self, "timer_actualizar_vidas"):
+            self.timer_actualizar_vidas.stop()
+
+        super().closeEvent(evento)
 
     def actualizar_vista(self):
         if hasattr(self, "fondo"):
