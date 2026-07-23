@@ -18,6 +18,12 @@ class NivelJava01(JuegoBase):
     NIVEL_ACTUAL = NIVEL_ACTUAL
     FONDO_ACTUAL = FONDO_ACTUAL
 
+    CARTEL_FINAL = {
+    "x": 3890,
+    "ajuste_y": -10,
+    "tamano":0.40,
+    "mostrar_bloqueado": True,
+    }
     # ========================================================
     # POSICIÓN DEL JUGADOR
     # ========================================================
@@ -212,8 +218,57 @@ class NivelJava01(JuegoBase):
             "hitbox_reducir_ancho": 10,
             "hitbox_reducir_alto": 18,
         },
+        {
+            "tipo":"estatua",
+            "imagen":"java/estatua.png",
+            "x": 2628,
+            "ajuste_y": -10,
+            "ancho": 100,
+            "alto": 60,
+            "hitbox_offset_x": 15,
+            "hitbox_offset_y": 14,
+            "hitbox_reducir_ancho": 35,
+            "hitbox_reducir_alto":14,
+        },
+        {
+            "tipo":"plataforma",
+            "imagen":"java/plataforma.png",
+            "x": 2714,
+            "ajuste_y": -10,
+            "ancho": 200,
+            "alto": 60,
+            "hitbox_offset_x": 5,
+            "hitbox_offset_y": 18,
+            "hitbox_reducir_ancho": 10,
+            "hitbox_reducir_alto": 18,
+        },
+        {
+            "tipo":"estatua",
+            "imagen":"java/estatua.png",
+            "x": 3038,
+            "ajuste_y": -10,
+            "ancho": 100,
+            "alto": 60,
+            "hitbox_offset_x": 15,
+            "hitbox_offset_y": 14,
+            "hitbox_reducir_ancho": 35,
+            "hitbox_reducir_alto":14,
+        },
+        {
+            # Varia el tamaño segun nivel o segun se desee
+            # no borrar este de aca
+            "tipo":"volcan",
+            "imagen":"java/volcan.png",
+            "x": 2900,
+            "ajuste_y": -10,
+            "ancho": 140,
+            "alto": 60,
+            "hitbox_offset_x": 5,
+            "hitbox_offset_y": 18,
+            "hitbox_reducir_ancho": 10,
+            "hitbox_reducir_alto": 18,
+        },
        {
-           # GUIA --------------------------------------------
             "tipo":"arco",
             "imagen":"java/arco.png",
             "x": 3330,
@@ -226,21 +281,9 @@ class NivelJava01(JuegoBase):
             "hitbox_reducir_alto": 14,
         },
         {
-            "tipo":"columnas",
-            "imagen":"java/columna.png",
-            "x": 4000,
-            "ajuste_y": -10,
-            "ancho": 50,
-            "alto": 100,
-            "hitbox_offset_x": 10,
-            "hitbox_offset_y": 12,
-            "hitbox_reducir_ancho": 20,
-            "hitbox_reducir_alto":12,
-        },
-        {
             "tipo":"estatua",
             "imagen":"java/estatua.png",
-            "x": 4500,
+            "x": 3487,
             "ajuste_y": -10,
             "ancho": 100,
             "alto": 60,
@@ -251,64 +294,11 @@ class NivelJava01(JuegoBase):
         },
         {
             # Varia el tamaño segun nivel o segun se desee
-            # Colocar en comentario tamaños de obstaculo
-            "tipo":"pico",
-            "imagen":"java/pico.png",
-            "x": 4300,
-            "ajuste_y": -5,
-            "ancho": 100,
-            "alto": 60,
-            "hitbox_offset_x": 10,
-            "hitbox_offset_y": 12,
-            "hitbox_reducir_ancho": 20,
-            "hitbox_reducir_alto":15,
-        },
-        {
-            # Varia el tamaño segun nivel o segun se desee
-            # Colocar en comentario tamaños de obstaculo
-            "tipo":"pico_ardiente",
-            "imagen":"java/pico_ardiente.png",
-            "x": 4200,
-            "ajuste_y": -10,
-            "ancho": 100,
-            "alto": 60,
-            "hitbox_offset_x": 10,
-            "hitbox_offset_y": 12,
-            "hitbox_reducir_ancho": 20,
-            "hitbox_reducir_alto":15,
-        },
-        {
-            "tipo":"plataforma",
-            "imagen":"java/plataforma.png",
-            "x": 4000,
-            "ajuste_y": -10,
-            "ancho": 200,
-            "alto": 60,
-            "hitbox_offset_x": 5,
-            "hitbox_offset_y": 18,
-            "hitbox_reducir_ancho": 10,
-            "hitbox_reducir_alto": 18,
-        },
-        {
-            # Varia el tamaño segun nivel o segun se desee
             "tipo":"plataforma_flotante",
             "imagen":"java/plataforma_flotante.png",
-            "x": 4000,
-            "ajuste_y": -10,
-            "ancho": 200,
-            "alto": 60,
-            "hitbox_offset_x": 5,
-            "hitbox_offset_y": 18,
-            "hitbox_reducir_ancho": 10,
-            "hitbox_reducir_alto": 18,
-        },
-        {
-            # Varia el tamaño segun nivel o segun se desee
-            "tipo":"volcan",
-            "imagen":"java/volcan.png",
-            "x": 2900,
-            "ajuste_y": -10,
-            "ancho": 140,
+            "x": 3639,
+            "ajuste_y": -100,
+            "ancho": 175,
             "alto": 60,
             "hitbox_offset_x": 5,
             "hitbox_offset_y": 18,
