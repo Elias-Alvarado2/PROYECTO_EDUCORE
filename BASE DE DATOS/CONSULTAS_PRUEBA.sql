@@ -201,4 +201,8 @@ JOIN jugador j ON j.id_jugador = p.id_jugador
 JOIN lenguaje l ON l.id_lenguaje = p.id_lenguaje;
 
 update jugador set vidas=5 where id_jugador=2;
-select *from historial
+select * from historial;
+
+-- IMPORTANTE PARA INSTALACIONES NUEVAS O BASES EXISTENTES:
+-- Después de este archivo, ejecuta CORRECCION_LECCIONES_PROGRESION.sql.
+-- Es idempotente y agrega/alinea las lecciones usadas por todos los niveles.

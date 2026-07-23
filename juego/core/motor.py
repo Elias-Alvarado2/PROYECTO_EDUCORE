@@ -3091,6 +3091,8 @@ class JuegoEduCore:
         )
         self.leccion_ya_completada = False
         self.leccion_npc_leida = False
+        self.progreso_nivel_guardado = False
+        self.ultimo_intento_guardado_progreso_ms = -5000
 
     def _inicializar_mundo(self):
         self.capas = []
@@ -4413,12 +4415,22 @@ class JuegoEduCore:
         """
         Comprueba continuamente si todas las prácticas terminaron.
 
-        Esta comprobación adicional evita que el cartel quede bloqueado si
-        una pantalla de práctica se cerró en un fotograma distinto al esperado.
+        Si MySQL no estaba disponible al terminar, el cartel permanece
+        desbloqueado y el guardado se vuelve a intentar cada cinco segundos.
         """
         if self.leccion_ya_completada:
             if self.cartel_final is not None:
                 self.cartel_final.desbloquear()
+
+            if not self.progreso_nivel_guardado:
+                ahora = pygame.time.get_ticks()
+
+                if ahora - self.ultimo_intento_guardado_progreso_ms >= 5000:
+                    self.ultimo_intento_guardado_progreso_ms = ahora
+                    self.progreso_nivel_guardado = (
+                        self._guardar_progreso_nivel_normal()
+                    )
+
             return True
 
         if not self.objetos_practica:
@@ -4458,6 +4470,7 @@ class JuegoEduCore:
         # La prueba final no se procesa como una lección normal. Su resultado
         # se guarda al abrir el cartel mediante GestorResultadoPrueba.
         if self.gestor_resultado_prueba.es_prueba_final(self):
+            self.progreso_nivel_guardado = True
             print(
                 "[PRUEBA FINAL] El resultado se guardará al abrir "
                 "el cartel final."
@@ -4466,47 +4479,64 @@ class JuegoEduCore:
 
         # Los administradores pueden probar los niveles sin guardar progreso.
         if self.es_administrador:
+            self.progreso_nivel_guardado = True
             return
 
+        self.ultimo_intento_guardado_progreso_ms = pygame.time.get_ticks()
+        self.progreso_nivel_guardado = self._guardar_progreso_nivel_normal()
+
+    def _guardar_progreso_nivel_normal(self):
+        """Guarda todas las lecciones del nivel y luego su porcentaje."""
         if self.id_jugador is None:
             print("[PROGRESO] No existe id_jugador.")
-            return
+            return False
 
         if self.id_lenguaje is None:
             print("[PROGRESO] No existe id_lenguaje.")
-            return
+            return False
 
-        if not self.db.activa:
+        if not self.db.activa and not self.db.conectar():
             print(
                 "[PROGRESO] No se guardó el nivel porque MySQL "
-                "no está conectado."
+                "no está conectado. Se volverá a intentar."
             )
-            return
+            return False
 
         numero_nivel = self.obtener_numero_nivel_actual()
+        lecciones_por_orden = {}
 
-        # El motor puede mostrar varias lecciones/NPC dentro de un mismo
-        # nivel. Se guarda la de mayor orden para avanzar correctamente
-        # leccion_actual, lecciones_completadas y puntos.
-        lecciones_npc = [
-            npc.leccion
-            for npc in getattr(self, "npcs", ())
-            if isinstance(getattr(npc, "leccion", None), dict)
-        ]
+        for npc in getattr(self, "npcs", ()):
+            leccion = getattr(npc, "leccion", None)
 
-        if lecciones_npc:
-            leccion_a_guardar = max(
-                lecciones_npc,
-                key=lambda leccion: int(leccion.get("orden") or 0),
+            if not isinstance(leccion, dict):
+                continue
+
+            try:
+                orden = int(leccion.get("orden") or 0)
+            except (TypeError, ValueError):
+                continue
+
+            if orden > 0:
+                lecciones_por_orden[orden] = leccion
+
+        if not lecciones_por_orden and isinstance(self.leccion_actual, dict):
+            try:
+                orden = int(self.leccion_actual.get("orden") or 0)
+            except (TypeError, ValueError):
+                orden = 0
+
+            if orden > 0:
+                lecciones_por_orden[orden] = self.leccion_actual
+
+        guardado_lecciones = bool(lecciones_por_orden)
+
+        for orden in sorted(lecciones_por_orden):
+            guardado = self.db.completar_leccion(
+                self.id_jugador,
+                self.id_lenguaje,
+                lecciones_por_orden[orden],
             )
-        else:
-            leccion_a_guardar = self.leccion_actual
-
-        guardado_leccion = self.db.completar_leccion(
-            self.id_jugador,
-            self.id_lenguaje,
-            leccion_a_guardar,
-        )
+            guardado_lecciones = guardado_lecciones and guardado
 
         guardado_nivel = self.db.registrar_nivel_completado(
             id_jugador=self.id_jugador,
@@ -4514,18 +4544,20 @@ class JuegoEduCore:
             numero_nivel=numero_nivel,
         )
 
-        if guardado_leccion and guardado_nivel:
+        if guardado_lecciones and guardado_nivel:
             print(
                 f"[PROGRESO] Nivel {numero_nivel} guardado "
                 "correctamente."
             )
-        else:
-            print(
-                f"[PROGRESO] El nivel {numero_nivel} terminó, "
-                "pero una parte del progreso no se pudo guardar. "
-                f"Lección: {guardado_leccion}; "
-                f"porcentaje: {guardado_nivel}."
-            )
+            return True
+
+        print(
+            f"[PROGRESO] El nivel {numero_nivel} terminó, "
+            "pero una parte del progreso no se pudo guardar. "
+            f"Lecciones: {guardado_lecciones}; "
+            f"porcentaje: {guardado_nivel}. Se volverá a intentar."
+        )
+        return False
 
     def finalizar_practica_objeto(self, respuesta_correcta):
         objeto = self.objeto_practica_actual

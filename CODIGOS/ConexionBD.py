@@ -118,7 +118,7 @@ class ConexionBD:
                 (jugador["id_jugador"],),
             )
 
-            # Cuando ya transcurrió una hora, restaura todas las vidas.
+            # Cuando ya transcurrieron cinco minutos, restaura todas las vidas.
             cursor.execute(
                 """
                 UPDATE jugador
@@ -129,7 +129,7 @@ class ConexionBD:
                   AND fecha_recuperacion_vidas IS NOT NULL
                   AND NOW() >= DATE_ADD(
                       fecha_recuperacion_vidas,
-                      INTERVAL 1 HOUR
+                      INTERVAL 5 MINUTE
                   )
                 """,
                 (jugador["id_jugador"],),
@@ -384,7 +384,7 @@ class ConexionBD:
                   AND fecha_recuperacion_vidas IS NOT NULL
                   AND NOW() >= DATE_ADD(
                       fecha_recuperacion_vidas,
-                      INTERVAL 1 HOUR
+                      INTERVAL 5 MINUTE
                   )
                 """,
                 (id_jugador,),

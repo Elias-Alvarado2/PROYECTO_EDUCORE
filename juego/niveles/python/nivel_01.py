@@ -120,6 +120,9 @@ class NivelPython01(JuegoBase):
         "repetible": True,
         "practica": 3,
     },
+)
+
+    OBSTACULOS = (
          {
         "tipo": "arena",
         "imagen": "python/arena.png",
@@ -146,9 +149,7 @@ class NivelPython01(JuegoBase):
         "hitbox_reducir_ancho": 8,
         "hitbox_reducir_alto": 8,
     },
-)
 
-    OBSTACULOS = (
        
 
         # ----------------------------------------------------

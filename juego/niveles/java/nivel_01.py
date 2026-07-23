@@ -308,7 +308,13 @@ class NivelJava01(JuegoBase):
     )
 
     PRACTICAS = (
-        
+        {
+            "x": 1260,
+            "y": None,
+            "pregunta": "En Java, una variable debe declarar su tipo de dato.",
+            "respuesta_correcta": True,
+            "nombre": "practica_java_01",
+        },
     )
 
 
