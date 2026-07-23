@@ -6347,6 +6347,9 @@ class JuegoEduCore:
         # Reiniciamos el reloj para evitar un salto grande en el primer frame.
         self.clock.tick()
         pygame.event.clear()
+        # La seleccion permanece como fondo para no exponer el escritorio.
+        # Pygame recupera explicitamente el primer plano al comenzar.
+        self.recuperar_foco_pygame()
         self.iniciar_transicion_entrada()
 
         ejecutando = True
