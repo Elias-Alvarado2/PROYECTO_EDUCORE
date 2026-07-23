@@ -23,6 +23,7 @@ class NivelPython01(JuegoBase):
     AJUSTE_Y_SPRITE_MONTANAS = 2
     AJUSTE_Y_SPRITE_SUELO = 0
     AJUSTE_Y_SPRITE_PLANTAS = 0
+    
     PISOS = (
         (0, LONGITUD_NIVEL),
     )

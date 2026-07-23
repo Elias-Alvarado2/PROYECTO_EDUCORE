@@ -236,6 +236,19 @@ background-color: transparent;
      </size>
     </property>
    </widget>
+   <widget class="QPushButton" name="btnDiploma">
+    <property name="geometry">
+     <rect>
+      <x>820</x>
+      <y>830</y>
+      <width>281</width>
+      <height>81</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>PushButton</string>
+    </property>
+   </widget>
   </widget>
  </widget>
  <resources/>

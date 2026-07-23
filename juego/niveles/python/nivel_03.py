@@ -26,6 +26,64 @@ class NivelPython03(JuegoBase):
     PISOS = (
         (0, LONGITUD_NIVEL),
     )
+    ENEMIGOS=(
+         {
+        "tipo": "jabali",
+        # Posiciones relativas al suelo
+        "x_inicial": 4843,
+        "x_limite": 5280,
+
+        "velocidad": 120,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+      {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 2075,
+
+        # Posiciones relativas al suelo
+        "y_inicial": 0,
+        "y_limite": -250,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -10,
+    },
+    {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 2280,
+
+        # Posiciones relativas al suelo
+        "y_inicial": 0,
+        "y_limite": -250,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -10,
+    },
+     {
+            
+        "tipo": "bolaazul",
+        "x_inicial": 3963,
+        "x_limite": 3624    ,
+        "ajuste_y": 0,
+        "ancho": 100,
+        "alto": 68,
+        "velocidad": 120,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+        "fps_animacion":8,
+
+        },
+    )
     NPCS = (
     {
         "nombre": "pinguino_1",
@@ -41,7 +99,7 @@ class NivelPython03(JuegoBase):
         "x": 2160,
         "ajuste_y": -180,
         "orden_leccion": 8,
-        "requiere_anterior": False,
+        "requiere_anterior": True,
         "repetible": True,
         "practica": 2,
     },
@@ -50,7 +108,7 @@ class NivelPython03(JuegoBase):
         "x": 3230,
         "ajuste_y": -145,
         "orden_leccion": 9,
-        "requiere_anterior": False,
+        "requiere_anterior": True,
         "repetible": True,
         "practica": 3,
     },
