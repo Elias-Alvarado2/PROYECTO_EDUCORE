@@ -74,14 +74,14 @@ def obtener_argumentos():
     parser.add_argument(
         "--lenguaje",
         type=str,
-        default="mysql",
+        default="java",
     )
 
     parser.add_argument(
         "--nivel",
         type=int,
 
-        default=6,
+        default= 6,
 
     
     )

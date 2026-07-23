@@ -46,6 +46,94 @@ class NivelJava02(JuegoBase):
         (0, LONGITUD_NIVEL),
     )
 
+    NPCS = (
+    {
+        "nombre": "guia_java_if",
+        "x": 400,  # Ajusta manualmente
+        "ajuste_y": -8,
+        "orden_leccion": 4,
+        "requiere_anterior": False,
+        "repetible": True,
+        "practica": 1,
+    },
+    {
+        "nombre": "guia_java_if_else",
+        "x": 1790,  # Ajusta manualmente
+        "ajuste_y": -290,
+        "orden_leccion": 5,
+        "requiere_anterior": True,
+        "repetible": True,
+        "practica": 2,
+    },
+    {
+        "nombre": "guia_java_else_if",
+        "x": 2800,  # Ajusta manualmente
+        "ajuste_y": -102,
+        "orden_leccion": 6,
+        "requiere_anterior": True,
+        "repetible": True,
+        "practica": 3,
+    },
+    )
+
+    ENEMIGOS = (
+    # ====================================================
+    # ENEMIGO 1: JABALÍ
+    # Movimiento horizontal rápido
+    # ====================================================
+    {
+        "tipo": "jabali",
+
+        # Ajusta estas posiciones según tu recorrido.
+        "x_inicial": 1113,
+        "x_limite": 1573,
+
+        "ajuste_y": -5,
+        "velocidad": 75,
+        "ancho": 120,
+        "alto": 80,
+        "fps_animacion": 7,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+
+    # ====================================================
+    # ENEMIGO 2: SERPIENTE
+    # Movimiento horizontal
+    # ====================================================
+    {
+        "tipo": "serpiente",
+
+        # Ajusta estas posiciones manualmente.
+        "x_inicial": 1779,
+        "x_limite": 1937,
+
+        "ajuste_y": -5,
+        "velocidad": 65,
+        "ancho": 110,
+        "alto": 75,
+        "fps_animacion": 7,
+        "hace_dano": True,
+        "rebote_al_pisar": -18,
+    },
+
+    {
+        "tipo": "serpiente",
+   
+        # Ajusta estas posiciones manualmente.
+        "x_inicial": 2349,
+        "x_limite": 2603,
+   
+        "ajuste_y": -5,
+        "velocidad": 65,
+        "ancho": 110,
+        "alto": 75,
+        "fps_animacion": 7,
+        "hace_dano": True,
+        "rebote_al_pisar": -18,
+    },
+    )
+
     OBSTACULOS = (
         {
             "tipo":"estatua",
@@ -291,13 +379,119 @@ class NivelJava02(JuegoBase):
     )
 
     PRACTICAS = (
-        {
-            "x": 1340,
-            "y": None,
-            "pregunta": 'En Java, una clase puede contener atributos y métodos.',
-            "respuesta_correcta": True,
-            "nombre": "practica_java_02",
-        },
+        # ====================================================
+         # PRÁCTICA 1: VERDADERO O FALSO
+         # Tema: if
+         # ====================================================
+         {
+             "x": 1220,  # Ajusta manualmente
+             "y": 367,
+             "nombre": "java_n2_p1_if",
+             "desbloqueada": False,
+             "pregunta": (
+                 "En Java, el bloque de un if se ejecuta "
+                 "solamente cuando su condición es verdadera."
+             ),
+             "respuesta_correcta": True,
+         },
+        
+         # ====================================================
+         # PRÁCTICA 2: ELECCIÓN MÚLTIPLE
+         # Tema: if y else
+         # ====================================================
+         {
+             "x": 2183,  # Ajusta manualmente
+             "y": 413,
+             "tipo": "eleccion_multiple",
+             "nombre": "java_n2_p2_if_else",
+             "desbloqueada": False,
+             "pregunta": (
+                 "¿Qué bloque se ejecuta cuando la condición "
+                 "del if es falsa?"
+             ),
+             "opciones": [
+                 "else",
+                 "if",
+                 "boolean",
+             ],
+             "respuesta_correcta": 1,
+         },
+        
+         # ====================================================
+         # PRÁCTICA 3: COMPLETAR CÓDIGO
+         # Tema: else if
+         # ====================================================
+         {
+             "x": 3684,  # Ajusta manualmente
+             "y": None,
+             "tipo": "codigo",
+             "nombre": "java_n2_p3_else_if",
+             "desbloqueada": False,
+             "pregunta": (
+                 "Completa la estructura que comprueba varias notas."
+             ),
+             "respuestas": {
+                 "primera_condicion": "if",
+                 "segunda_condicion": "else if",
+                 "alternativa": "else",
+             },
+             "codigo": [
+                 {
+                     "indentacion": 0,
+                     "segmentos": [
+                         {"hueco": "primera_condicion"},
+                         {"texto": " (nota >= 90) {"},
+                     ],
+                 },
+                 {
+                     "indentacion": 1,
+                     "segmentos": [
+                         {"texto": 'System.out.println("Excelente");'},
+                     ],
+                 },
+                 {
+                     "indentacion": 0,
+                     "segmentos": [
+                         {"texto": "} "},
+                         {"hueco": "segunda_condicion"},
+                         {"texto": " (nota >= 60) {"},
+                     ],
+                 },
+                 {
+                     "indentacion": 1,
+                     "segmentos": [
+                         {"texto": 'System.out.println("Aprobado");'},
+                     ],
+                 },
+                 {
+                     "indentacion": 0,
+                     "segmentos": [
+                         {"texto": "} "},
+                         {"hueco": "alternativa"},
+                         {"texto": " {"},
+                     ],
+                 },
+                 {
+                     "indentacion": 1,
+                     "segmentos": [
+                         {"texto": 'System.out.println("Reprobado");'},
+                     ],
+                 },
+                 {
+                     "indentacion": 0,
+                     "segmentos": [
+                         {"texto": "}"},
+                     ],
+                 },
+             ],
+             "opciones": [
+                 "if",
+                 "else if",
+                 "else",
+                 "while",
+                 "switch",
+             ],
+         },
     )
 
 

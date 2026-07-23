@@ -63,6 +63,86 @@ class NivelJava01(JuegoBase):
         (0, LONGITUD_NIVEL),
     )
 
+    NPCS = (
+    {
+        "nombre": "guia_java_variables",
+        "x": 350,
+        "ajuste_y": -8,
+        "orden_leccion": 1,
+        "requiere_anterior": False,
+        "repetible": True,
+        "practica": 1,
+    },
+    {
+        "nombre": "guia_java_tipos",
+        "x": 1890,
+        "ajuste_y": -8,
+        "orden_leccion": 2,
+        "requiere_anterior": True,
+        "repetible": True,
+        "practica": 2,
+    },
+    {
+    "nombre": "guia_java_asignacion",
+    "x": 2767, 
+    "ajuste_y": -52,
+    "orden_leccion": 3,
+    "requiere_anterior": True,
+    "repetible": True,
+    "practica": 3,
+    },
+    )
+
+    ENEMIGOS = (
+    {
+        "tipo": "caracol",
+
+        # Recorrido horizontal
+        # Cambiar segun el diseño
+        "x_inicial": 3111,
+        "x_limite": 3236,
+
+        # Altura respecto al suelo.
+        # Negativo = sube; positivo = baja
+        "ajuste_y": -5,
+
+        "velocidad": 55,
+        "ancho": 100,
+        "alto": 68,
+        "fps_animacion": 6,
+
+        # Permite que el jugador pierda una vida al tocarlo de lado
+        "hace_dano": True,
+
+        # Salto que recibe el jugador al pisarlo
+        "rebote_al_pisar": -20,
+    },
+    {
+        "tipo": "bolaazul",
+        "x_inicial": 3547,
+        "x_limite": 3768,
+        "ajuste_y": -5,
+        "velocidad": 65,
+        "ancho": 95,
+        "alto": 70,
+        "fps_animacion": 8,
+        "hace_dano": True,
+        "rebote_al_pisar": -18,
+    },
+    {
+        "tipo": "serpiente",
+        "x_inicial": 1136,
+        "x_limite": 1595,
+        "ajuste_y": -5,
+        "velocidad": 70,
+        "ancho": 110,
+        "alto": 78,
+        "fps_animacion": 7,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+    )
+
     OBSTACULOS = (
         {
             "tipo":"plataforma",
@@ -308,7 +388,67 @@ class NivelJava01(JuegoBase):
     )
 
     PRACTICAS = (
-        
+        {
+        "x": 1292,
+        "y": 187,
+        "nombre": "java_n1_p1_variables",
+        "desbloqueada": False,
+        "pregunta": (
+            "En la declaración int vidas = 5;, "
+            "int indica el tipo de dato de la variable."
+        ),
+        "respuesta_correcta": True,
+    },
+    {
+        "x": 2190,
+        "y": None,
+        "tipo": "eleccion_multiple",
+        "nombre": "java_n1_p2_tipos",
+        "desbloqueada": False,
+        "pregunta": (
+            "¿Qué tipo de dato se utiliza normalmente para "
+            "guardar números enteros en Java?"
+        ),
+        "opciones": [
+            "int",
+            "String",
+            "boolean",
+        ],
+        "respuesta_correcta": 1,
+    },
+    {
+    "x": 3701,  # posicion para mi practica
+    "y": 367,
+    "tipo": "codigo",
+    "nombre": "java_n1_p3_asignacion",
+    "desbloqueada": False,
+    "pregunta": "Completa la declaración de una variable de texto.",
+    "respuestas": {
+        "tipo": "String",
+        "variable": "nombre",
+        "valor": '"Ana"',
+    },
+    "codigo": [
+        {
+            "indentacion": 0,
+            "segmentos": [
+                {"hueco": "tipo"},
+                {"texto": " "},
+                {"hueco": "variable"},
+                {"texto": " = "},
+                {"hueco": "valor"},
+                {"texto": ";"},
+            ],
+        },
+    ],
+    "opciones": [
+        "String",
+        "nombre",
+        '"Ana"',
+        "int",
+        "System.out.println",
+    ],
+},
     )
 
 

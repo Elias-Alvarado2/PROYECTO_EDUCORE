@@ -46,6 +46,77 @@ class NivelJava05(JuegoBase):
         (0, LONGITUD_NIVEL),
     )
 
+    NPCS = (
+    {
+        "nombre": "guia_java_arreglos",
+        "x": 400,  # Ajusta manualmente
+        "ajuste_y": -8,
+        "orden_leccion": 13,
+        "requiere_anterior": False,
+        "repetible": True,
+        "practica": 1,
+    },
+    {
+        "nombre": "guia_java_indices",
+        "x": 2279,  # Ajusta manualmente
+        "ajuste_y": -8,
+        "orden_leccion": 14,
+        "requiere_anterior": True,
+        "repetible": True,
+        "practica": 2,
+    },
+    {
+        "nombre": "guia_java_recorrido",
+        "x": 4678,  # Ajusta manualmente
+        "ajuste_y": -8,
+        "orden_leccion": 15,
+        "requiere_anterior": True,
+        "repetible": True,
+        "practica": 3,
+    },
+    )
+
+    ENEMIGOS = (
+    # ====================================================
+    # ENEMIGO 1: JABALÍ
+    # Movimiento horizontal rápido
+    # ====================================================
+    {
+        "tipo": "jabali",
+
+        # Ajusta estas posiciones según tu diseño.
+        "x_inicial": 968,
+        "x_limite": 1456,
+
+        "ajuste_y": 0,
+        "velocidad": 100,
+        "ancho": 125,
+        "alto": 82,
+        "fps_animacion": 9,
+        "hace_dano": True,
+        "rebote_al_pisar": -22,
+    },
+    # ====================================================
+    # ENEMIGO 3: SERPIENTE
+    # Movimiento horizontal rápido antes del cartel
+    # ====================================================
+    {
+        "tipo": "serpiente",
+
+        # Ajusta estas posiciones según tu recorrido.
+        "x_inicial": 1662,
+        "x_limite": 2000,
+
+        "ajuste_y": 0,
+        "velocidad": 90,
+        "ancho": 110,
+        "alto": 76,
+        "fps_animacion": 9,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+    )
+
     OBSTACULOS = (
         {
             "tipo":"estatua",
@@ -557,15 +628,104 @@ class NivelJava05(JuegoBase):
     )
 
     PRACTICAS = (
-        {
-            "x": 1580,
-            "y": None,
-            "pregunta": 'En Java, una clase puede contener atributos y métodos.',
-            "respuesta_correcta": True,
-            "nombre": "practica_java_05",
-        },
-    )
+    # ====================================================
+    # PRÁCTICA 1: VERDADERO O FALSO
+    # Tema: creación de arreglos
+    # ====================================================
+    {
+        "x": 1720,  # Ajusta manualmente
+        "y": 217,
+        "nombre": "java_n5_p1_arreglos",
+        "desbloqueada": False,
+        "pregunta": (
+            "En Java, todos los elementos de un arreglo "
+            "deben ser del mismo tipo de dato."
+        ),
+        "respuesta_correcta": True,
+    },
 
+    # ====================================================
+    # PRÁCTICA 2: ELECCIÓN MÚLTIPLE
+    # Tema: índices
+    # ====================================================
+    {
+        "x": 3875,  # Ajusta manualmente
+        "y": 207,
+        "tipo": "eleccion_multiple",
+        "nombre": "java_n5_p2_indices",
+        "desbloqueada": False,
+        "pregunta": (
+            "¿Qué expresión obtiene el primer elemento "
+            "del arreglo personajes?"
+        ),
+        "opciones": [
+            "personajes[0]",
+            "personajes[1]",
+            "personajes.first",
+        ],
+        "respuesta_correcta": 1,
+    },
+
+    # ====================================================
+    # PRÁCTICA 3: COMPLETAR CÓDIGO
+    # Tema: recorrer un arreglo
+    # ====================================================
+    {
+        "x": 5547,  # Ajusta manualmente
+        "y": None,
+        "tipo": "codigo",
+        "nombre": "java_n5_p3_recorrer_arreglo",
+        "desbloqueada": False,
+        "pregunta": (
+            "Completa el ciclo que recorre y muestra "
+            "todos los elementos del arreglo monedas."
+        ),
+        "respuestas": {
+            "inicio": "0",
+            "longitud": "monedas.length",
+            "elemento": "monedas[i]",
+        },
+        "codigo": [
+            {
+                "indentacion": 0,
+                "segmentos": [
+                    {"texto": "int[] monedas = {5, 10, 15};"},
+                ],
+            },
+            {
+                "indentacion": 0,
+                "segmentos": [
+                    {"texto": "for (int i = "},
+                    {"hueco": "inicio"},
+                    {"texto": "; i < "},
+                    {"hueco": "longitud"},
+                    {"texto": "; i++) {"},
+                ],
+            },
+            {
+                "indentacion": 1,
+                "segmentos": [
+                    {"texto": "System.out.println("},
+                    {"hueco": "elemento"},
+                    {"texto": ");"},
+                ],
+            },
+            {
+                "indentacion": 0,
+                "segmentos": [
+                    {"texto": "}"},
+                ],
+            },
+        ],
+        "opciones": [
+            "0",
+            "monedas.length",
+            "monedas[i]",
+            "1",
+            "monedas",
+        ],
+    },
+)
 
 CLASE_NIVEL = NivelJava05
 

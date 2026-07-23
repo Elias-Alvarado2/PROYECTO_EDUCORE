@@ -13,6 +13,8 @@ class NivelJava06(JuegoBase):
     FONDO_ACTUAL = FONDO_ACTUAL
     JUGADOR_X_INICIAL = 170
 
+    ES_PRUEBA_FINAL =True
+
     CARTEL_FINAL = {
     "x": 5890,
     "ajuste_y": -10,
@@ -45,6 +47,81 @@ class NivelJava06(JuegoBase):
     PISOS = (
         (0, LONGITUD_NIVEL),
     )
+
+    NPCS = (
+    {
+        "nombre": "guia_prueba_final_java",
+        "x": 450,  # Ajusta según el espacio de tu nivel
+        "ajuste_y": -8,
+        "orden_leccion": 16,
+        "requiere_anterior": False,
+        "repetible": True,
+
+        # Desbloquea las cinco preguntas.
+        "practica": (1, 2, 3, 4, 5),
+    },
+ )
+
+    ENEMIGOS = (
+    # ====================================================
+    # ENEMIGO 1: JABALÍ
+    # Movimiento horizontal rápido
+    # ====================================================
+    {
+        "tipo": "jabali",
+
+        # Ajusta el recorrido según tus obstáculos.
+        "x_inicial": 3599,
+        "x_limite": 3709,
+
+        "ajuste_y": -5,
+        "velocidad": 105,
+        "ancho": 125,
+        "alto": 82,
+        "fps_animacion": 9,
+        "hace_dano": True,
+        "rebote_al_pisar": -22,
+    },
+
+    # ====================================================
+    # ENEMIGO 2: FUEGO
+    # Movimiento vertical
+    # ====================================================
+    {
+        "tipo": "jabali",
+    
+        # Ajusta el recorrido según tus obstáculos.
+        "x_inicial": 4598,
+        "x_limite": 4725,
+        "ajuste_y": -5,
+        "velocidad": 105,
+        "ancho": 125,
+        "alto": 82,
+        "fps_animacion": 9,
+        "hace_dano": True,
+        "rebote_al_pisar": -22,
+    },
+
+    # ====================================================
+    # ENEMIGO 3: BOLA AZUL
+    # Movimiento horizontal rápido antes del cartel
+    # ====================================================
+    {
+        "tipo": "bolaazul",
+
+        # Ajusta el recorrido según tu diseño.
+        "x_inicial": 4906,
+        "x_limite": 5186,
+
+        "ajuste_y": -5,
+        "velocidad": 95,
+        "ancho": 100,
+        "alto": 72,
+        "fps_animacion": 10,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+)
 
     OBSTACULOS = (
         {
@@ -306,13 +383,161 @@ class NivelJava06(JuegoBase):
     )
     #97
     PRACTICAS = (
-        {
-            "x": 1660,
-            "y": None,
-            "pregunta": 'En Java, una clase puede contener atributos y métodos.',
-            "respuesta_correcta": True,
-            "nombre": "practica_java_06",
+         # ====================================================
+    # PREGUNTA 1: VARIABLES Y TIPOS DE DATOS
+    # Verdadero o falso
+    # ====================================================
+    {
+        "x": 1395,  # Ajusta manualmente
+        "y": 317,
+        "nombre": "java_final_p1_variables",
+        "desbloqueada": False,
+        "pregunta": (
+            "En Java, String se utiliza para guardar texto."
+        ),
+        "respuesta_correcta": True,
+    },
+
+    # ====================================================
+    # PREGUNTA 2: CONDICIONALES
+    # Elección múltiple
+    # ====================================================
+    {
+        "x": 2745,  # Ajusta manualmente
+        "y": 267,
+        "tipo": "eleccion_multiple",
+        "nombre": "java_final_p2_condicionales",
+        "desbloqueada": False,
+        "pregunta": (
+            "¿Qué estructura permite comprobar otra condición "
+            "cuando el primer if es falso?"
+        ),
+        "opciones": [
+            "else if",
+            "while",
+            "return",
+        ],
+        "respuesta_correcta": 1,
+    },
+
+    # ====================================================
+    # PREGUNTA 3: CICLOS
+    # Completar código
+    # ====================================================
+    {
+        "x": 4187,  # Ajusta manualmente
+        "y": None,
+        "tipo": "codigo",
+        "nombre": "java_final_p3_ciclos",
+        "desbloqueada": False,
+        "pregunta": (
+            "Completa el ciclo que muestra los números del 1 al 3."
+        ),
+        "respuestas": {
+            "inicio": "1",
+            "condicion": "i <= 3",
+            "aumento": "i++",
         },
+        "codigo": [
+            {
+                "indentacion": 0,
+                "segmentos": [
+                    {"texto": "for (int i = "},
+                    {"hueco": "inicio"},
+                    {"texto": "; "},
+                    {"hueco": "condicion"},
+                    {"texto": "; "},
+                    {"hueco": "aumento"},
+                    {"texto": ") {"},
+                ],
+            },
+            {
+                "indentacion": 1,
+                "segmentos": [
+                    {"texto": "System.out.println(i);"},
+                ],
+            },
+            {
+                "indentacion": 0,
+                "segmentos": [
+                    {"texto": "}"},
+                ],
+            },
+        ],
+        "opciones": [
+            "1",
+            "i <= 3",
+            "i++",
+            "i >= 3",
+            "i--",
+        ],
+    },
+
+    # ====================================================
+    # PREGUNTA 4: MÉTODOS
+    # Elección múltiple
+    # ====================================================
+    {
+        "x": 5089,  # Ajusta manualmente
+        "y": 367,
+        "tipo": "eleccion_multiple",
+        "nombre": "java_final_p4_metodos",
+        "desbloqueada": False,
+        "pregunta": (
+            "¿Qué palabra se utiliza para devolver un valor "
+            "desde un método?"
+        ),
+        "opciones": [
+            "return",
+            "void",
+            "static",
+        ],
+        "respuesta_correcta": 1,
+    },
+
+    # ====================================================
+    # PREGUNTA 5: ARREGLOS
+    # Completar código
+    # ====================================================
+    {
+        "x": 5621,  # Ajusta manualmente
+        "y": None,
+        "tipo": "codigo",
+        "nombre": "java_final_p5_arreglos",
+        "desbloqueada": False,
+        "pregunta": (
+            "Completa el código que obtiene el primer elemento "
+            "del arreglo nombres."
+        ),
+        "respuestas": {
+            "tipo": "String[]",
+            "indice": "0",
+        },
+        "codigo": [
+            {
+                "indentacion": 0,
+                "segmentos": [
+                    {"hueco": "tipo"},
+                    {"texto": ' nombres = {"Ana", "Luis", "Carlos"};'},
+                ],
+            },
+            {
+                "indentacion": 0,
+                "segmentos": [
+                    {"texto": "System.out.println(nombres["},
+                    {"hueco": "indice"},
+                    {"texto": "]);"},
+                ],
+            },
+        ],
+        "opciones": [
+            "String[]",
+            "0",
+            "String",
+            "1",
+            "int[]",
+        ],
+    },
     )
 
 

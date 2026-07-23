@@ -45,6 +45,101 @@ class NivelJava03(JuegoBase):
         (0, LONGITUD_NIVEL),
     )
 
+    NPCS = (
+    {
+        "nombre": "guia_java_while",
+        "x": 400,  # Ajusta esta posición
+        "ajuste_y": -8,
+        "orden_leccion": 7,
+        "requiere_anterior": False,
+        "repetible": True,
+        "practica": 1,
+    },
+    {
+        "nombre": "guia_java_for",
+        "x": 1923,  # Ajusta esta posición
+        "ajuste_y": -328,
+        "orden_leccion": 8,
+        "requiere_anterior": True,
+        "repetible": True,
+        "practica": 2,
+    },
+    {
+        "nombre": "guia_java_do_while",
+        "x": 3070,  # Ajusta esta posición
+        "ajuste_y": -288,
+        "orden_leccion": 9,
+        "requiere_anterior": True,
+        "repetible": True,
+        "practica": 3,
+    },
+    )
+
+    ENEMIGOS = (
+    # ====================================================
+    # ENEMIGO 1: BOLA AZUL
+    # Movimiento horizontal
+    # ====================================================
+    {
+        "tipo": "bolaazul",
+        "x_inicial": 1148,
+        "x_limite": 1371,
+        "ajuste_y": -5,
+        "velocidad": 70,
+        "ancho": 100,
+        "alto": 72,
+        "fps_animacion": 8,
+        "hace_dano": True,
+        "rebote_al_pisar": -18,
+    },
+
+    # ====================================================
+    # ENEMIGO 2: JABALÍ
+    # Movimiento horizontal más rápido
+    # ====================================================
+    {
+        "tipo": "jabali",
+        "x_inicial": 1557,
+        "x_limite": 1716,
+        "ajuste_y": -5,
+        "velocidad": 85,
+        "ancho": 125,
+        "alto": 82,
+        "fps_animacion": 8,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+
+    # ====================================================
+    # ENEMIGO 3: SERPIENTE
+    # Movimiento horizontal
+    # ====================================================
+    {
+        "tipo": "serpiente",
+        "x_inicial": 1909,
+        "x_limite": 2014,
+        "ajuste_y": -5,
+        "velocidad": 75,
+        "ancho": 110,
+        "alto": 76,
+        "fps_animacion": 7,
+        "hace_dano": True,
+        "rebote_al_pisar": -18,
+    },
+    {
+        "tipo": "serpiente",
+        "x_inicial": 2810,
+        "x_limite": 3154,
+        "ajuste_y": -5,
+        "velocidad": 75,
+        "ancho": 110,
+        "alto": 76,
+        "fps_animacion": 7,
+        "hace_dano": True,
+        "rebote_al_pisar": -18,
+    },
+)
+
     OBSTACULOS = (
         {
             # Varia el tamaño segun nivel o segun se desee
@@ -333,13 +428,106 @@ class NivelJava03(JuegoBase):
     )
 
     PRACTICAS = (
-        {
-            "x": 1420,
-            "y": None,
-            "pregunta": 'En Java, una clase puede contener atributos y métodos.',
-            "respuesta_correcta": True,
-            "nombre": "practica_java_03",
+      # ====================================================
+    # PRÁCTICA 1: VERDADERO O FALSO
+    # Tema: ciclo while
+    # ====================================================
+    {
+        "x": 1340,  
+        "y": 367,
+        "nombre": "java_n3_p1_while",
+        "desbloqueada": False,
+        "pregunta": (
+            "En Java, el ciclo while repite sus instrucciones "
+            "mientras su condición sea verdadera."
+        ),
+        "respuesta_correcta": True,
+    },
+
+    # ====================================================
+    # PRÁCTICA 2: ELECCIÓN MÚLTIPLE
+    # Tema: ciclo for
+    # ====================================================
+    {
+        "x": 2365,  # Ajusta esta posición
+        "y": 457,
+        "tipo": "eleccion_multiple",
+        "nombre": "java_n3_p2_for",
+        "desbloqueada": False,
+        "pregunta": (
+            "¿Qué ciclo es más apropiado cuando conocemos "
+            "la cantidad de repeticiones?"
+        ),
+        "opciones": [
+            "for",
+            "while",
+            "if",
+        ],
+        "respuesta_correcta": 1,
+    },
+
+    # ====================================================
+    # PRÁCTICA 3: COMPLETAR CÓDIGO
+    # Tema: ciclo do-while
+    # ====================================================
+    {
+        "x": 3420,  # Ajusta esta posición
+        "y": None,
+        "tipo": "codigo",
+        "nombre": "java_n3_p3_do_while",
+        "desbloqueada": False,
+        "pregunta": (
+            "Completa el ciclo que muestra los números del 1 al 5."
+        ),
+        "respuestas": {
+            "inicio": "do",
+            "aumento": "numero++",
+            "condicion": "while",
         },
+        "codigo": [
+            {
+                "indentacion": 0,
+                "segmentos": [
+                    {"texto": "int numero = 1;"},
+                ],
+            },
+            {
+                "indentacion": 0,
+                "segmentos": [
+                    {"hueco": "inicio"},
+                    {"texto": " {"},
+                ],
+            },
+            {
+                "indentacion": 1,
+                "segmentos": [
+                    {"texto": "System.out.println(numero);"},
+                ],
+            },
+            {
+                "indentacion": 1,
+                "segmentos": [
+                    {"hueco": "aumento"},
+                    {"texto": ";"},
+                ],
+            },
+            {
+                "indentacion": 0,
+                "segmentos": [
+                    {"texto": "} "},
+                    {"hueco": "condicion"},
+                    {"texto": " (numero <= 5);"},
+                ],
+            },
+        ],
+        "opciones": [
+            "do",
+            "numero++",
+            "while",
+            "for",
+            "numero--",
+        ],
+    },
     )
 
 

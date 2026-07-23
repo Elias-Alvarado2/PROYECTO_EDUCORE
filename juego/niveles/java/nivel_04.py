@@ -46,6 +46,89 @@ class NivelJava04(JuegoBase):
         (0, LONGITUD_NIVEL),
     )
 
+    NPCS = (
+    {
+        "nombre": "guia_java_metodos",
+        "x": 400,  # Ajusta manualmente
+        "ajuste_y": -8,
+        "orden_leccion": 10,
+        "requiere_anterior": False,
+        "repetible": True,
+        "practica": 1,
+    },
+    {
+        "nombre": "guia_java_parametros",
+        "x": 2579,  # Ajusta manualmente
+        "ajuste_y": -188,
+        "orden_leccion": 11,
+        "requiere_anterior": True,
+        "repetible": True,
+        "practica": 2,
+    },
+    {
+        "nombre": "guia_java_retorno",
+        "x": 4520,  # Ajusta manualmente
+        "ajuste_y": -8,
+        "orden_leccion": 12,
+        "requiere_anterior": True,
+        "repetible": True,
+        "practica": 3,
+    },
+    )
+
+    ENEMIGOS = (
+    # ====================================================
+    # ENEMIGO 1: CARACOL
+    # Zona inicial, movimiento lento
+    # ====================================================
+    {
+        "tipo": "caracol",
+        "x_inicial": 961,
+        "x_limite": 1468,
+        "ajuste_y": -5,
+        "velocidad": 60,
+        "ancho": 100,
+        "alto": 68,
+        "fps_animacion": 6,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+
+    # ====================================================
+    # ENEMIGO 2: BOLA AZUL
+    # Movimiento horizontal medio
+    # ====================================================
+    {
+        "tipo": "bolaazul",
+        "x_inicial": 1702,
+        "x_limite": 2107,
+        "ajuste_y": -5,
+        "velocidad": 75,
+        "ancho": 100,
+        "alto": 72,
+        "fps_animacion": 8,
+        "hace_dano": True,
+        "rebote_al_pisar": -18,
+    },
+
+    # ====================================================
+    # ENEMIGO 3: JABALÍ
+    # Movimiento horizontal rápido
+    # ====================================================
+    {
+        "tipo": "jabali",
+        "x_inicial": 2400,
+        "x_limite": 3199,
+        "ajuste_y": -5,
+        "velocidad": 95,
+        "ancho": 125,
+        "alto": 82,
+        "fps_animacion": 8,
+        "hace_dano": True,
+        "rebote_al_pisar": -22,
+    },
+    )
+
     OBSTACULOS = (
         {
             "tipo":"estatua",
@@ -386,13 +469,96 @@ class NivelJava04(JuegoBase):
     )
 
     PRACTICAS = (
-        {
-            "x": 1500,
-            "y": None,
-            "pregunta": 'En Java, una clase puede contener atributos y métodos.',
-            "respuesta_correcta": True,
-            "nombre": "practica_java_04",
+        # ====================================================
+    # PRÁCTICA 1: VERDADERO O FALSO
+    # Tema: creación y llamada de métodos
+    # ====================================================
+    {
+        "x": 1760,  # Ajusta manualmente
+        "y": 267,
+        "nombre": "java_n4_p1_metodos",
+        "desbloqueada": False,
+        "pregunta": (
+            "En Java, para ejecutar un método se escribe "
+            "su nombre seguido de paréntesis."
+        ),
+        "respuesta_correcta": True,
+    },
+
+    # ====================================================
+    # PRÁCTICA 2: ELECCIÓN MÚLTIPLE
+    # Tema: parámetros y argumentos
+    # ====================================================
+    {
+        "x": 3517,  # Ajusta manualmente
+        "y": None,
+        "tipo": "eleccion_multiple",
+        "nombre": "java_n4_p2_parametros",
+        "desbloqueada": False,
+        "pregunta": (
+            "¿Cuáles son los parámetros del siguiente método? "
+            "mostrarJugador(String nombre, int vidas)"
+        ),
+        "opciones": [
+            "String nombre e int vidas",
+            '"Ana" y 5',
+            "mostrarJugador",
+        ],
+        "respuesta_correcta": 1,
+    },
+
+    # ====================================================
+    # PRÁCTICA 3: COMPLETAR CÓDIGO
+    # Tema: retorno de valores
+    # ====================================================
+    {
+        "x": 5199,  # Ajusta manualmente
+        "y": None,
+        "tipo": "codigo",
+        "nombre": "java_n4_p3_retorno",
+        "desbloqueada": False,
+        "pregunta": (
+            "Completa el método que suma dos números "
+            "y devuelve el resultado."
+        ),
+        "respuestas": {
+            "tipo_retorno": "int",
+            "nombre_metodo": "sumar",
+            "devolver": "return",
         },
+        "codigo": [
+            {
+                "indentacion": 0,
+                "segmentos": [
+                    {"text": "public static "},
+                    {"hueco": "tipo_retorno"},
+                    {"texto": " "},
+                    {"hueco": "nombre_metodo"},
+                    {"texto": "(int a, int b) {"},
+                ],
+            },
+            {
+                "indentacion": 1,
+                "segmentos": [
+                    {"hueco": "devolver"},
+                    {"texto": " a + b;"},
+                ],
+            },
+            {
+                "indentacion": 0,
+                "segmentos": [
+                    {"texto": "}"},
+                ],
+            },
+        ],
+        "opciones": [
+            "int",
+            "sumar",
+            "return",
+            "void",
+            "System.out.println",
+        ],
+    },
     )
 
 
