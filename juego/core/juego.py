@@ -564,16 +564,68 @@ class JuegoBase(motor.JuegoEduCore):
             elif tipo in TIPOS_EJEMPLO:
                 tipo = "ejemplo"
 
+            # ====================================================
+            # POSICIÓN VERTICAL DE LA PRÁCTICA
+            # ====================================================
+            # "y" permite indicar una posición vertical absoluta.
+            # Si no existe, se usa la posición automática sobre el suelo.
             y_config = config.get("y")
 
             if y_config is None:
-                y = (
+                y_base = (
                     self.obtener_piso_colision_nivel()
                     - tamano_objeto
                     - round(18 * motor.ESCALA_JUEGO)
                 )
             else:
-                y = self.escalar(y_config)
+                try:
+                    y_base = self.escalar(float(y_config))
+                except (TypeError, ValueError):
+                    print(
+                        f"[PRACTICAS] Se ignoró la práctica {indice}: "
+                        f"la posición y no es válida: {y_config!r}."
+                    )
+                    continue
+
+            # Ajuste individual de cada práctica.
+            # Negativo = sube.
+            # Positivo = baja.
+            ajuste_y_config = config.get("ajuste_y", 0)
+
+            try:
+                ajuste_y = self.escalar(
+                    float(ajuste_y_config)
+                )
+            except (TypeError, ValueError):
+                print(
+                    f"[PRACTICAS] La práctica {indice} tiene un "
+                    f"ajuste_y inválido: {ajuste_y_config!r}. "
+                    "Se utilizará 0."
+                )
+                ajuste_y = 0
+
+            # Ajuste global opcional para todas las prácticas del nivel.
+            # Se puede declarar en la clase concreta:
+            # AJUSTE_Y_PRACTICAS = -20
+            ajuste_y_global_config = getattr(
+                self,
+                "AJUSTE_Y_PRACTICAS",
+                0,
+            )
+
+            try:
+                ajuste_y_global = self.escalar(
+                    float(ajuste_y_global_config)
+                )
+            except (TypeError, ValueError):
+                print(
+                    "[PRACTICAS] AJUSTE_Y_PRACTICAS no es válido. "
+                    "Se utilizará 0."
+                )
+                ajuste_y_global = 0
+
+            # En Pygame, reducir Y hace que el objeto suba.
+            y = y_base + ajuste_y + ajuste_y_global
 
             respuesta_configurada = config.get(
                 "respuesta_correcta",
