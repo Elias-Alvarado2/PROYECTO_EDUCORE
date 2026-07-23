@@ -1,0 +1,187 @@
+USE educore_db;
+
+-- Migración idempotente: puede ejecutarse más de una vez.
+DROP TEMPORARY TABLE IF EXISTS semillas_leccion;
+CREATE TEMPORARY TABLE semillas_leccion (
+    lenguaje VARCHAR(50) NOT NULL,
+    orden INT NOT NULL,
+    titulo VARCHAR(100) NOT NULL,
+    teoria TEXT,
+    codigo TEXT,
+    final TEXT,
+    puntos INT NOT NULL
+);
+
+INSERT INTO semillas_leccion
+    (lenguaje, orden, titulo, teoria, codigo, final, puntos)
+VALUES
+('Python', 1, 'Variables numéricas',
+ 'Las variables permiten guardar datos. Un número entero se escribe sin comillas y puede utilizarse después en cálculos.',
+ 'cantidad = 10\nprint(cantidad)',
+ 'Una variable numérica puede almacenar y reutilizar números enteros.', 10),
+('Python', 2, 'Variables de texto',
+ 'Los textos se escriben entre comillas. Python reconoce esos valores como cadenas de texto.',
+ 'nombre = "Ana"\nprint(nombre)',
+ 'Los textos se guardan entre comillas simples o dobles.', 10),
+('Python', 3, 'Crear variables',
+ 'Una variable se crea escribiendo un nombre, el signo igual y el valor que se desea guardar.',
+ 'edad = 15\nprint(edad)',
+ 'La asignación usa nombre = valor.', 10),
+('Python', 4, 'Condiciones con if',
+ 'La instrucción if ejecuta un bloque solamente cuando su condición es verdadera.',
+ 'edad = 20\nif edad >= 18:\n    print("Mayor de edad")',
+ 'if permite tomar decisiones a partir de una condición.', 10),
+('Python', 5, 'Alternativas con else',
+ 'La instrucción else define qué debe suceder cuando la condición de un if es falsa.',
+ 'edad = 12\nif edad >= 18:\n    print("Mayor")\nelse:\n    print("Menor")',
+ 'else cubre el caso contrario del if.', 10),
+('Python', 6, 'Operadores de comparación',
+ 'Los operadores como >=, <=, ==, > y < comparan valores y producen verdadero o falso.',
+ 'edad = 18\nprint(edad >= 18)',
+ 'Las comparaciones se utilizan dentro de decisiones.', 10),
+('Python', 7, 'Ciclo while',
+ 'while repite un bloque mientras su condición continúe siendo verdadera.',
+ 'contador = 0\nwhile contador < 3:\n    print(contador)\n    contador += 1',
+ 'La condición del while debe cambiar para que el ciclo termine.', 10),
+('Python', 8, 'Condición inicial de while',
+ 'while comprueba su condición antes de la primera repetición. Si comienza siendo falsa, el bloque no se ejecuta.',
+ 'contador = 5\nwhile contador < 3:\n    print(contador)',
+ 'Un while puede ejecutarse cero veces.', 10),
+('Python', 9, 'Ciclo for y range',
+ 'for recorre una secuencia. range(3) produce los valores 0, 1 y 2.',
+ 'for numero in range(3):\n    print(numero)',
+ 'range ayuda a repetir una cantidad conocida de veces.', 10),
+('Python', 10, 'Crear funciones',
+ 'Una función agrupa instrucciones reutilizables y se define con la palabra def.',
+ 'def saludar():\n    print("Hola")',
+ 'def inicia la definición de una función.', 10),
+('Python', 11, 'Ejecutar funciones',
+ 'Definir una función no la ejecuta. Para usarla se escribe su nombre seguido de paréntesis.',
+ 'def saludar():\n    print("Hola")\n\nsaludar()',
+ 'Una llamada a función utiliza nombre().', 10),
+('Python', 12, 'Parámetros y retorno',
+ 'Los parámetros reciben datos y return devuelve el resultado producido por una función.',
+ 'def sumar(a, b):\n    return a + b\n\nresultado = sumar(2, 3)',
+ 'Los parámetros hacen reutilizable una función.', 10),
+('Python', 13, 'Listas',
+ 'Una lista guarda varios elementos en orden entre corchetes y separados por comas.',
+ 'frutas = ["manzana", "pera", "uva"]',
+ 'Una lista puede contener varios valores.', 10),
+('Python', 14, 'Índices de listas',
+ 'Los índices permiten obtener un elemento. El primer elemento utiliza el índice 0.',
+ 'frutas = ["manzana", "pera", "uva"]\nprint(frutas[0])',
+ 'Los índices de las listas comienzan en cero.', 10),
+('Python', 15, 'Agregar elementos con append',
+ 'El método append agrega un nuevo elemento al final de una lista.',
+ 'frutas = ["manzana", "pera"]\nfrutas.append("uva")\nprint(frutas)',
+ 'append modifica la lista agregando un elemento al final.', 10),
+('Python', 16, 'Repaso final de Python',
+ 'Repasa variables, condiciones, ciclos, funciones y listas antes de comenzar la prueba final.',
+ 'def multiplicar(a, b):\n    return a * b',
+ 'Ya puedes aplicar los conceptos principales del curso.', 10),
+('Java', 1, 'Variables y tipos en Java',
+ 'En Java cada variable declara el tipo de dato que puede almacenar.',
+ 'int edad = 15;\nString nombre = "Ana";',
+ 'El tipo se escribe antes del nombre de la variable.', 10),
+('Java', 2, 'Clases y miembros',
+ 'Una clase puede agrupar atributos que guardan estado y métodos que definen comportamientos.',
+ 'class Persona {\n    String nombre;\n    void saludar() { }\n}',
+ 'Las clases organizan atributos y métodos.', 10),
+('Java', 3, 'Métodos en Java',
+ 'Los métodos contienen instrucciones y pueden recibir parámetros y devolver resultados.',
+ 'int sumar(int a, int b) {\n    return a + b;\n}',
+ 'Un método describe una operación de la clase.', 10),
+('Java', 4, 'Constructores',
+ 'Un constructor inicializa los objetos y tiene el mismo nombre que la clase.',
+ 'Persona(String nombre) {\n    this.nombre = nombre;\n}',
+ 'El constructor prepara el estado inicial de un objeto.', 10),
+('Java', 5, 'Herencia',
+ 'La palabra extends permite crear una clase que hereda miembros de otra.',
+ 'class Estudiante extends Persona { }',
+ 'La herencia reutiliza y especializa clases.', 10),
+('Java', 6, 'Repaso final de Java',
+ 'Repasa tipos, clases, atributos, métodos, constructores y herencia antes de la prueba final.',
+ 'Persona persona = new Persona("Ana");',
+ 'Ya puedes aplicar los conceptos principales del curso.', 10),
+('C#', 1, 'Variables y tipos en C#',
+ 'En C# una variable declara el tipo de dato que puede almacenar.',
+ 'int edad = 15;\nstring nombre = "Ana";',
+ 'El tipo se escribe antes del nombre de la variable.', 10),
+('C#', 2, 'Clases y miembros en C#',
+ 'Una clase puede agrupar campos, propiedades y métodos.',
+ 'class Persona {\n    public string Nombre { get; set; }\n}',
+ 'Las clases organizan los datos y comportamientos.', 10),
+('C#', 3, 'Métodos en C#',
+ 'Los métodos contienen instrucciones y pueden recibir parámetros y devolver resultados.',
+ 'int Sumar(int a, int b) {\n    return a + b;\n}',
+ 'Un método representa una operación reutilizable.', 10),
+('C#', 4, 'Constructores en C#',
+ 'Un constructor inicializa un objeto nuevo y tiene el mismo nombre que la clase.',
+ 'public Persona(string nombre) {\n    Nombre = nombre;\n}',
+ 'El constructor prepara el estado inicial del objeto.', 10),
+('C#', 5, 'Herencia en C#',
+ 'Los dos puntos permiten indicar que una clase hereda de otra.',
+ 'class Estudiante : Persona { }',
+ 'La herencia permite reutilizar miembros de otra clase.', 10),
+('C#', 6, 'Repaso final de C#',
+ 'Repasa tipos, clases, métodos, constructores y herencia antes de la prueba final.',
+ 'Persona persona = new Persona("Ana");',
+ 'Ya puedes aplicar los conceptos principales del curso.', 10);
+
+INSERT INTO leccion (
+    id_lenguaje,
+    titulo,
+    contenido_teoria,
+    codigo_ejemplo,
+    contenido_final,
+    orden,
+    puntos,
+    estado
+)
+SELECT
+    l.id_lenguaje,
+    s.titulo,
+    s.teoria,
+    s.codigo,
+    s.final,
+    s.orden,
+    s.puntos,
+    'Activa'
+FROM semillas_leccion AS s
+JOIN lenguaje AS l ON l.nombre = s.lenguaje
+ON DUPLICATE KEY UPDATE
+    titulo = VALUES(titulo),
+    contenido_teoria = VALUES(contenido_teoria),
+    codigo_ejemplo = VALUES(codigo_ejemplo),
+    contenido_final = VALUES(contenido_final),
+    puntos = VALUES(puntos),
+    estado = 'Activa';
+
+DROP TEMPORARY TABLE semillas_leccion;
+
+INSERT INTO prueba (
+    id_lenguaje,
+    nombre,
+    puntos_totales,
+    puntos_minimos,
+    certificado
+)
+VALUES
+(
+    (SELECT id_lenguaje FROM lenguaje WHERE nombre = 'Java' LIMIT 1),
+    'Prueba final Java',
+    60,
+    40,
+    1
+),
+(
+    (SELECT id_lenguaje FROM lenguaje WHERE nombre = 'C#' LIMIT 1),
+    'Prueba final C#',
+    60,
+    40,
+    1
+)
+ON DUPLICATE KEY UPDATE
+    puntos_totales = VALUES(puntos_totales),
+    puntos_minimos = VALUES(puntos_minimos),
+    certificado = VALUES(certificado);

@@ -4,6 +4,7 @@ from pathlib import Path
 from PyQt6 import QtCore, QtGui, QtWidgets, uic
 
 from AjusteResponsive import BotonesResponsivos
+from CofreDiploma import CofreDiplomaMixin
 from ConexionBD import ConexionBD
 from Transicion import FormAnterior, FormTransicion
 from ValidarVidas import validar_vidas_disponibles
@@ -520,7 +521,7 @@ class TareaCargaProgreso(QtCore.QRunnable):
                     pass
 
 
-class NivelesJava(QtWidgets.QWidget):
+class NivelesJava(CofreDiplomaMixin, QtWidgets.QWidget):
     """Menú de Java con desbloqueo progresivo de niveles."""
 
     LENGUAJE = "java"
@@ -592,6 +593,7 @@ class NivelesJava(QtWidgets.QWidget):
             str(self.ruta_ui),
             self,
         )
+        self.inicializar_cofre_diploma()
 
         self.corregir_rutas_stylesheet(
             self.ruta_botones
@@ -640,6 +642,7 @@ class NivelesJava(QtWidgets.QWidget):
 
         self.botones_hover = [
             self.btnVolver,
+            self.btnDiploma,
             *self.botones_niveles,
         ]
 
@@ -1069,6 +1072,7 @@ class NivelesJava(QtWidgets.QWidget):
             "btnNivel4",
             "btnNivel5",
             "btnComenzar",
+            "btnDiploma",
         )
 
         for nombre in nombres:
@@ -1228,51 +1232,51 @@ class NivelesJava(QtWidgets.QWidget):
                     pass
 
     def calcular_niveles_completados(self, progreso):
+        progreso = progreso if isinstance(progreso, dict) else {}
+
+        try:
+            porcentaje = float(
+                progreso.get("porcentaje_avance") or 0
+            )
+        except (TypeError, ValueError):
+            porcentaje = 0
+
         try:
             lecciones = int(
-                progreso.get(
-                    "lecciones_completadas"
-                )
-                or 0
+                progreso.get("lecciones_completadas") or 0
             )
         except (TypeError, ValueError):
             lecciones = 0
 
         try:
-            porcentaje = float(
-                progreso.get(
-                    "porcentaje_avance"
-                )
-                or 0
+            prueba_completada = bool(
+                int(progreso.get("prueba_completada") or 0)
             )
         except (TypeError, ValueError):
-            porcentaje = 0
+            prueba_completada = False
 
-        lecciones = max(
-            0,
-            min(
-                lecciones,
-                self.TOTAL_NIVELES,
-            ),
-        )
-        porcentaje = max(
-            0,
-            min(
-                porcentaje,
-                100,
-            ),
-        )
+        if prueba_completada:
+            return self.TOTAL_NIVELES
 
-        niveles_por_porcentaje = int(
-            porcentaje // 20
-        )
+        porcentaje = max(0, min(porcentaje, 100))
+        lecciones = max(0, lecciones)
+        umbrales_por_nivel = (1, 2, 3, 4, 5)
 
-        return max(
-            lecciones,
-            min(
-                niveles_por_porcentaje,
-                self.TOTAL_NIVELES,
-            ),
+        # lecciones_completadas guarda el orden de la última lección.
+        # Se compara contra el final real de cada nivel; nunca se interpreta
+        # directamente como una cantidad de niveles terminados.
+        niveles_por_lecciones = sum(
+            lecciones >= umbral
+            for umbral in umbrales_por_nivel
+        )
+        niveles_por_porcentaje = int(porcentaje // 20)
+
+        # El menor de ambos valores repara porcentajes antiguos inflados sin
+        # borrar el progreso ni afectar una prueba final ya completada.
+        return min(
+            niveles_por_porcentaje,
+            niveles_por_lecciones,
+            self.TOTAL_NIVELES,
         )
 
     @staticmethod
@@ -1301,6 +1305,8 @@ class NivelesJava(QtWidgets.QWidget):
                 QtCore.Qt.CursorShape.PointingHandCursor
             )
         )
+        self._progreso_actual = {}
+        self.actualizar_estado_boton_diploma()
 
         for boton in self.botones_niveles:
             boton.setEnabled(
@@ -1409,6 +1415,8 @@ class NivelesJava(QtWidgets.QWidget):
             return
 
         try:
+            self._progreso_actual = dict(progreso or {})
+
             if self.es_sesion_administrador():
                 for numero_nivel, boton in self.botones_por_nivel.items():
                     self.aplicar_imagen_boton(
@@ -1430,6 +1438,7 @@ class NivelesJava(QtWidgets.QWidget):
                     self.btnComenzar,
                     True,
                 )
+                self.actualizar_estado_boton_diploma()
                 self.poner_controles_al_frente()
                 self.actualizar_hover_botones()
                 return
@@ -1503,6 +1512,7 @@ class NivelesJava(QtWidgets.QWidget):
                 self.btnComenzar,
                 prueba_desbloqueada,
             )
+            self.actualizar_estado_boton_diploma()
 
             self.poner_controles_al_frente()
             self.actualizar_hover_botones()
@@ -1707,6 +1717,7 @@ class NivelesJava(QtWidgets.QWidget):
                 boton.setEnabled(
                     False
                 )
+            self.btnDiploma.setEnabled(False)
 
             return
 

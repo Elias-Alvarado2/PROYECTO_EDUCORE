@@ -118,7 +118,7 @@ class ConexionBD:
                 (jugador["id_jugador"],),
             )
 
-            # Cuando ya transcurrió una hora, restaura todas las vidas.
+            # Cuando ya transcurrieron cinco minutos, restaura todas las vidas.
             cursor.execute(
                 """
                 UPDATE jugador
@@ -129,7 +129,7 @@ class ConexionBD:
                   AND fecha_recuperacion_vidas IS NOT NULL
                   AND NOW() >= DATE_ADD(
                       fecha_recuperacion_vidas,
-                      INTERVAL 1 HOUR
+                      INTERVAL 5 MINUTE
                   )
                 """,
                 (jugador["id_jugador"],),
@@ -384,7 +384,7 @@ class ConexionBD:
                   AND fecha_recuperacion_vidas IS NOT NULL
                   AND NOW() >= DATE_ADD(
                       fecha_recuperacion_vidas,
-                      INTERVAL 1 HOUR
+                      INTERVAL 5 MINUTE
                   )
                 """,
                 (id_jugador,),
@@ -742,13 +742,22 @@ class ConexionBD:
                     COALESCE(
                         MAX(pj.prueba_completada),
                         0
-                    ) AS prueba_completada
+                    ) AS prueba_completada,
+
+                    COALESCE(
+                        MAX(d.correo_enviado),
+                        0
+                    ) AS diploma_enviado
 
                 FROM lenguaje AS l
 
                 LEFT JOIN progreso_jugador AS pj
                     ON pj.id_lenguaje = l.id_lenguaje
                     AND pj.id_jugador = %s
+
+                LEFT JOIN diploma AS d
+                    ON d.id_lenguaje = l.id_lenguaje
+                    AND d.id_jugador = %s
 
                 WHERE LOWER(TRIM(l.nombre)) IN (
                     'python',
@@ -769,7 +778,10 @@ class ConexionBD:
 
             cursor.execute(
                 consulta,
-                (id_jugador,)
+                (
+                    id_jugador,
+                    id_jugador,
+                )
             )
 
             return cursor.fetchall()

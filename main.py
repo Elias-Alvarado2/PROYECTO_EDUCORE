@@ -81,7 +81,7 @@ def obtener_argumentos():
         "--nivel",
         type=int,
 
-        default= 6,
+        default=1,
 
     
     )

@@ -96,7 +96,7 @@ class NivelPython02(JuegoBase):
         "x": 3225,
         "ajuste_y": -115,
         "orden_leccion": 5,
-        "requiere_anterior": False,
+        "requiere_anterior": True,
         "repetible": True,
         "practica": 2,
     },
@@ -105,7 +105,7 @@ class NivelPython02(JuegoBase):
         "x": 4419,
         "ajuste_y": -93,
         "orden_leccion": 6,
-        "requiere_anterior": False,
+        "requiere_anterior": True,
         "repetible": True,
         "practica": 3,
     },
@@ -603,12 +603,12 @@ class NivelPython02(JuegoBase):
         "y": 500,
         "tipo": "eleccion_multiple",
         "pregunta": (
-        "¿Qué mensaje muestra este código?"
-        "edad = 12"
-        'if edad >= 18:'
-        '    print("Mayor de edad")'
+        "¿Qué mensaje muestra este código?\n"
+        "edad = 12\n"
+        'if edad >= 18:\n'
+        '    print("Mayor de edad")\n'
         'else:'
-        '    print("Menor de edad")'
+        '    print("Menor de edad")\n'
         
         ),
         "opciones": [

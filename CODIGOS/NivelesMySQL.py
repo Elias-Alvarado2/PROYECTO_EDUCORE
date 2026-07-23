@@ -4,9 +4,8 @@ from pathlib import Path
 from PyQt6 import QtCore, QtGui, QtWidgets, uic
 
 from AjusteResponsive import BotonesResponsivos
-from Alertas import Alertas
+from CofreDiploma import CofreDiplomaMixin
 from ConexionBD import ConexionBD
-from Diplomas import TareaEnvioDiploma, preparar_fuentes_diploma
 from Transicion import FormAnterior, FormTransicion
 from ValidarVidas import validar_vidas_disponibles
 from quitar_barra import quitar
@@ -522,7 +521,7 @@ class TareaCargaProgreso(QtCore.QRunnable):
                     pass
 
 
-class NivelesMySQL(QtWidgets.QWidget):
+class NivelesMySQL(CofreDiplomaMixin, QtWidgets.QWidget):
     """Menú de MySQL con desbloqueo progresivo de niveles."""
 
     LENGUAJE = "mysql"
@@ -597,7 +596,7 @@ class NivelesMySQL(QtWidgets.QWidget):
             str(self.ruta_ui),
             self,
         )
-        preparar_fuentes_diploma()
+        self.inicializar_cofre_diploma()
 
         self.corregir_rutas_stylesheet(
             self.ruta_botones
@@ -1135,51 +1134,51 @@ class NivelesMySQL(QtWidgets.QWidget):
                     pass
 
     def calcular_niveles_completados(self, progreso):
+        progreso = progreso if isinstance(progreso, dict) else {}
+
+        try:
+            porcentaje = float(
+                progreso.get("porcentaje_avance") or 0
+            )
+        except (TypeError, ValueError):
+            porcentaje = 0
+
         try:
             lecciones = int(
-                progreso.get(
-                    "lecciones_completadas"
-                )
-                or 0
+                progreso.get("lecciones_completadas") or 0
             )
         except (TypeError, ValueError):
             lecciones = 0
 
         try:
-            porcentaje = float(
-                progreso.get(
-                    "porcentaje_avance"
-                )
-                or 0
+            prueba_completada = bool(
+                int(progreso.get("prueba_completada") or 0)
             )
         except (TypeError, ValueError):
-            porcentaje = 0
+            prueba_completada = False
 
-        lecciones = max(
-            0,
-            min(
-                lecciones,
-                self.TOTAL_NIVELES,
-            ),
-        )
-        porcentaje = max(
-            0,
-            min(
-                porcentaje,
-                100,
-            ),
-        )
+        if prueba_completada:
+            return self.TOTAL_NIVELES
 
-        niveles_por_porcentaje = int(
-            porcentaje // 20
-        )
+        porcentaje = max(0, min(porcentaje, 100))
+        lecciones = max(0, lecciones)
+        umbrales_por_nivel = (3, 7, 9, 13, 16)
 
-        return max(
-            lecciones,
-            min(
-                niveles_por_porcentaje,
-                self.TOTAL_NIVELES,
-            ),
+        # lecciones_completadas guarda el orden de la última lección.
+        # Se compara contra el final real de cada nivel; nunca se interpreta
+        # directamente como una cantidad de niveles terminados.
+        niveles_por_lecciones = sum(
+            lecciones >= umbral
+            for umbral in umbrales_por_nivel
+        )
+        niveles_por_porcentaje = int(porcentaje // 20)
+
+        # El menor de ambos valores repara porcentajes antiguos inflados sin
+        # borrar el progreso ni afectar una prueba final ya completada.
+        return min(
+            niveles_por_porcentaje,
+            niveles_por_lecciones,
+            self.TOTAL_NIVELES,
         )
 
     @staticmethod
@@ -1478,162 +1477,6 @@ class NivelesMySQL(QtWidgets.QWidget):
         )
         self.btnComenzar.clicked.connect(
             self.abrir_prueba_final
-        )
-        self.btnDiploma.clicked.connect(
-            self.solicitar_envio_diploma
-        )
-
-    def prueba_final_completada(self):
-        valor = self._progreso_actual.get(
-            "prueba_completada",
-            False,
-        )
-
-        if isinstance(valor, str):
-            return valor.strip().casefold() in {
-                "1",
-                "true",
-                "si",
-                "yes",
-            }
-
-        return bool(valor)
-
-    def actualizar_estado_boton_diploma(self):
-        if not hasattr(self, "btnDiploma"):
-            return
-
-        disponible = (
-            not self.es_sesion_administrador()
-            and self.obtener_id_jugador() is not None
-            and self.prueba_final_completada()
-            and not self._envio_diploma_en_curso
-            and not self.nivel_en_ejecucion
-        )
-        self.habilitar_boton(
-            self.btnDiploma,
-            disponible,
-        )
-        self.btnDiploma.setText(
-            "ENVIANDO..."
-            if self._envio_diploma_en_curso
-            else "ENVIAR DIPLOMA"
-        )
-
-        if self.es_sesion_administrador():
-            ayuda = "Los administradores no generan diplomas."
-        elif not self.prueba_final_completada():
-            ayuda = "Completa la leccion final para habilitar el diploma."
-        elif self._envio_diploma_en_curso:
-            ayuda = "El diploma se esta generando y enviando."
-        else:
-            ayuda = "Genera y envia el diploma al correo registrado."
-
-        self.btnDiploma.setToolTip(ayuda)
-
-    def solicitar_envio_diploma(self):
-        if self._envio_diploma_en_curso:
-            return
-
-        if not self.prueba_final_completada():
-            Alertas.mostrar(
-                self,
-                "Diploma bloqueado",
-                "Debes completar la leccion final antes de solicitarlo.",
-                "advertencia",
-            )
-            return
-
-        id_jugador = self.obtener_id_jugador()
-
-        if id_jugador is None or self.es_sesion_administrador():
-            Alertas.mostrar(
-                self,
-                "Diploma no disponible",
-                "El diploma solo esta disponible para jugadores.",
-                "advertencia",
-            )
-            return
-
-        correo = "el correo registrado"
-
-        if isinstance(self.jugador, dict):
-            correo = str(
-                self.jugador.get("correo")
-                or correo
-            ).strip()
-
-        respuesta = Alertas.confirmar(
-            self,
-            "Enviar diploma",
-            (
-                f"Se generara el diploma de {self.LENGUAJE} y se "
-                f"enviara a:\n\n{correo}\n\nDeseas continuar?"
-            ),
-            tipo="informacion",
-            texto_confirmar="ENVIAR",
-            texto_cancelar="CANCELAR",
-        )
-
-        if not respuesta:
-            return
-
-        self._envio_diploma_en_curso = True
-        self.actualizar_estado_boton_diploma()
-
-        tarea = TareaEnvioDiploma(
-            id_jugador=id_jugador,
-            lenguaje=self.LENGUAJE,
-        )
-        tarea.senales.terminado.connect(
-            self._al_enviar_diploma
-        )
-        tarea.senales.error.connect(
-            self._al_fallar_envio_diploma
-        )
-        self._tarea_envio_diploma = tarea
-        QtCore.QThreadPool.globalInstance().start(tarea)
-
-    @QtCore.pyqtSlot(object)
-    def _al_enviar_diploma(self, resultado):
-        self._envio_diploma_en_curso = False
-        self._tarea_envio_diploma = None
-        self.actualizar_estado_boton_diploma()
-
-        detalle_registro = ""
-
-        if not resultado.get("registrado_en_bd", False):
-            detalle_registro = (
-                "\n\nEl correo fue enviado, pero no se pudo actualizar "
-                "la tabla diploma."
-            )
-
-        print(
-            resultado.get("correo", ""),
-            "[DIPLOMA] Envio completado:",
-            (
-                "El diploma fue enviado correctamente a:\n"
-                f"{resultado.get('correo', '')}\n\n"
-                "Archivo generado:\n"
-                f"{resultado.get('ruta_pdf', '')}"
-                f"{detalle_registro}"
-            ),
-        )
-
-    @QtCore.pyqtSlot(str)
-    def _al_fallar_envio_diploma(self, detalle):
-        self._envio_diploma_en_curso = False
-        self._tarea_envio_diploma = None
-        self.actualizar_estado_boton_diploma()
-
-        Alertas.mostrar(
-            self,
-            "No se pudo enviar el diploma",
-            (
-                "No se genero o envio el diploma.\n\n"
-                f"Detalles:\n{detalle}"
-            ),
-            "error",
         )
 
     # ========================================================
