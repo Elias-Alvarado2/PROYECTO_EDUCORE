@@ -1662,7 +1662,8 @@ class NivelesJava(QtWidgets.QWidget):
                 False
             )
 
-            self.hide()
+            # Mantener la seleccion visible evita mostrar el escritorio
+            # mientras la pantalla de carga y Pygame toman el primer plano.
             QtWidgets.QApplication.processEvents()
 
             ejecutar_nivel(

@@ -137,7 +137,7 @@ class TokenCodigo:
             0,
             0,
             max(70, ancho_texto + 34),
-            max(48, alto_texto + 20),
+            max(44, alto_texto + 16),
         )
 
         self.hueco_actual: str | None = None
@@ -214,7 +214,7 @@ class PantallaPracticaCodigo:
     # 72 px corresponde aproximadamente al hueco pequeno que aparece despues
     # de "estudiantes" y evita revelar la respuesta por el tamano del espacio.
     ANCHO_HUECO_VACIO = 72
-    ALTO_HUECO_VACIO = 50
+    ALTO_HUECO_VACIO = 42
 
     def __init__(self, ancho: int = 1920, alto: int = 1080):
         self.ancho = int(ancho)
@@ -340,14 +340,14 @@ class PantallaPracticaCodigo:
         self.rect_cerrar = rr(38, 35, 78, 72)
         self.rect_titulo = rr(132, 43, 255, 62)
         self.rect_pregunta = rr(95, 145, 1258, 115)
-        self.rect_codigo = rr(90, 282, 1268, 355)
-        self.rect_opciones = rr(95, 670, 1258, 180)
+        self.rect_codigo = rr(90, 270, 1268, 435)
+        self.rect_opciones = rr(95, 725, 1258, 125)
         self.rect_resultado = rr(105, 882, 745, 90)
         self.rect_verificar = rr(885, 882, 415, 90)
 
         escala_fuente = min(sx, sy)
         self.fuente_pregunta = _cargar_fuente(round(38 * escala_fuente))
-        self.fuente_codigo = _cargar_fuente(round(42 * escala_fuente))
+        self.fuente_codigo = _cargar_fuente(round(36 * escala_fuente))
         self.fuente_opciones = _cargar_fuente(round(34 * escala_fuente))
         self.fuente_boton = _cargar_fuente(round(38 * escala_fuente))
         self.fuente_resultado = _cargar_fuente(round(33 * escala_fuente))
@@ -418,16 +418,29 @@ class PantallaPracticaCodigo:
         respuestas = self.configuracion.get("respuestas", {})
         lineas = self.configuracion.get("codigo", [])
         ancho_vacio, alto_vacio = self._obtener_tamano_hueco_vacio()
-        x_inicial = self.rect_codigo.x + 42
+        x_inicial = self.rect_codigo.x + 35
 
-        # Empieza cerca de la parte superior, pero conserva suficiente
-        # separación para que los huecos de líneas consecutivas no se monten.
-        y = self.rect_codigo.y + 12
-        alto_linea = max(57, self.fuente_codigo.get_height() + 16)
+        # Empieza cerca de la parte superior y calcula una separación
+        # dinámica según la cantidad de líneas para que todo el código quepa.
+        margen_superior = 14
+        margen_inferior = 14
+        y = self.rect_codigo.y + margen_superior
+
+        cantidad_lineas = max(1, len(lineas))
+        alto_disponible = max(
+            1,
+            self.rect_codigo.height - margen_superior - margen_inferior,
+        )
+        alto_linea_disponible = alto_disponible // cantidad_lineas
+
+        alto_linea = max(
+            self.fuente_codigo.get_height() + 8,
+            min(52, alto_linea_disponible),
+        )
 
         ancho_indentacion = max(
-            35,
-            round(self.fuente_codigo.size("    ")[0] * 0.78),
+            30,
+            round(self.fuente_codigo.size("    ")[0] * 0.72),
         )
 
         for linea in lineas:
@@ -465,10 +478,13 @@ class PantallaPracticaCodigo:
                     # El hueco solo cambia de tamano despues de colocar una
                     # ficha y usa el ancho de ESA ficha, sea correcta o no.
                     # Al retirarla, _recalcular_codigo restaura 72 x 50.
-                    ancho_hueco = token.rect.width + 12
-                    alto_hueco = max(alto_base, token.rect.height + 10)
+                    ancho_hueco = token.rect.width + 10
+                    alto_hueco = max(
+                        alto_base,
+                        min(token.rect.height + 4, alto_linea - 2),
+                    )
 
-                rect = pygame.Rect(x, y - 8, ancho_hueco, alto_hueco)
+                rect = pygame.Rect(x, y - 5, ancho_hueco, alto_hueco)
                 hueco = HuecoCodigo(
                     identificador,
                     respuesta,
@@ -492,10 +508,10 @@ class PantallaPracticaCodigo:
             if token.hueco_actual is None and not token.arrastrando
         ]
         x = self.rect_opciones.x
-        y = self.rect_opciones.y + 8
+        y = self.rect_opciones.y + 4
         limite = self.rect_opciones.right
         separacion_x = 16
-        separacion_y = 14
+        separacion_y = 8
 
         for token in libres:
             if x + token.rect.width > limite:

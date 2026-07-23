@@ -236,6 +236,31 @@ background-color: transparent;
      </size>
     </property>
    </widget>
+   <widget class="QPushButton" name="btnDiploma">
+    <property name="geometry">
+     <rect>
+      <x>1600</x>
+      <y>890</y>
+      <width>281</width>
+      <height>171</height>
+     </rect>
+    </property>
+    <property name="cursor">
+     <cursorShape>ClosedHandCursor</cursorShape>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton#btnDiploma {
+    border: 0px;
+    background-color: transparent;
+    padding: 0px;
+    margin: 0px;
+}
+</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
   </widget>
  </widget>
  <resources/>

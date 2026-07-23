@@ -17,12 +17,78 @@ class NivelPython01(JuegoBase):
     # Negativo = sube.
     # Positivo = baja.
     AJUSTE_Y_JUGADOR =0
-    LONGITUD_NIVEL = 7000
+    LONGITUD_NIVEL = 7500
     NPC_X = 720
     AJUSTE_Y_NPC = -8  
     AJUSTE_Y_SPRITE_MONTANAS = 2
     AJUSTE_Y_SPRITE_SUELO = 0
     AJUSTE_Y_SPRITE_PLANTAS = 0
+    CARTEL_FINAL = (
+        {
+    "x": 6000,
+    "ajuste_y": -10,
+    "tamano":0.40,
+    "mostrar_bloqueado": True,}
+    
+)
+
+    ENEMIGOS=(
+         {
+             
+        "tipo": "serpiente",
+        # Posiciones relativas al suelo
+        "x_inicial": 1547,
+        "x_limite": 1843,
+
+        "velocidad": 80,
+        "ancho": 80,
+        "alto": 48,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+     {      
+        "tipo": "caracol",
+        "x_inicial": 1997,
+        "x_limite": 2193,
+        "ajuste_y": 0,
+        "ancho": 100,
+        "alto": 68,
+        "velocidad": 60,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+        "fps_animacion":6,
+
+        },
+         {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 3200,
+
+        # Posiciones relativas al suelo
+        "y_inicial": 0,
+        "y_limite": -250,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -10,
+    },
+      {
+            
+        "tipo": "bolaazul",
+        "x_inicial": 5493,
+        "x_limite": 5630    ,
+        "ajuste_y": 0,
+        "ancho": 80,
+        "alto": 48,
+        "velocidad": 120,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+        "fps_animacion":8,
+
+        },
+    )
     PISOS = (
         (0, LONGITUD_NIVEL),
     )

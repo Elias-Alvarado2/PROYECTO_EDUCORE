@@ -23,6 +23,78 @@ class NivelPython05(JuegoBase):
     AJUSTE_Y_SPRITE_MONTANAS = 2
     AJUSTE_Y_SPRITE_SUELO = 0
     AJUSTE_Y_SPRITE_PLANTAS = 0
+    ENEMIGOS=(
+         {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 946,
+
+        # Posiciones relativas al suelo
+        "y_inicial": 0,
+        "y_limite": -250,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -10,
+    },
+     {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 1185,
+
+        # Posiciones relativas al suelo
+        "y_inicial": 0,
+        "y_limite": -250,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -10,
+    },
+     {
+            
+        "tipo": "bolaazul",
+        "x_inicial": 2504,
+        "x_limite": 2667    ,
+        "ajuste_y": 0,
+        "ancho": 100,
+        "alto": 68,
+        "velocidad": 120,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+        "fps_animacion":8,
+
+        },
+          {      
+        "tipo": "caracol",
+        "x_inicial": 3975,
+        "x_limite": 4100,
+        "ajuste_y": 0,
+        "ancho": 100,
+        "alto": 68,
+        "velocidad": 60,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+        "fps_animacion":6,
+
+        },
+         {
+             
+        "tipo": "serpiente",
+        # Posiciones relativas al suelo
+        "x_inicial": 4930,
+        "x_limite": 5011,
+        "ajuste_y": -240,
+        "velocidad": 80,
+        "ancho": 80,
+        "alto": 48,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+    )
     PISOS = (
         (0, LONGITUD_NIVEL),
     )

@@ -1459,8 +1459,11 @@ class ConexionEduCore:
 
         numero_nivel = max(1, min(numero_nivel, 5))
         porcentaje = min(numero_nivel * 20, 100)
-        prueba_desbloqueada = 1 if numero_nivel >= 4 else 0
-        prueba_completada = 1 if numero_nivel >= 5 else 0
+        # Hay cinco niveles normales y el nivel 6 es la prueba final. El nivel
+        # 5 solamente desbloquea esa prueba; GestorResultadoPrueba es el unico
+        # encargado de marcar prueba_completada al terminar realmente el 6.
+        prueba_desbloqueada = 1 if numero_nivel >= 5 else 0
+        prueba_completada = 0
 
         if not self.asegurar_progreso(id_jugador, id_lenguaje):
             return False
@@ -4072,7 +4075,16 @@ class JuegoEduCore:
 
         # Los huesos regresan al inicio. También se reconoce el nombre del
         # archivo PNG por si el nivel los declaró accidentalmente como púas.
-        if obstaculo.debe_regresar_al_inicio():
+        debe_regresar_al_inicio = getattr(
+            obstaculo,
+            "debe_regresar_al_inicio",
+            None,
+        )
+
+        if (
+            callable(debe_regresar_al_inicio)
+            and debe_regresar_al_inicio()
+        ):
             self.regresar_al_inicio(motivo="huesos")
             return True
 
@@ -5618,7 +5630,10 @@ class JuegoEduCore:
             corte=8,
             sombra=False,
         )
-        numero_nivel = int(self.leccion_actual.get("orden", 1)) if self.leccion_actual else 1
+        # El numero mostrado pertenece al archivo del nivel, no a la leccion
+        # devuelta por MySQL. Asi sigue siendo correcto aunque la base de
+        # datos no este disponible o no tenga cargada esa leccion.
+        numero_nivel = self.obtener_numero_nivel_actual()
         num = fuente.render(str(numero_nivel), False, (255, 225, 90))
         pantalla.blit(num, (nivel_icono.centerx - num.get_width() // 2, nivel_icono.centery - num.get_height() // 2))
 
@@ -5626,10 +5641,7 @@ class JuegoEduCore:
         pantalla.blit(titulo, (panel.x + 160, panel.y + 570))
 
         fuente_chica = cargar_fuente_pixel(27)
-        if self.leccion_actual:
-            texto_nivel = f"{self.nombre_lenguaje} - Leccion {self.leccion_actual.get('orden', 1)}"
-        else:
-            texto_nivel = f"{self.nombre_lenguaje} - Leccion 1"
+        texto_nivel = f"{self.nombre_lenguaje} - Nivel {numero_nivel}"
 
         texto_nivel_render = fuente_chica.render(texto_nivel[:26], False, (15, 42, 78))
         pantalla.blit(texto_nivel_render, (panel.x + 160, panel.y + 620))
@@ -6335,6 +6347,9 @@ class JuegoEduCore:
         # Reiniciamos el reloj para evitar un salto grande en el primer frame.
         self.clock.tick()
         pygame.event.clear()
+        # La seleccion permanece como fondo para no exponer el escritorio.
+        # Pygame recupera explicitamente el primer plano al comenzar.
+        self.recuperar_foco_pygame()
         self.iniciar_transicion_entrada()
 
         ejecutando = True

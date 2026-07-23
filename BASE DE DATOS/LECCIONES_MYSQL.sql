@@ -1,7 +1,7 @@
 
 select *from leccion;
 select *from jugador;
-update jugador set vidas=100 where id_jugador=8;
+update jugador set vidas=100 where id_jugador=1;
 INSERT INTO leccion (
     id_lenguaje,
     titulo,
@@ -425,6 +425,26 @@ SET nombre = ''Ana'',
 WHERE id_estudiante = 5;',
     'Esta consulta modifica dos campos del estudiante cuyo id_estudiante sea igual a 5. La columna nombre recibe el valor Ana y la columna edad recibe el valor 16. Las dos asignaciones están separadas por una coma.',
     17,
+    10,
+    CURRENT_TIMESTAMP,
+    'Activa'
+);
+INSERT INTO leccion (
+    id_lenguaje,
+    titulo,
+    contenido_teoria,
+    codigo_ejemplo,
+    orden,
+    puntos,
+    fecha_creacion,
+    estado
+)
+VALUES (
+    4,
+    'Prueba Final',
+    'En esta prueba se pondrán a prueba todos los conocimientos aprendidos durante tu viaje, completa esta prueba para obtener tu certificado. ¡Buena Suerte!',
+    '',
+    18,
     10,
     CURRENT_TIMESTAMP,
     'Activa'

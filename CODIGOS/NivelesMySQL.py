@@ -4,7 +4,9 @@ from pathlib import Path
 from PyQt6 import QtCore, QtGui, QtWidgets, uic
 
 from AjusteResponsive import BotonesResponsivos
+from Alertas import Alertas
 from ConexionBD import ConexionBD
+from Diplomas import TareaEnvioDiploma, preparar_fuentes_diploma
 from Transicion import FormAnterior, FormTransicion
 from ValidarVidas import validar_vidas_disponibles
 from quitar_barra import quitar
@@ -562,6 +564,9 @@ class NivelesMySQL(QtWidgets.QWidget):
         self._carga_progreso_en_curso = False
         self._recarga_progreso_pendiente = False
         self._tarea_carga_progreso = None
+        self._progreso_actual = {}
+        self._envio_diploma_en_curso = False
+        self._tarea_envio_diploma = None
 
         self.base_dir = Path(__file__).resolve().parent
         self.proyecto_dir = self.base_dir.parent
@@ -592,6 +597,7 @@ class NivelesMySQL(QtWidgets.QWidget):
             str(self.ruta_ui),
             self,
         )
+        preparar_fuentes_diploma()
 
         self.corregir_rutas_stylesheet(
             self.ruta_botones
@@ -640,6 +646,7 @@ class NivelesMySQL(QtWidgets.QWidget):
 
         self.botones_hover = [
             self.btnVolver,
+            self.btnDiploma,
             *self.botones_niveles,
         ]
 
@@ -968,6 +975,7 @@ class NivelesMySQL(QtWidgets.QWidget):
             "btnNivel4",
             "btnNivel5",
             "btnComenzar",
+            "btnDiploma",
         )
 
         for nombre in nombres:
@@ -1198,6 +1206,8 @@ class NivelesMySQL(QtWidgets.QWidget):
                 QtCore.Qt.CursorShape.PointingHandCursor
             )
         )
+        self._progreso_actual = {}
+        self.actualizar_estado_boton_diploma()
 
         for boton in self.botones_niveles:
             boton.setEnabled(
@@ -1306,6 +1316,8 @@ class NivelesMySQL(QtWidgets.QWidget):
             return
 
         try:
+            self._progreso_actual = dict(progreso or {})
+
             if self.es_sesion_administrador():
                 for numero_nivel, boton in self.botones_por_nivel.items():
                     self.aplicar_imagen_boton(
@@ -1327,6 +1339,7 @@ class NivelesMySQL(QtWidgets.QWidget):
                     self.btnComenzar,
                     True,
                 )
+                self.actualizar_estado_boton_diploma()
                 self.poner_controles_al_frente()
                 self.actualizar_hover_botones()
                 return
@@ -1400,6 +1413,7 @@ class NivelesMySQL(QtWidgets.QWidget):
                 self.btnComenzar,
                 prueba_desbloqueada,
             )
+            self.actualizar_estado_boton_diploma()
 
             self.poner_controles_al_frente()
             self.actualizar_hover_botones()
@@ -1464,6 +1478,162 @@ class NivelesMySQL(QtWidgets.QWidget):
         )
         self.btnComenzar.clicked.connect(
             self.abrir_prueba_final
+        )
+        self.btnDiploma.clicked.connect(
+            self.solicitar_envio_diploma
+        )
+
+    def prueba_final_completada(self):
+        valor = self._progreso_actual.get(
+            "prueba_completada",
+            False,
+        )
+
+        if isinstance(valor, str):
+            return valor.strip().casefold() in {
+                "1",
+                "true",
+                "si",
+                "yes",
+            }
+
+        return bool(valor)
+
+    def actualizar_estado_boton_diploma(self):
+        if not hasattr(self, "btnDiploma"):
+            return
+
+        disponible = (
+            not self.es_sesion_administrador()
+            and self.obtener_id_jugador() is not None
+            and self.prueba_final_completada()
+            and not self._envio_diploma_en_curso
+            and not self.nivel_en_ejecucion
+        )
+        self.habilitar_boton(
+            self.btnDiploma,
+            disponible,
+        )
+        self.btnDiploma.setText(
+            "ENVIANDO..."
+            if self._envio_diploma_en_curso
+            else "ENVIAR DIPLOMA"
+        )
+
+        if self.es_sesion_administrador():
+            ayuda = "Los administradores no generan diplomas."
+        elif not self.prueba_final_completada():
+            ayuda = "Completa la leccion final para habilitar el diploma."
+        elif self._envio_diploma_en_curso:
+            ayuda = "El diploma se esta generando y enviando."
+        else:
+            ayuda = "Genera y envia el diploma al correo registrado."
+
+        self.btnDiploma.setToolTip(ayuda)
+
+    def solicitar_envio_diploma(self):
+        if self._envio_diploma_en_curso:
+            return
+
+        if not self.prueba_final_completada():
+            Alertas.mostrar(
+                self,
+                "Diploma bloqueado",
+                "Debes completar la leccion final antes de solicitarlo.",
+                "advertencia",
+            )
+            return
+
+        id_jugador = self.obtener_id_jugador()
+
+        if id_jugador is None or self.es_sesion_administrador():
+            Alertas.mostrar(
+                self,
+                "Diploma no disponible",
+                "El diploma solo esta disponible para jugadores.",
+                "advertencia",
+            )
+            return
+
+        correo = "el correo registrado"
+
+        if isinstance(self.jugador, dict):
+            correo = str(
+                self.jugador.get("correo")
+                or correo
+            ).strip()
+
+        respuesta = Alertas.confirmar(
+            self,
+            "Enviar diploma",
+            (
+                f"Se generara el diploma de {self.LENGUAJE} y se "
+                f"enviara a:\n\n{correo}\n\nDeseas continuar?"
+            ),
+            tipo="informacion",
+            texto_confirmar="ENVIAR",
+            texto_cancelar="CANCELAR",
+        )
+
+        if not respuesta:
+            return
+
+        self._envio_diploma_en_curso = True
+        self.actualizar_estado_boton_diploma()
+
+        tarea = TareaEnvioDiploma(
+            id_jugador=id_jugador,
+            lenguaje=self.LENGUAJE,
+        )
+        tarea.senales.terminado.connect(
+            self._al_enviar_diploma
+        )
+        tarea.senales.error.connect(
+            self._al_fallar_envio_diploma
+        )
+        self._tarea_envio_diploma = tarea
+        QtCore.QThreadPool.globalInstance().start(tarea)
+
+    @QtCore.pyqtSlot(object)
+    def _al_enviar_diploma(self, resultado):
+        self._envio_diploma_en_curso = False
+        self._tarea_envio_diploma = None
+        self.actualizar_estado_boton_diploma()
+
+        detalle_registro = ""
+
+        if not resultado.get("registrado_en_bd", False):
+            detalle_registro = (
+                "\n\nEl correo fue enviado, pero no se pudo actualizar "
+                "la tabla diploma."
+            )
+
+        print(
+            resultado.get("correo", ""),
+            "[DIPLOMA] Envio completado:",
+            (
+                "El diploma fue enviado correctamente a:\n"
+                f"{resultado.get('correo', '')}\n\n"
+                "Archivo generado:\n"
+                f"{resultado.get('ruta_pdf', '')}"
+                f"{detalle_registro}"
+            ),
+        )
+
+    @QtCore.pyqtSlot(str)
+    def _al_fallar_envio_diploma(self, detalle):
+        self._envio_diploma_en_curso = False
+        self._tarea_envio_diploma = None
+        self.actualizar_estado_boton_diploma()
+
+        Alertas.mostrar(
+            self,
+            "No se pudo enviar el diploma",
+            (
+                "No se genero o envio el diploma.\n\n"
+                f"Detalles:\n{detalle}"
+            ),
+            "error",
         )
 
     # ========================================================
@@ -1559,7 +1729,8 @@ class NivelesMySQL(QtWidgets.QWidget):
                 False
             )
 
-            self.hide()
+            # Mantener la seleccion visible evita mostrar el escritorio
+            # mientras la pantalla de carga y Pygame toman el primer plano.
             QtWidgets.QApplication.processEvents()
 
             ejecutar_nivel(
@@ -1604,6 +1775,7 @@ class NivelesMySQL(QtWidgets.QWidget):
                     False
                 )
 
+            self.btnDiploma.setEnabled(False)
             return
 
         self.btnVolver.setEnabled(
