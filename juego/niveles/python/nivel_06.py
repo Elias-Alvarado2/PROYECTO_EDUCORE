@@ -139,7 +139,7 @@ class NivelPython06(JuegoBase):
             "nombre": "pinguino_1",
             "x": 640,
             "ajuste_y": -130,
-            "orden_leccion": 4,
+            "orden_leccion": 16,
             "requiere_anterior": False,
             "repetible": False,
 

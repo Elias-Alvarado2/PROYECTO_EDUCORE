@@ -9,7 +9,7 @@ from Diplomas import TareaEnvioDiploma, preparar_fuentes_diploma
 
 
 # Posición y tamaño base del cofre en las ventanas de 1920 x 1080.
-GEOMETRIA_COFRE = (1600, 890, 281, 171)
+GEOMETRIA_COFRE = (1600, 890, 150, 171)
 
 # Para cambiar las imágenes solo hay que editar estas rutas.
 CARPETAS_COFRE = {
@@ -50,7 +50,7 @@ class CofreDiplomaMixin:
             boton.setObjectName("btnDiploma")
             boton.setGeometry(*GEOMETRIA_COFRE)
             self.btnDiploma = boton
-
+        boton.setGeometry(*GEOMETRIA_COFRE)
         lenguaje = str(self.LENGUAJE).strip().casefold()
         carpeta = CARPETAS_COFRE.get(lenguaje)
 
@@ -62,7 +62,7 @@ class CofreDiplomaMixin:
         base_botones = (
             Path(self.proyecto_dir)
             / "EXPO-DISEÑOS"
-            / "botones"
+            / "Botones"
             / carpeta
         )
         self._ruta_cofre_cerrado = base_botones / IMAGEN_COFRE_CERRADO

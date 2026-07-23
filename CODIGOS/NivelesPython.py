@@ -1217,51 +1217,51 @@ class NivelesPython(CofreDiplomaMixin, QtWidgets.QWidget):
                     pass
 
     def calcular_niveles_completados(self, progreso):
+        progreso = progreso if isinstance(progreso, dict) else {}
+
+        try:
+            porcentaje = float(
+                progreso.get("porcentaje_avance") or 0
+            )
+        except (TypeError, ValueError):
+            porcentaje = 0
+
         try:
             lecciones = int(
-                progreso.get(
-                    "lecciones_completadas"
-                )
-                or 0
+                progreso.get("lecciones_completadas") or 0
             )
         except (TypeError, ValueError):
             lecciones = 0
 
         try:
-            porcentaje = float(
-                progreso.get(
-                    "porcentaje_avance"
-                )
-                or 0
+            prueba_completada = bool(
+                int(progreso.get("prueba_completada") or 0)
             )
         except (TypeError, ValueError):
-            porcentaje = 0
+            prueba_completada = False
 
-        lecciones = max(
-            0,
-            min(
-                lecciones,
-                self.TOTAL_NIVELES,
-            ),
-        )
-        porcentaje = max(
-            0,
-            min(
-                porcentaje,
-                100,
-            ),
-        )
+        if prueba_completada:
+            return self.TOTAL_NIVELES
 
-        niveles_por_porcentaje = int(
-            porcentaje // 20
-        )
+        porcentaje = max(0, min(porcentaje, 100))
+        lecciones = max(0, lecciones)
+        umbrales_por_nivel = (3, 6, 9, 12, 15)
 
-        return max(
-            lecciones,
-            min(
-                niveles_por_porcentaje,
-                self.TOTAL_NIVELES,
-            ),
+        # lecciones_completadas guarda el orden de la última lección.
+        # Se compara contra el final real de cada nivel; nunca se interpreta
+        # directamente como una cantidad de niveles terminados.
+        niveles_por_lecciones = sum(
+            lecciones >= umbral
+            for umbral in umbrales_por_nivel
+        )
+        niveles_por_porcentaje = int(porcentaje // 20)
+
+        # El menor de ambos valores repara porcentajes antiguos inflados sin
+        # borrar el progreso ni afectar una prueba final ya completada.
+        return min(
+            niveles_por_porcentaje,
+            niveles_por_lecciones,
+            self.TOTAL_NIVELES,
         )
 
     @staticmethod

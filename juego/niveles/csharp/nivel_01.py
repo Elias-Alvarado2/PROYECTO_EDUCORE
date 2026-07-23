@@ -17,6 +17,14 @@ class NivelCSharp01(JuegoBase):
     LENGUAJE_ACTUAL = LENGUAJE_ACTUAL
     NIVEL_ACTUAL = NIVEL_ACTUAL
     FONDO_ACTUAL = FONDO_ACTUAL
+
+    CARTEL_FINAL = {
+        "x": 4500,
+        "ajuste_y": -10,
+        "tamano": 0.40,
+        "mostrar_bloqueado": True,
+    }
+
     AJUSTE_Y_SPRITE_MONTANAS = 0
     AJUSTE_Y_SPRITE_SUELO = 0
     AJUSTE_Y_SPRITE_PLANTAS = 0
@@ -52,7 +60,7 @@ class NivelCSharp01(JuegoBase):
     OBSTACULOS = (
         {
             "tipo": "tronco",
-            "imagen": "tronco.png",
+            "imagen": "mysql/tronco.png",
             "x": 500,
             "ajuste_y": 40,
             "hitbox_offset_x": 10,

@@ -11,6 +11,14 @@ class NivelCSharp06(JuegoBase):
     LENGUAJE_ACTUAL = LENGUAJE_ACTUAL
     NIVEL_ACTUAL = NIVEL_ACTUAL
     FONDO_ACTUAL = FONDO_ACTUAL
+
+    CARTEL_FINAL = {
+        "x": 7000,
+        "ajuste_y": -10,
+        "tamano": 0.40,
+        "mostrar_bloqueado": True,
+    }
+
     JUGADOR_X_INICIAL = 170
 
     # Usa valores pequeños.
@@ -30,7 +38,7 @@ class NivelCSharp06(JuegoBase):
     OBSTACULOS = (
         {
             "tipo": "tronco",
-            "imagen": "tronco.png",
+            "imagen": "mysql/tronco.png",
             "x": 900,
             "ajuste_y": 40,
             "hitbox_offset_x": 10,
@@ -40,7 +48,7 @@ class NivelCSharp06(JuegoBase):
         },
         {
             "tipo": "tronco",
-            "imagen": "tronco.png",
+            "imagen": "mysql/tronco.png",
             "x": 1930,
             "ajuste_y": 40,
             "hitbox_offset_x": 10,
@@ -50,7 +58,7 @@ class NivelCSharp06(JuegoBase):
         },
         {
             "tipo": "tronco",
-            "imagen": "tronco.png",
+            "imagen": "mysql/tronco.png",
             "x": 2760,
             "ajuste_y": 40,
             "hitbox_offset_x": 10,
