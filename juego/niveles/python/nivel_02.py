@@ -603,12 +603,12 @@ class NivelPython02(JuegoBase):
         "y": 500,
         "tipo": "eleccion_multiple",
         "pregunta": (
-        "¿Qué mensaje muestra este código?"
-        "edad = 12"
-        'if edad >= 18:'
-        '    print("Mayor de edad")'
+        "¿Qué mensaje muestra este código?\n"
+        "edad = 12\n"
+        'if edad >= 18:\n'
+        '    print("Mayor de edad")\n'
         'else:'
-        '    print("Menor de edad")'
+        '    print("Menor de edad")\n'
         
         ),
         "opciones": [

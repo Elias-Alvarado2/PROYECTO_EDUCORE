@@ -360,8 +360,26 @@ class JuegoBase(motor.JuegoEduCore):
         reducir_ancho = self.escalar(
             config.get("hitbox_reducir_ancho", 0)
         )
+
+        # El sprite del cerdo termina visualmente unos píxeles antes que su
+        # hitbox inferior. Por eso, al aterrizar sobre un fragmento, parecía
+        # quedar flotando aunque las dos hitboxes ya estuvieran tocándose.
+        #
+        # Para corregirlo sin modificar la hitbox del personaje, bajamos solo
+        # la superficie superior de colisión de los fragmentos. La misma
+        # cantidad se resta de la altura para conservar intacto el borde
+        # inferior del obstáculo y no alterar las colisiones laterales.
+        tipo_obstaculo = str(config.get("tipo", "")).strip().lower()
+        ajuste_contacto_y = config.get(
+            "ajuste_contacto_personaje_y",
+            7 if tipo_obstaculo == "fragmento" else 0,
+        )
+
+        hitbox_offset_y = self.escalar(
+            config.get("hitbox_offset_y", 0) + ajuste_contacto_y
+        )
         reducir_alto = self.escalar(
-            config.get("hitbox_reducir_alto", 0)
+            config.get("hitbox_reducir_alto", 0) + ajuste_contacto_y
         )
 
         return motor.Obstaculo(
@@ -381,9 +399,7 @@ class JuegoBase(motor.JuegoEduCore):
             hitbox_offset_x=self.escalar(
                 config.get("hitbox_offset_x", 0)
             ),
-            hitbox_offset_y=self.escalar(
-                config.get("hitbox_offset_y", 0)
-            ),
+            hitbox_offset_y=hitbox_offset_y,
             hitbox_ancho=max(
                 1,
                 ancho - reducir_ancho,
