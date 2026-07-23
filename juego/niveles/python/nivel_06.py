@@ -25,7 +25,7 @@ class NivelPython06(JuegoBase):
     AJUSTE_Y_SPRITE_PLANTAS = 0
     CARTEL_FINAL = (
         {
-    "x": 9300,
+    "x": 6200,
     "ajuste_y": -10,
     "tamano":0.40,
     "mostrar_bloqueado": True,

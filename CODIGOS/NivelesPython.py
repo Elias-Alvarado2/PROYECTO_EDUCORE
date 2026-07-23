@@ -4,6 +4,7 @@ from pathlib import Path
 from PyQt6 import QtCore, QtGui, QtWidgets, uic
 
 from AjusteResponsive import BotonesResponsivos
+from CofreDiploma import CofreDiplomaMixin
 from ConexionBD import ConexionBD
 from Transicion import FormAnterior, FormTransicion
 from ValidarVidas import validar_vidas_disponibles
@@ -520,7 +521,7 @@ class TareaCargaProgreso(QtCore.QRunnable):
                     pass
 
 
-class NivelesPython(QtWidgets.QWidget):
+class NivelesPython(CofreDiplomaMixin, QtWidgets.QWidget):
     """Menú de Python con desbloqueo progresivo de niveles."""
 
     LENGUAJE = "python"
@@ -592,6 +593,7 @@ class NivelesPython(QtWidgets.QWidget):
             str(self.ruta_ui),
             self,
         )
+        self.inicializar_cofre_diploma()
 
         self.corregir_rutas_stylesheet(
             self.ruta_botones
@@ -640,6 +642,7 @@ class NivelesPython(QtWidgets.QWidget):
 
         self.botones_hover = [
             self.btnVolver,
+            self.btnDiploma,
             *self.botones_niveles,
         ]
 
@@ -1054,6 +1057,7 @@ class NivelesPython(QtWidgets.QWidget):
             "btnNivel4",
             "btnNivel5",
             "btnComenzar",
+            "btnDiploma",
         )
 
         for nombre in nombres:
@@ -1284,6 +1288,8 @@ class NivelesPython(QtWidgets.QWidget):
                 QtCore.Qt.CursorShape.PointingHandCursor
             )
         )
+        self._progreso_actual = {}
+        self.actualizar_estado_boton_diploma()
 
         for boton in self.botones_niveles:
             boton.setEnabled(
@@ -1392,6 +1398,8 @@ class NivelesPython(QtWidgets.QWidget):
             return
 
         try:
+            self._progreso_actual = dict(progreso or {})
+
             if self.es_sesion_administrador():
                 for numero_nivel, boton in self.botones_por_nivel.items():
                     self.aplicar_imagen_boton(
@@ -1413,6 +1421,7 @@ class NivelesPython(QtWidgets.QWidget):
                     self.btnComenzar,
                     True,
                 )
+                self.actualizar_estado_boton_diploma()
                 self.poner_controles_al_frente()
                 self.actualizar_hover_botones()
                 return
@@ -1486,6 +1495,7 @@ class NivelesPython(QtWidgets.QWidget):
                 self.btnComenzar,
                 prueba_desbloqueada,
             )
+            self.actualizar_estado_boton_diploma()
 
             self.poner_controles_al_frente()
             self.actualizar_hover_botones()
@@ -1690,6 +1700,7 @@ class NivelesPython(QtWidgets.QWidget):
                 boton.setEnabled(
                     False
                 )
+            self.btnDiploma.setEnabled(False)
 
             return
 

@@ -2994,6 +2994,7 @@ class JuegoEduCore:
         self.en_pausa = False
         self.proceso_ajustes = None
         self.boton_pausa_rects = {}
+        self._cursor_pygame_actual = None
         self.musica_silenciada = gestor_audio.silenciado
         self.musica_fondo_preparada = False
         self.interacciones = []
@@ -5307,6 +5308,32 @@ class JuegoEduCore:
             self._generar_fondo_pausa_cache()
         else:
             self._fondo_pausa_cache = None
+            self._establecer_cursor_pygame(
+                pygame.SYSTEM_CURSOR_ARROW
+            )
+
+    def _establecer_cursor_pygame(self, tipo_cursor):
+        if self._cursor_pygame_actual == tipo_cursor:
+            return
+
+        try:
+            pygame.mouse.set_cursor(tipo_cursor)
+            self._cursor_pygame_actual = tipo_cursor
+        except (pygame.error, TypeError):
+            # Algunos sistemas no admiten todos los cursores del sistema.
+            pass
+
+    def actualizar_cursor_menu_pausa(self):
+        mouse_pos = pygame.mouse.get_pos()
+        sobre_boton = any(
+            boton.rect.collidepoint(mouse_pos)
+            for boton in self.botones_pausa.values()
+        )
+        self._establecer_cursor_pygame(
+            pygame.SYSTEM_CURSOR_HAND
+            if sobre_boton
+            else pygame.SYSTEM_CURSOR_ARROW
+        )
 
     def dibujar_rect_pixel(
             self,
@@ -5709,6 +5736,7 @@ class JuegoEduCore:
             nombre: boton.rect
             for nombre, boton in self.botones_pausa.items()
         }
+        self.actualizar_cursor_menu_pausa()
         self.dibujar_panel_pausa(pantalla)
         # Dibujar las imágenes de los botones
         self.botones_pausa["reanudar"].dibujar(pantalla)
@@ -6018,6 +6046,9 @@ class JuegoEduCore:
             "reanudar"
         ].fue_presionado(posicion):
             self.en_pausa = False
+            self._establecer_cursor_pygame(
+                pygame.SYSTEM_CURSOR_ARROW
+            )
             pygame.event.clear()
 
             return None

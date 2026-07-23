@@ -1,7 +1,7 @@
 
 select *from leccion;
 select *from jugador;
-update jugador set vidas=100 where id_jugador=1;
+update jugador set vidas=5 where id_jugador=14;
 INSERT INTO leccion (
     id_lenguaje,
     titulo,

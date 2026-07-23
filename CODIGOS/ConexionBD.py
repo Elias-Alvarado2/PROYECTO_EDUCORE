@@ -742,13 +742,22 @@ class ConexionBD:
                     COALESCE(
                         MAX(pj.prueba_completada),
                         0
-                    ) AS prueba_completada
+                    ) AS prueba_completada,
+
+                    COALESCE(
+                        MAX(d.correo_enviado),
+                        0
+                    ) AS diploma_enviado
 
                 FROM lenguaje AS l
 
                 LEFT JOIN progreso_jugador AS pj
                     ON pj.id_lenguaje = l.id_lenguaje
                     AND pj.id_jugador = %s
+
+                LEFT JOIN diploma AS d
+                    ON d.id_lenguaje = l.id_lenguaje
+                    AND d.id_jugador = %s
 
                 WHERE LOWER(TRIM(l.nombre)) IN (
                     'python',
@@ -769,7 +778,10 @@ class ConexionBD:
 
             cursor.execute(
                 consulta,
-                (id_jugador,)
+                (
+                    id_jugador,
+                    id_jugador,
+                )
             )
 
             return cursor.fetchall()
