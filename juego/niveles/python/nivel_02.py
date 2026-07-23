@@ -92,7 +92,7 @@ class NivelPython02(JuegoBase):
         "practica": 1,
     },
      {
-        "nombre": "pinguino_1",
+        "nombre": "pinguino_2",
         "x": 3225,
         "ajuste_y": -115,
         "orden_leccion": 5,
@@ -101,7 +101,7 @@ class NivelPython02(JuegoBase):
         "practica": 2,
     },
       {
-        "nombre": "pinguino_1",
+        "nombre": "pinguino_3",
         "x": 4419,
         "ajuste_y": -93,
         "orden_leccion": 6,

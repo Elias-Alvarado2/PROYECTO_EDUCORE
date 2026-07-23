@@ -5630,7 +5630,10 @@ class JuegoEduCore:
             corte=8,
             sombra=False,
         )
-        numero_nivel = int(self.leccion_actual.get("orden", 1)) if self.leccion_actual else 1
+        # El numero mostrado pertenece al archivo del nivel, no a la leccion
+        # devuelta por MySQL. Asi sigue siendo correcto aunque la base de
+        # datos no este disponible o no tenga cargada esa leccion.
+        numero_nivel = self.obtener_numero_nivel_actual()
         num = fuente.render(str(numero_nivel), False, (255, 225, 90))
         pantalla.blit(num, (nivel_icono.centerx - num.get_width() // 2, nivel_icono.centery - num.get_height() // 2))
 
@@ -5638,10 +5641,7 @@ class JuegoEduCore:
         pantalla.blit(titulo, (panel.x + 160, panel.y + 570))
 
         fuente_chica = cargar_fuente_pixel(27)
-        if self.leccion_actual:
-            texto_nivel = f"{self.nombre_lenguaje} - Leccion {self.leccion_actual.get('orden', 1)}"
-        else:
-            texto_nivel = f"{self.nombre_lenguaje} - Leccion 1"
+        texto_nivel = f"{self.nombre_lenguaje} - Nivel {numero_nivel}"
 
         texto_nivel_render = fuente_chica.render(texto_nivel[:26], False, (15, 42, 78))
         pantalla.blit(texto_nivel_render, (panel.x + 160, panel.y + 620))

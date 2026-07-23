@@ -1,7 +1,7 @@
 
 select *from leccion;
 select *from jugador;
-update jugador set vidas=5 where id_jugador=14;
+update jugador set vidas=100 where id_jugador=1;
 INSERT INTO leccion (
     id_lenguaje,
     titulo,
@@ -429,30 +429,23 @@ WHERE id_estudiante = 5;',
     CURRENT_TIMESTAMP,
     'Activa'
 );
--- =====================================================
--- REGISTRO REUTILIZABLE DE LA PRUEBA FINAL DE MYSQL
--- =====================================================
-
-INSERT INTO prueba (
+INSERT INTO leccion (
     id_lenguaje,
-    nombre,
-    puntos_totales,
-    puntos_minimos,
-    certificado
+    titulo,
+    contenido_teoria,
+    codigo_ejemplo,
+    orden,
+    puntos,
+    fecha_creacion,
+    estado
 )
-SELECT
-    l.id_lenguaje,
-    'Prueba final MySQL',
-    COALESCE(SUM(le.puntos), 0),
-    CEIL(COALESCE(SUM(le.puntos), 0) * 0.60),
-    1
-FROM lenguaje AS l
-LEFT JOIN leccion AS le
-    ON le.id_lenguaje = l.id_lenguaje
-    AND le.estado = 'Activa'
-WHERE LOWER(TRIM(l.nombre)) = 'mysql'
-GROUP BY l.id_lenguaje
-ON DUPLICATE KEY UPDATE
-    puntos_totales = VALUES(puntos_totales),
-    puntos_minimos = VALUES(puntos_minimos),
-    certificado = VALUES(certificado);
+VALUES (
+    4,
+    'Prueba Final',
+    'En esta prueba se pondrán a prueba todos los conocimientos aprendidos durante tu viaje, completa esta prueba para obtener tu certificado. ¡Buena Suerte!',
+    '',
+    18,
+    10,
+    CURRENT_TIMESTAMP,
+    'Activa'
+);

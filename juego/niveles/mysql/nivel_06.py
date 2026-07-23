@@ -17,18 +17,29 @@ class NivelMySQL06(JuegoBase):
     # Negativo = sube.
     # Positivo = baja.
     AJUSTE_Y_JUGADOR =0
-    LONGITUD_NIVEL = 10000
+    LONGITUD_NIVEL = 11000
     NPC_X = 895
     AJUSTE_Y_NPC = -8
     AJUSTE_Y_SPRITE_MONTANAS = 0
     AJUSTE_Y_SPRITE_SUELO = 0
     AJUSTE_Y_SPRITE_PLANTAS = 0
     CARTEL_FINAL = {
-    "x": 8900,
+    "x": 9400,
     "ajuste_y": -10,
     "tamano":0.40,
     "mostrar_bloqueado": True,
 }
+    NPCS=(
+         {
+        "nombre": "pinguino_1",
+        "x": 355,
+        "ajuste_y": -8,
+        "orden_leccion": 18,
+        "requiere_anterior": False,
+        "repetible": True,
+        "practica": (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20),
+    },
+    )
     PISOS = (
         (0, LONGITUD_NIVEL),
     )
@@ -246,7 +257,7 @@ class NivelMySQL06(JuegoBase):
         {
             "tipo": "puas",
             "imagen": "mysql/pinchos.png",
-            "x": 3950,
+            "x": 3930,
             "cantidad": 2,
             "separacion": 10,
             "ajuste_y": -5,
@@ -539,7 +550,145 @@ class NivelMySQL06(JuegoBase):
             "hitbox_reducir_ancho": 20,
             "hitbox_reducir_alto": 10,
         },
+         {
+        "tipo": "puas",
+        "imagen": "mysql/pinchos.png",
+        "x": 8319,
+        "cantidad": 1,
+        "separacion": 0,
+        "ancho": 70,
+        "alto": 50,
+        "ajuste_y": -2,
 
+        "hitbox_offset_x": 12,
+        "hitbox_offset_y": 20,
+        "hitbox_reducir_ancho": 24,
+        "hitbox_reducir_alto": 22,
+    },
+     {
+        "tipo": "puas",
+        "imagen": "mysql/pinchos.png",
+        "x": 8819,
+        "cantidad": 1,
+        "separacion": 0,
+        "ancho": 70,
+        "alto": 50,
+        "ajuste_y": -2,
+
+        "hitbox_offset_x": 12,
+        "hitbox_offset_y": 20,
+        "hitbox_reducir_ancho": 24,
+        "hitbox_reducir_alto": 22,
+    },
+
+    )
+    ENEMIGOS=(
+         {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 1878,
+
+        # Posiciones relativas al suelo
+        "y_inicial": 0,
+        "y_limite": -150,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -10,
+    },
+     {
+             
+        "tipo": "serpiente",
+        # Posiciones relativas al suelo
+        "x_inicial": 2798,
+        "x_limite": 2930,
+        "ajuste_y":-161,
+        "velocidad": 80,
+        "ancho": 80,
+        "alto": 48,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+     {
+        "tipo": "jabali",
+        # Posiciones relativas al suelo
+        "x_inicial": 3381,
+        "x_limite": 3741,
+
+        "velocidad": 160,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+    {      
+        "tipo": "caracol",
+        "x_inicial": 4707,
+        "x_limite": 4881,
+        "ajuste_y": 0,
+        "ancho": 100,
+        "alto": 68,
+        "velocidad": 60,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+        "fps_animacion":6,
+
+        },
+        {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 5714,
+
+        # Posiciones relativas al suelo
+        "y_inicial": 0,
+        "y_limite": -250,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -10,
+    },
+     {
+            
+        "tipo": "bolaazul",
+        "x_inicial": 6601,
+        "x_limite": 6891    ,
+        "ajuste_y": 0,
+        "ancho": 80,
+        "alto": 48,
+        "velocidad": 120,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+        "fps_animacion":8,
+
+        },
+         {
+             
+        "tipo": "serpiente",
+        # Posiciones relativas al suelo
+        "x_inicial": 8125,
+        "x_limite": 8227,
+        "velocidad": 80,
+        "ancho": 80,
+        "alto": 48,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+     {
+        "tipo": "jabali",
+        # Posiciones relativas al suelo
+        "x_inicial": 8373,
+        "x_limite": 8727,
+
+        "velocidad": 160,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
     )
 
     PRACTICAS = (
@@ -551,7 +700,7 @@ class NivelMySQL06(JuegoBase):
             "x": 750,
             "y": 470,
             "nombre": "prueba_final_mysql_01",
-            "desbloqueada": True,
+            "desbloqueada": False,
 
             "pregunta": (
                 "La consulta USE escuela; selecciona la base de datos "
@@ -561,7 +710,6 @@ class NivelMySQL06(JuegoBase):
             "respuesta_correcta": True,
         },
 
-
         # =========================================================
         # EJERCICIO 2 - OPCIÓN MÚLTIPLE
         # =========================================================
@@ -570,7 +718,7 @@ class NivelMySQL06(JuegoBase):
             "y": 420,
             "tipo": "eleccion_multiple",
             "nombre": "prueba_final_mysql_02",
-            "desbloqueada": True,
+            "desbloqueada": False,
 
             "pregunta": (
                 "¿Cuál consulta crea una base de datos llamada tienda?"
@@ -585,7 +733,6 @@ class NivelMySQL06(JuegoBase):
             "respuesta_correcta": 1,
         },
 
-
         # =========================================================
         # EJERCICIO 3 - COMPLETAR CÓDIGO
         # =========================================================
@@ -594,7 +741,7 @@ class NivelMySQL06(JuegoBase):
             "y": None,
             "tipo": "codigo",
             "nombre": "prueba_final_mysql_03",
-            "desbloqueada": True,
+            "desbloqueada": False,
 
             "pregunta": (
                 "Completa el código para crear y seleccionar "
@@ -632,15 +779,14 @@ class NivelMySQL06(JuegoBase):
             ],
         },
 
-
         # =========================================================
         # EJERCICIO 4 - VERDADERO O FALSO
         # =========================================================
         {
-            "x": 2400,
+            "x": 2448,
             "y": 350,
             "nombre": "prueba_final_mysql_04",
-            "desbloqueada": True,
+            "desbloqueada": False,
 
             "pregunta": (
                 "VARCHAR se utiliza para guardar textos como nombres, "
@@ -650,16 +796,15 @@ class NivelMySQL06(JuegoBase):
             "respuesta_correcta": True,
         },
 
-
         # =========================================================
         # EJERCICIO 5 - OPCIÓN MÚLTIPLE
         # =========================================================
         {
-            "x": 2950,
+            "x": 2865,
             "y": 350,
             "tipo": "eleccion_multiple",
             "nombre": "prueba_final_mysql_05",
-            "desbloqueada": True,
+            "desbloqueada": False,
 
             "pregunta": (
                 "¿Qué tipo de dato es más adecuado para guardar "
@@ -675,7 +820,6 @@ class NivelMySQL06(JuegoBase):
             "respuesta_correcta": 2,
         },
 
-
         # =========================================================
         # EJERCICIO 6 - COMPLETAR CÓDIGO
         # =========================================================
@@ -684,7 +828,7 @@ class NivelMySQL06(JuegoBase):
             "y": None,
             "tipo": "codigo",
             "nombre": "prueba_final_mysql_06",
-            "desbloqueada": True,
+            "desbloqueada": False,
 
             "pregunta": (
                 "Completa el código para crear la tabla libros."
@@ -747,15 +891,14 @@ class NivelMySQL06(JuegoBase):
             ],
         },
 
-
         # =========================================================
         # EJERCICIO 7 - VERDADERO O FALSO
         # =========================================================
         {
-            "x": 4050,
-            "y": 470,
+            "x": 4150,
+            "y": 490,
             "nombre": "prueba_final_mysql_07",
-            "desbloqueada": True,
+            "desbloqueada": False,
 
             "pregunta": (
                 "Una columna declarada como PRIMARY KEY puede tener "
@@ -765,7 +908,6 @@ class NivelMySQL06(JuegoBase):
             "respuesta_correcta": False,
         },
 
-
         # =========================================================
         # EJERCICIO 8 - OPCIÓN MÚLTIPLE
         # =========================================================
@@ -774,7 +916,7 @@ class NivelMySQL06(JuegoBase):
             "y": 470,
             "tipo": "eleccion_multiple",
             "nombre": "prueba_final_mysql_08",
-            "desbloqueada": True,
+            "desbloqueada": False,
 
             "pregunta": (
                 "¿Cuál consulta inserta correctamente un estudiante "
@@ -799,16 +941,15 @@ class NivelMySQL06(JuegoBase):
             "respuesta_correcta": 1,
         },
 
-
         # =========================================================
         # EJERCICIO 9 - COMPLETAR CÓDIGO
         # =========================================================
         {
-            "x": 5150,
+            "x": 5221,
             "y": 390,
             "tipo": "codigo",
             "nombre": "prueba_final_mysql_09",
-            "desbloqueada": True,
+            "desbloqueada": False,
 
             "pregunta": (
                 "Completa la consulta para insertar el producto "
@@ -847,15 +988,14 @@ class NivelMySQL06(JuegoBase):
             ],
         },
 
-
         # =========================================================
         # EJERCICIO 10 - VERDADERO O FALSO
         # =========================================================
         {
-            "x": 5700,
+            "x": 5614,
             "y": 310,
             "nombre": "prueba_final_mysql_10",
-            "desbloqueada": True,
+            "desbloqueada": False,
 
             "pregunta": (
                 "La cláusula WHERE permite seleccionar únicamente "
@@ -865,16 +1005,15 @@ class NivelMySQL06(JuegoBase):
             "respuesta_correcta": True,
         },
 
-
         # =========================================================
         # EJERCICIO 11 - OPCIÓN MÚLTIPLE
         # =========================================================
         {
-            "x": 6250,
+            "x": 6309,
             "y": 390,
             "tipo": "eleccion_multiple",
             "nombre": "prueba_final_mysql_11",
-            "desbloqueada": True,
+            "desbloqueada": False,
 
             "pregunta": (
                 "¿Cuál consulta muestra estudiantes de 18 años o más "
@@ -899,7 +1038,6 @@ class NivelMySQL06(JuegoBase):
             "respuesta_correcta": 1,
         },
 
-
         # =========================================================
         # EJERCICIO 12 - COMPLETAR CÓDIGO
         # =========================================================
@@ -908,7 +1046,7 @@ class NivelMySQL06(JuegoBase):
             "y": None,
             "tipo": "codigo",
             "nombre": "prueba_final_mysql_12",
-            "desbloqueada": True,
+            "desbloqueada": False,
 
             "pregunta": (
                 "Completa la consulta para mostrar productos con precio "
@@ -956,7 +1094,6 @@ class NivelMySQL06(JuegoBase):
             ],
         },
 
-
         # =========================================================
         # EJERCICIO 13 - VERDADERO O FALSO
         # =========================================================
@@ -964,7 +1101,7 @@ class NivelMySQL06(JuegoBase):
             "x": 7350,
             "y": 365,
             "nombre": "prueba_final_mysql_13",
-            "desbloqueada": True,
+            "desbloqueada": False,
 
             "pregunta": (
                 "La consulta DELETE FROM usuarios; elimina todos "
@@ -974,16 +1111,15 @@ class NivelMySQL06(JuegoBase):
             "respuesta_correcta": True,
         },
 
-
         # =========================================================
         # EJERCICIO 14 - OPCIÓN MÚLTIPLE
         # =========================================================
         {
-            "x": 7900,
+            "x": 7989,
             "y": 425,
             "tipo": "eleccion_multiple",
             "nombre": "prueba_final_mysql_14",
-            "desbloqueada": True,
+            "desbloqueada": False,
 
             "pregunta": (
                 "¿Cuál consulta elimina solamente al estudiante "
@@ -1005,7 +1141,6 @@ class NivelMySQL06(JuegoBase):
             "respuesta_correcta": 2,
         },
 
-
         # =========================================================
         # EJERCICIO 15 - COMPLETAR CÓDIGO
         # =========================================================
@@ -1014,7 +1149,7 @@ class NivelMySQL06(JuegoBase):
             "y": None,
             "tipo": "codigo",
             "nombre": "prueba_final_mysql_15",
-            "desbloqueada": True,
+            "desbloqueada": False,
 
             "pregunta": (
                 "Completa la consulta para cambiar el nombre y el precio "
@@ -1067,7 +1202,6 @@ class NivelMySQL06(JuegoBase):
             ],
         },
 
-
         # =========================================================
         # EJERCICIO 16 - VERDADERO O FALSO
         # =========================================================
@@ -1075,7 +1209,7 @@ class NivelMySQL06(JuegoBase):
             "x": 8400,
             "y": None,
             "nombre": "prueba_final_mysql_16",
-            "desbloqueada": True,
+            "desbloqueada": False,
 
             "pregunta": (
                 "La consulta UPDATE productos SET precio = 0; modifica "
@@ -1085,7 +1219,6 @@ class NivelMySQL06(JuegoBase):
             "respuesta_correcta": True,
         },
 
-
         # =========================================================
         # EJERCICIO 17 - OPCIÓN MÚLTIPLE
         # =========================================================
@@ -1094,7 +1227,7 @@ class NivelMySQL06(JuegoBase):
             "y": None,
             "tipo": "eleccion_multiple",
             "nombre": "prueba_final_mysql_17",
-            "desbloqueada": True,
+            "desbloqueada": False,
 
             "pregunta": (
                 "¿Cuál consulta muestra solamente las columnas nombre "
@@ -1110,7 +1243,6 @@ class NivelMySQL06(JuegoBase):
             "respuesta_correcta": 1,
         },
 
-
         # =========================================================
         # EJERCICIO 18 - COMPLETAR CÓDIGO
         # =========================================================
@@ -1119,7 +1251,7 @@ class NivelMySQL06(JuegoBase):
             "y": None,
             "tipo": "codigo",
             "nombre": "prueba_final_mysql_18",
-            "desbloqueada": True,
+            "desbloqueada": False,
 
             "pregunta": (
                 "Completa la consulta para cambiar la existencia a 20 "
@@ -1166,7 +1298,6 @@ class NivelMySQL06(JuegoBase):
             ],
         },
 
-
         # =========================================================
         # EJERCICIO 19 - VERDADERO O FALSO
         # =========================================================
@@ -1174,7 +1305,7 @@ class NivelMySQL06(JuegoBase):
             "x": 8940,
             "y": None,
             "nombre": "prueba_final_mysql_19",
-            "desbloqueada": True,
+            "desbloqueada": False,
 
             "pregunta": (
                 "Una columna definida con NOT NULL no permite guardar "
@@ -1184,7 +1315,6 @@ class NivelMySQL06(JuegoBase):
             "respuesta_correcta": True,
         },
 
-
         # =========================================================
         # EJERCICIO 20 - OPCIÓN MÚLTIPLE
         # =========================================================
@@ -1193,7 +1323,7 @@ class NivelMySQL06(JuegoBase):
             "y": None,
             "tipo": "eleccion_multiple",
             "nombre": "prueba_final_mysql_20",
-            "desbloqueada": True,
+            "desbloqueada": False,
 
             "pregunta": (
                 "¿Cuál consulta elimina únicamente los usuarios cuyo "
