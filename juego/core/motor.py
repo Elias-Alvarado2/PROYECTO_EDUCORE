@@ -190,14 +190,9 @@ MARGEN_COLISION_VERTICAL = round(20 * ESCALA_JUEGO)
 
 VIDAS_MAXIMAS = 5
 
-<<<<<<< HEAD
-TIPOS_OBSTACULOS_SOLIDOS = frozenset({"caja", "fragmento", "arena","tronco","cofre","bloque","piedra", "bloque", "columnas", "arco", "columna", "columna_derribada", "estatua", "plataforma", "plataforma_flotante"})
-TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser", "cactus", "huesos", "pico", "pico_ardiente", "volcan"})
-=======
 TIPOS_OBSTACULOS_SOLIDOS = frozenset(
     {"caja", "fragmento", "arena", "tronco", "cofre", "bloque", "piedra", "bloque", "columnas"})
 TIPOS_OBSTACULOS_DANIO = frozenset({"puas", "laser", "cactus", "huesos"})
->>>>>>> 272625b2bee766385394d348cb4288990c5321d6
 
 # Las vidas se restauran completamente cinco minutos después de perder la
 # primera vida. El motor consulta MySQL cada 30 segundos mientras el nivel
@@ -1463,8 +1458,11 @@ class ConexionEduCore:
 
         numero_nivel = max(1, min(numero_nivel, 5))
         porcentaje = min(numero_nivel * 20, 100)
-        prueba_desbloqueada = 1 if numero_nivel >= 4 else 0
-        prueba_completada = 1 if numero_nivel >= 5 else 0
+        # Hay cinco niveles normales y el nivel 6 es la prueba final. El nivel
+        # 5 solamente desbloquea esa prueba; GestorResultadoPrueba es el unico
+        # encargado de marcar prueba_completada al terminar realmente el 6.
+        prueba_desbloqueada = 1 if numero_nivel >= 5 else 0
+        prueba_completada = 0
 
         if not self.asegurar_progreso(id_jugador, id_lenguaje):
             return False
@@ -4076,7 +4074,16 @@ class JuegoEduCore:
 
         # Los huesos regresan al inicio. También se reconoce el nombre del
         # archivo PNG por si el nivel los declaró accidentalmente como púas.
-        if obstaculo.debe_regresar_al_inicio():
+        debe_regresar_al_inicio = getattr(
+            obstaculo,
+            "debe_regresar_al_inicio",
+            None,
+        )
+
+        if (
+            callable(debe_regresar_al_inicio)
+            and debe_regresar_al_inicio()
+        ):
             self.regresar_al_inicio(motivo="huesos")
             return True
 

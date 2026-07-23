@@ -32,6 +32,60 @@ class NivelPython04(JuegoBase):
     "tamano":0.40,
     "mostrar_bloqueado": True,
 }
+    ENEMIGOS=(
+         {      
+        "tipo": "caracol",
+        "x_inicial": 2007,
+        "x_limite": 2154,
+        "ajuste_y": 0,
+        "ancho": 100,
+        "alto": 68,
+        "velocidad": 60,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+        "fps_animacion":6,
+
+        },
+         {
+            
+        "tipo": "bolaazul",
+        "x_inicial": 3049,
+        "x_limite": 2874    ,
+        "ajuste_y": 0,
+        "ancho": 100,
+        "alto": 68,
+        "velocidad": 120,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+        "fps_animacion":8,
+
+        },
+         {
+             
+        "tipo": "serpiente",
+        # Posiciones relativas al suelo
+        "x_inicial": 3814,
+        "x_limite": 3727,
+
+        "velocidad": 80,
+        "ancho": 80,
+        "alto": 48,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+    {
+        "tipo": "jabali",
+        # Posiciones relativas al suelo
+        "x_inicial": 5789,
+        "x_limite": 5367,
+
+        "velocidad": 140,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+    )
     NPCS = (
     {
         "nombre": "pinguino_1",

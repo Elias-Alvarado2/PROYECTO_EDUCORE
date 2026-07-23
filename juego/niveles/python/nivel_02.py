@@ -22,7 +22,61 @@ class NivelPython02(JuegoBase):
     AJUSTE_Y_SPRITE_MONTANAS = 2
     AJUSTE_Y_SPRITE_SUELO = 0
     AJUSTE_Y_SPRITE_PLANTAS = 0
+    ENEMIGOS=(
+        {
+             
+        "tipo": "serpiente",
+        # Posiciones relativas al suelo
+        "x_inicial": 683,
+        "x_limite": 963,
 
+        "velocidad": 80,
+        "ancho": 80,
+        "alto": 48,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+      {      
+        "tipo": "caracol",
+        "x_inicial": 1613,
+        "x_limite": 1765,
+        "ajuste_y": 0,
+        "ancho": 100,
+        "alto": 68,
+        "velocidad": 60,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+        "fps_animacion":6,
+
+        },
+         {
+        "tipo": "fuego",
+        "movimiento": "vertical",
+        "x": 3120,
+
+        # Posiciones relativas al suelo
+        "y_inicial": 0,
+        "y_limite": -200,
+
+        "velocidad": 80,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -10,
+    },
+        {
+        "tipo": "jabali",
+        # Posiciones relativas al suelo
+        "x_inicial": 4843,
+        "x_limite": 5280,
+
+        "velocidad": 120,
+        "ancho": 100,
+        "alto": 68,
+        "hace_dano": True,
+        "rebote_al_pisar": -20,
+    },
+    )
     PISOS = (
         (0, LONGITUD_NIVEL),
     )
