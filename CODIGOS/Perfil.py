@@ -18,11 +18,6 @@ try:
 except ImportError:
     FormTransicion = None
 
-
-# ==========================================================
-# RUTAS PRINCIPALES
-# ==========================================================
-
 BASE_DIR = Path(__file__).resolve().parent
 PROYECTO_DIR = BASE_DIR.parent
 
@@ -47,19 +42,14 @@ RUTA_FUENTE_BOLD = (
     / "PixelOperator-Bold.ttf"
 )
 
-# El proyecto tiene 4 niveles y una prueba final.
 TOTAL_NIVELES = 5
 
-# Configuración de las vidas del jugador.
 MAX_VIDAS = 5
 MINUTOS_RECUPERACION_VIDAS = 5
-# Consulta vidas y progreso cada 2 segundos mientras el perfil esté visible.
+
 INTERVALO_ACTUALIZACION_PERFIL_MS = 2000
 
-
-# ==========================================================
-# FONDO RESPONSIVO
-# ==========================================================
+RETRASO_CARGA_INICIAL_MS = 1600
 
 class FondoImagen(QtWidgets.QLabel):
     def __init__(
@@ -109,21 +99,7 @@ class FondoImagen(QtWidgets.QLabel):
 
         self.lower()
 
-
-
-# ==========================================================
-# ELEMENTOS RESPONSIVOS
-# ==========================================================
-
 class ElementosResponsivos(QtCore.QObject):
-    """
-    Escala posición, tamaño y fuente de los controles tomando
-    como referencia el diseño original de 1920 x 1080.
-
-    Los botones se excluyen de esta clase porque se ajustan con
-    BotonesResponsivos, evitando que dos clases cambien al mismo
-    tiempo la geometría del mismo botón.
-    """
 
     def __init__(
         self,
@@ -202,16 +178,7 @@ class ElementosResponsivos(QtCore.QObject):
 
             elemento.setFont(fuente_escalada)
 
-
-# ==========================================================
-# EFECTO HOVER DEL BOTÓN VOLVER
-# ==========================================================
-
 class EfectoHoverBoton(QtCore.QObject):
-    """
-    Agranda suavemente el botón y aumenta su sombra cuando
-    el cursor pasa sobre él.
-    """
 
     def __init__(
         self,
@@ -299,11 +266,6 @@ class EfectoHoverBoton(QtCore.QObject):
         self.animacion_sombra.start()
 
     def actualizar_geometria_base(self):
-        """
-        Guarda la posición y tamaño asignados por
-        BotonesResponsivos.
-        """
-
         self.animacion_geometria.stop()
 
         if not self.cursor_encima:
@@ -348,11 +310,6 @@ class EfectoHoverBoton(QtCore.QObject):
 
         return super().eventFilter(objeto, evento)
 
-
-# ==========================================================
-# VENTANA DE PERFIL
-# ==========================================================
-
 class PerfilWindow(QtWidgets.QWidget):
     def __init__(
         self,
@@ -365,10 +322,10 @@ class PerfilWindow(QtWidgets.QWidget):
 
         self.ANCHO_BASE = 1920
         self.ALTO_BASE = 1080
-        self._pantalla_completa_aplicada = False
+        self._maximizado_inicial = False
+        self._volviendo = False
 
-        # Instancia para realizar las consultas.
-        self.base_datos = ConexionBD()
+        self.base_datos = None
 
         self.id_jugador = id_jugador
         self.formulario_anterior = formulario_anterior
@@ -376,15 +333,21 @@ class PerfilWindow(QtWidgets.QWidget):
         self.pixmap_personaje_original = None
         self.transicion_volver = None
 
-        # Evita ejecutar dos veces la transición por doble clic.
         self._transicion_en_curso = False
 
-        # Evita ejecutar dos consultas simultáneas si una actualización
-        # tarda más de lo esperado.
         self._actualizacion_en_curso = False
 
-        # Mantiene vivas las animaciones de las barras de progreso.
+        self._carga_inicial_programada = False
+        self._carga_inicial_completada = False
+
         self.animaciones_progreso = {}
+
+        self._timer_ajuste_resize = QtCore.QTimer(self)
+        self._timer_ajuste_resize.setSingleShot(True)
+        self._timer_ajuste_resize.setInterval(90)
+        self._timer_ajuste_resize.timeout.connect(
+            self._aplicar_resize_completo
+        )
 
         if not RUTA_UI.exists():
             raise FileNotFoundError(
@@ -397,8 +360,6 @@ class PerfilWindow(QtWidgets.QWidget):
             self
         )
 
-        # Carga PixelOperator y la aplica a todos los controles
-        # antes de guardar las geometrías y fuentes responsivas.
         self.cargar_y_aplicar_fuentes()
 
         self.setMinimumSize(0, 0)
@@ -429,19 +390,15 @@ class PerfilWindow(QtWidgets.QWidget):
         self.configurar_responsividad()
         self.configurar_actualizacion_tiempo_real()
 
+        # No se cargan datos aquí. Las consultas se programan después
+        # del primer dibujo de la ventana para no congelar la transición.
+
+        # Igual que Ajustes: maximiza una sola vez y evita cambiar a
+        # pantalla completa mientras FormTransicion está animando.
         QtCore.QTimer.singleShot(
             0,
-            self.cargar_toda_la_informacion
+            self._mostrar_maximizado,
         )
-
-        QtCore.QTimer.singleShot(
-            0,
-            self.mostrar_pantalla_completa
-        )
-
-    # ======================================================
-    # FUENTES PIXELOPERATOR
-    # ======================================================
 
     @staticmethod
     def registrar_fuente(ruta_fuente: Path):
@@ -484,11 +441,6 @@ class PerfilWindow(QtWidgets.QWidget):
 
     @staticmethod
     def quitar_font_family_stylesheet(control):
-        """
-        Elimina solamente font-family del stylesheet para evitar
-        que Qt Designer sobrescriba PixelOperator.
-        """
-
         estilo = control.styleSheet()
 
         if not estilo:
@@ -509,10 +461,6 @@ class PerfilWindow(QtWidgets.QWidget):
         control: QtWidgets.QWidget,
         usar_bold: bool = False,
     ):
-        """
-        Cambia únicamente la familia y el peso. Conserva el
-        tamaño definido en Qt Designer.
-        """
 
         self.quitar_font_family_stylesheet(control)
 
@@ -524,29 +472,20 @@ class PerfilWindow(QtWidgets.QWidget):
         else:
             fuente.setFamily(self.familia_pixel_normal)
 
-            # Conserva la negrita original del Designer.
             if fuente.bold():
                 fuente.setBold(True)
 
         control.setFont(fuente)
 
     def obtener_labels_responsivos(self):
-        """
-        Obtiene todos los QLabel creados en Qt Designer.
-        Su posición y tamaño originales se toman directamente
-        del archivo Perfil.ui.
-        """
-
         labels = []
 
         for label in self.contenedor_principal.findChildren(
                 QtWidgets.QLabel
         ):
-            # No incluir el fondo creado desde Python.
             if label is self.fondo:
                 continue
 
-            # Ignorar labels internos sin nombre.
             if not label.objectName():
                 continue
 
@@ -555,10 +494,6 @@ class PerfilWindow(QtWidgets.QWidget):
         return labels
 
     def cargar_y_aplicar_fuentes(self):
-        """
-        Aplica PixelOperator a labels, botones, barras, tabla,
-        encabezados y demás controles del perfil.
-        """
 
         self.familia_pixel_normal = self.registrar_fuente(
             RUTA_FUENTE_NORMAL
@@ -569,8 +504,6 @@ class PerfilWindow(QtWidgets.QWidget):
         )
 
         if not self.familia_pixel_normal:
-            # El formulario continúa funcionando aunque falte
-            # la fuente; solamente conservará la fuente del UI.
             return
 
         controles = [
@@ -592,8 +525,6 @@ class PerfilWindow(QtWidgets.QWidget):
                 usar_bold=usar_bold,
             )
 
-        # Refuerzo para los controles cuyo texto se pinta mediante
-        # componentes internos de Qt.
         if hasattr(self, "dgv_perfil"):
             fuente_tabla = QtGui.QFont(
                 self.dgv_perfil.font()
@@ -656,14 +587,7 @@ class PerfilWindow(QtWidgets.QWidget):
             self.familia_pixel_normal
         )
 
-    # ======================================================
-    # CONFIGURAR RESPONSIVIDAD
-    # ======================================================
-
     def configurar_responsividad(self):
-        # ======================================================
-        # BOTÓN VOLVER
-        # ======================================================
 
         self.botones_perfil = []
 
@@ -681,10 +605,6 @@ class PerfilWindow(QtWidgets.QWidget):
             escalar_fuentes=False,
         )
 
-        # ======================================================
-        # LABELS DEL DESIGNER
-        # ======================================================
-
         self.labels_perfil = (
             self.obtener_labels_responsivos()
         )
@@ -697,10 +617,6 @@ class PerfilWindow(QtWidgets.QWidget):
             escalar_fuentes=True,
         )
 
-        # ======================================================
-        # RESTO DE ELEMENTOS
-        # ======================================================
-
         elementos = self.obtener_elementos_responsivos()
 
         self.elementos_responsivos = ElementosResponsivos(
@@ -710,10 +626,6 @@ class PerfilWindow(QtWidgets.QWidget):
             alto_base=self.ALTO_BASE,
             escalar_fuentes=True,
         )
-
-        # ======================================================
-        # HOVER
-        # ======================================================
 
         self.efectos_hover = [
             EfectoHoverBoton(
@@ -725,17 +637,9 @@ class PerfilWindow(QtWidgets.QWidget):
             for boton in self.botones_perfil
         ]
 
-        QtCore.QTimer.singleShot(
-            0,
-            self.actualizar_interfaz_responsiva,
-        )
+        self.actualizar_interfaz_responsiva()
 
     def obtener_elementos_responsivos(self):
-        """
-        Devuelve únicamente los controles creados por el archivo
-        .ui. Se omiten los widgets internos de QTableWidget y el
-        fondo para evitar deformaciones.
-        """
 
         elementos = []
         excluidos = {
@@ -743,9 +647,6 @@ class PerfilWindow(QtWidgets.QWidget):
             self.fondo,
         }
 
-        # La tabla se posiciona y escala de forma manual en
-        # ajustar_tabla_responsiva(), para tener control exacto
-        # sobre su ubicación, columnas, filas y fuente.
         if hasattr(self, "dgv_perfil"):
             excluidos.add(self.dgv_perfil)
 
@@ -806,10 +707,6 @@ class PerfilWindow(QtWidgets.QWidget):
         escala_y = self.height() / self.ALTO_BASE
         escala_fuente = min(escala_x, escala_y)
 
-        # ======================================================
-        # POSICIÓN EXACTA DENTRO DEL CUADRO
-        # ======================================================
-        # Valores calibrados para el fondo de 1920 x 1080.
         x_base = 242
         y_base = 620
         ancho_base = 1408
@@ -939,10 +836,6 @@ class PerfilWindow(QtWidgets.QWidget):
             }
         """)
 
-        # ======================================================
-        # MISMA FUENTE QUE LOS LABELS
-        # ======================================================
-
         if hasattr(self, "lbl_usuario"):
             fuente_tabla = QtGui.QFont(
                 self.lbl_usuario.font()
@@ -978,10 +871,6 @@ class PerfilWindow(QtWidgets.QWidget):
         self.dgv_perfil.setFont(
             fuente_tabla
         )
-
-        # ======================================================
-        # ANCHO EXACTO DE LAS COLUMNAS
-        # ======================================================
 
         encabezado_horizontal = (
             self.dgv_perfil.horizontalHeader()
@@ -1033,18 +922,12 @@ class PerfilWindow(QtWidgets.QWidget):
                 ancho_columna
             )
 
-        # ======================================================
-        # ALTURA DE LAS FILAS
-        # ======================================================
-
         encabezado_vertical = (
             self.dgv_perfil.verticalHeader()
         )
 
         cantidad_filas = self.dgv_perfil.rowCount()
 
-        # Cuando hay entre 6 y 10 registros, las filas ocupan todo
-        # el alto disponible, evitando el espacio vacío inferior.
         if 6 <= cantidad_filas <= 10:
             encabezado_vertical.setSectionResizeMode(
                 QtWidgets.QHeaderView.ResizeMode.Stretch
@@ -1072,28 +955,19 @@ class PerfilWindow(QtWidgets.QWidget):
 
         self.dgv_perfil.raise_()
 
-    def mostrar_pantalla_completa(self):
-        """
-        Abre el perfil ocupando toda la pantalla. El control se
-        realiza una sola vez para no interrumpir las transiciones.
-        """
+    def _mostrar_maximizado(self):
 
-        if self._pantalla_completa_aplicada:
+        if self._maximizado_inicial:
             return
 
-        self._pantalla_completa_aplicada = True
-        self.showFullScreen()
+        self._maximizado_inicial = True
 
+        self.showMaximized()
+        self.raise_()
+        self.activateWindow()
 
-    # ======================================================
-    # BUSCAR FONDO DEL PERFIL
-    # ======================================================
 
     def buscar_fondo_perfil(self) -> Path:
-        """
-        Busca automáticamente el fondo del perfil dentro de
-        assets/DISEÑOS.
-        """
 
         carpetas = [
             PROYECTO_DIR / "assets" / "DISEÑOS",
@@ -1148,15 +1022,7 @@ class PerfilWindow(QtWidgets.QWidget):
             "de la lista nombres_posibles."
         )
 
-    # ======================================================
-    # SUBIR CONTROLES
-    # ======================================================
-
     def subir_controles_sobre_fondo(self):
-        """
-        Mantiene los controles del Designer encima
-        del QLabel utilizado como fondo.
-        """
 
         for objeto in self.contenedor_principal.children():
             if (
@@ -1167,29 +1033,17 @@ class PerfilWindow(QtWidgets.QWidget):
 
         self.fondo.lower()
 
-    # ======================================================
-    # CONFIGURACIÓN DEL FORMULARIO
-    # ======================================================
-
     def configurar_formulario(self):
-        # --------------------------------------------------
-        # BOTÓN VOLVER
-        # --------------------------------------------------
 
         if hasattr(self, "btn_volver"):
-            # pressed se ejecuta al presionar el botón, sin esperar a que
-            # el usuario suelte el clic. La transición comienza de inmediato.
-            self.btn_volver.pressed.connect(
+
+            self.btn_volver.clicked.connect(
                 self.volver
             )
 
             self.btn_volver.setCursor(
                 QtCore.Qt.CursorShape.PointingHandCursor
             )
-
-        # --------------------------------------------------
-        # FOTO DEL PERSONAJE
-        # --------------------------------------------------
 
         self.lbl_fotopersonaje.setAlignment(
             QtCore.Qt.AlignmentFlag.AlignCenter
@@ -1198,10 +1052,6 @@ class PerfilWindow(QtWidgets.QWidget):
         self.lbl_fotopersonaje.setScaledContents(
             False
         )
-
-        # --------------------------------------------------
-        # LABELS
-        # --------------------------------------------------
 
         self.lbl_usuario.setText(
             ""
@@ -1214,10 +1064,6 @@ class PerfilWindow(QtWidgets.QWidget):
         self.lbl_vidas.setText(
             "0"
         )
-
-        # --------------------------------------------------
-        # BARRAS DE PROGRESO
-        # --------------------------------------------------
 
         barras = [
             self.pb_python,
@@ -1243,14 +1089,8 @@ class PerfilWindow(QtWidgets.QWidget):
                 True
             )
 
-        # --------------------------------------------------
-        # TABLA
-        # --------------------------------------------------
-
         self.dgv_perfil.setColumnCount(5)
 
-        # Los títulos ya forman parte del fondo del diseño.
-        # Se conservan internamente, pero no se muestran.
         self.dgv_perfil.setHorizontalHeaderLabels([
             "FECHA",
             "EVENTO",
@@ -1262,7 +1102,6 @@ class PerfilWindow(QtWidgets.QWidget):
         self.dgv_perfil.horizontalHeader().setVisible(False)
         self.dgv_perfil.verticalHeader().setVisible(False)
 
-        # Elimina las filas de ejemplo creadas en Qt Designer.
         self.dgv_perfil.clearContents()
         self.dgv_perfil.setRowCount(0)
 
@@ -1297,19 +1136,35 @@ class PerfilWindow(QtWidgets.QWidget):
 
         self.ajustar_tabla_responsiva()
 
-    # ======================================================
-    # ACTUALIZACIÓN AUTOMÁTICA DE VIDAS Y PROGRESO
-    # ======================================================
+    def programar_carga_inicial(self):
+
+
+        if self._carga_inicial_completada:
+            return
+
+        if self._carga_inicial_programada:
+            return
+
+        self._carga_inicial_programada = True
+
+        QtCore.QTimer.singleShot(
+            RETRASO_CARGA_INICIAL_MS,
+            self.ejecutar_carga_inicial,
+        )
+
+    def ejecutar_carga_inicial(self):
+        self._carga_inicial_programada = False
+
+        if not self.isVisible():
+            return
+
+        self.cargar_toda_la_informacion()
+        self._carga_inicial_completada = True
+
+        if hasattr(self, "timer_actualizar_perfil"):
+            self.timer_actualizar_perfil.start()
 
     def configurar_actualizacion_tiempo_real(self):
-        """
-        Consulta periódicamente las vidas y el progreso mientras
-        el perfil permanece visible.
-
-        De esta forma, si otro formulario completa una lección o
-        modifica las vidas, el perfil refleja el cambio sin tener
-        que cerrarse y abrirse otra vez.
-        """
 
         self.timer_actualizar_perfil = QtCore.QTimer(self)
         self.timer_actualizar_perfil.setInterval(
@@ -1320,7 +1175,6 @@ class PerfilWindow(QtWidgets.QWidget):
         )
 
     def actualizar_datos_en_tiempo_real(self):
-        """Actualiza únicamente los datos que pueden cambiar."""
 
         if self._actualizacion_en_curso:
             return
@@ -1337,18 +1191,10 @@ class PerfilWindow(QtWidgets.QWidget):
         finally:
             self._actualizacion_en_curso = False
 
-    # Se conserva este nombre por compatibilidad con cualquier
-    # parte del proyecto que todavía lo llame directamente.
     def configurar_actualizacion_vidas(self):
         self.configurar_actualizacion_tiempo_real()
 
     def aplicar_recuperacion_vidas_si_corresponde(self) -> bool:
-        """
-        Recupera las cinco vidas cuando el jugador llegó a cero y
-        ya transcurrió el tiempo configurado en la base de datos.
-
-        Devuelve True cuando la consulta restauró las vidas.
-        """
 
         conexion = None
         cursor = None
@@ -1410,15 +1256,11 @@ class PerfilWindow(QtWidgets.QWidget):
                     pass
 
     def actualizar_vidas_perfil(self):
-        """
-        Consulta las vidas actuales y actualiza lbl_vidas. Antes de
-        leer el dato, comprueba si ya corresponde restaurarlas.
-        """
 
         try:
             self.aplicar_recuperacion_vidas_si_corresponde()
 
-            jugador = self.base_datos.obtener_datos_perfil(
+            jugador = self.obtener_base_datos().obtener_datos_perfil(
                 self.id_jugador
             )
 
@@ -1447,9 +1289,12 @@ class PerfilWindow(QtWidgets.QWidget):
                 error
             )
 
-    # ======================================================
-    # CONEXIÓN
-    # ======================================================
+
+    def obtener_base_datos(self):
+        if self.base_datos is None:
+            self.base_datos = ConexionBD()
+
+        return self.base_datos
 
     def obtener_conexion(self):
         conexion_bd = ConexionBD()
@@ -1468,10 +1313,6 @@ class PerfilWindow(QtWidgets.QWidget):
                 )
 
         return conexion
-
-    # ======================================================
-    # CARGAR TODO
-    # ======================================================
 
     def cargar_toda_la_informacion(self):
         errores = []
@@ -1509,10 +1350,6 @@ class PerfilWindow(QtWidgets.QWidget):
                 + "\n\n".join(errores)
             )
 
-    # ======================================================
-    # MOSTRAR ERRORES
-    # ======================================================
-
     def mostrar_error(self, mensaje: str):
         if Alertas is not None:
             try:
@@ -1532,10 +1369,6 @@ class PerfilWindow(QtWidgets.QWidget):
             "Error",
             mensaje
         )
-
-    # ======================================================
-    # COLUMNAS DE UNA TABLA
-    # ======================================================
 
     def obtener_columnas_tabla(
         self,
@@ -1566,10 +1399,6 @@ class PerfilWindow(QtWidgets.QWidget):
 
         return columnas
 
-    # ======================================================
-    # ELEGIR PRIMERA COLUMNA EXISTENTE
-    # ======================================================
-
     def primera_columna_existente(
         self,
         columnas: set[str],
@@ -1581,16 +1410,12 @@ class PerfilWindow(QtWidgets.QWidget):
 
         return None
 
-    # ======================================================
-    # DATOS DEL JUGADOR
-    # ======================================================
-
     def cargar_datos_jugador(self):
         # Antes de mostrar las vidas, comprueba si ya pasó el
         # tiempo necesario para recuperar las cinco.
         self.aplicar_recuperacion_vidas_si_corresponde()
 
-        jugador = self.base_datos.obtener_datos_perfil(
+        jugador = self.obtener_base_datos().obtener_datos_perfil(
             self.id_jugador
         )
 
@@ -1623,10 +1448,6 @@ class PerfilWindow(QtWidgets.QWidget):
             personaje
         )
 
-    # ======================================================
-    # NORMALIZAR TEXTO
-    # ======================================================
-
     @staticmethod
     def normalizar_texto(texto: str) -> str:
         texto = str(texto).strip().lower()
@@ -1653,10 +1474,6 @@ class PerfilWindow(QtWidgets.QWidget):
         )
 
         return texto
-
-    # ======================================================
-    # BUSCAR IMAGEN DEL PERSONAJE
-    # ======================================================
 
     def buscar_imagen_personaje(
         self,
@@ -1793,10 +1610,6 @@ class PerfilWindow(QtWidgets.QWidget):
 
         return mejores_resultados[0][1]
 
-    # ======================================================
-    # CARGAR FOTO DEL PERSONAJE
-    # ======================================================
-
     def cargar_imagen_personaje(
         self,
         personaje: str
@@ -1842,10 +1655,6 @@ class PerfilWindow(QtWidgets.QWidget):
 
         self.actualizar_imagen_personaje()
 
-    # ======================================================
-    # ESCALAR FOTO DEL PERSONAJE
-    # ======================================================
-
     def actualizar_imagen_personaje(self):
         if self.pixmap_personaje_original is None:
             return
@@ -1866,7 +1675,6 @@ class PerfilWindow(QtWidgets.QWidget):
                 alto,
                 QtCore.Qt.AspectRatioMode.KeepAspectRatio,
 
-                # Conserva el estilo pixel art.
                 QtCore.Qt.TransformationMode.FastTransformation
             )
         )
@@ -1874,10 +1682,6 @@ class PerfilWindow(QtWidgets.QWidget):
         self.lbl_fotopersonaje.setPixmap(
             pixmap_escalado
         )
-
-    # ======================================================
-    # OBTENER BARRA DE UN LENGUAJE
-    # ======================================================
 
     def obtener_barra_lenguaje(
         self,
@@ -1896,10 +1700,6 @@ class PerfilWindow(QtWidgets.QWidget):
         return barras.get(
             lenguaje
         )
-
-    # ======================================================
-    # TOTAL DE LECCIONES POR LENGUAJE
-    # ======================================================
 
     def obtener_totales_lecciones(
         self,
@@ -1934,16 +1734,11 @@ class PerfilWindow(QtWidgets.QWidget):
         except Exception:
             return {}
 
-    # ======================================================
-    # PROGRESO DE LENGUAJES
-    # ======================================================
-
     def animar_barra_progreso(
         self,
         barra: QtWidgets.QProgressBar,
         porcentaje: int,
     ):
-        """Cambia el porcentaje con una animación corta y fluida."""
 
         porcentaje = max(0, min(int(porcentaje), 100))
         valor_actual = barra.value()
@@ -1985,10 +1780,6 @@ class PerfilWindow(QtWidgets.QWidget):
         animacion.start()
 
     def actualizar_progreso_lenguajes(self):
-        """
-        Vuelve a consultar el progreso sin reiniciar visualmente
-        las barras, evitando que parpadeen cada pocos segundos.
-        """
 
         try:
             self.cargar_progreso_lenguajes(animar=True)
@@ -2011,15 +1802,12 @@ class PerfilWindow(QtWidgets.QWidget):
             barra.setTextVisible(True)
 
         registros = (
-            self.base_datos
+            self.obtener_base_datos()
             .obtener_progreso_perfil(
                 self.id_jugador
             )
         )
 
-        # Empieza en cero para que un lenguaje sin registro se
-        # muestre correctamente, pero sin reiniciar la interfaz
-        # antes de terminar la consulta.
         datos_progreso = {
             lenguaje: {
                 "porcentaje": 0,
@@ -2083,13 +1871,10 @@ class PerfilWindow(QtWidgets.QWidget):
                 f"{lecciones_completadas}"
             )
 
-    # ======================================================
-    # CARGAR HISTORIAL
-    # ======================================================
 
     def cargar_historial(self):
         registros = (
-            self.base_datos
+            self.obtener_base_datos()
             .obtener_historial_perfil(
                 self.id_jugador
             )
@@ -2143,7 +1928,6 @@ class PerfilWindow(QtWidgets.QWidget):
                     item
                 )
 
-        # Mantiene una altura uniforme y una fuente legible.
         QtCore.QTimer.singleShot(
             0,
             self.ajustar_tabla_responsiva
@@ -2153,33 +1937,26 @@ class PerfilWindow(QtWidgets.QWidget):
             True
         )
 
-    # ======================================================
-    # VOLVER
-    # ======================================================
+    def volver(
+        self,
+        _checked: bool = False,
+    ):
 
-    def volver(self):
-        """
-        Inicia la transición inmediatamente al presionar btn_volver.
 
-        Antes de crear FormTransicion se detienen únicamente las tareas
-        visuales y periódicas que podrían competir con la animación.
-        """
         if self._transicion_en_curso:
             return
 
         if self.formulario_anterior is None:
+            self._volviendo = True
             self.close()
             return
 
         self._transicion_en_curso = True
+        self._volviendo = True
 
-        # Evita que una actualización automática del perfil se ejecute
-        # mientras está comenzando la transición.
         if hasattr(self, "timer_actualizar_perfil"):
             self.timer_actualizar_perfil.stop()
 
-        # Detiene las animaciones de las barras para liberar el ciclo
-        # gráfico durante la transición.
         for animacion in getattr(
             self,
             "animaciones_progreso",
@@ -2187,47 +1964,50 @@ class PerfilWindow(QtWidgets.QWidget):
         ).values():
             animacion.stop()
 
-        # Restaura inmediatamente el botón si estaba agrandado por hover.
-        for efecto in getattr(
-            self,
-            "efectos_hover",
-            [],
-        ):
-            if efecto.boton is self.btn_volver:
-                efecto.restaurar_inmediatamente()
-                break
+        try:
+            self.transicion_volver = FormTransicion(
+                self,
+                self.formulario_anterior,
+                guardar_actual=False,
+            )
 
-        self.btn_volver.setEnabled(
-            False
-        )
-
-        if FormTransicion is not None:
+        except TypeError:
             try:
-                # Se crea directamente, sin QTimer ni espera adicional.
-                # La referencia evita que la animación sea destruida.
                 self.transicion_volver = FormTransicion(
                     self,
                     self.formulario_anterior,
                 )
-                return
 
             except Exception as error:
-                print(
-                    "No se pudo utilizar la transición:",
-                    error,
+                self._volver_sin_transicion(
+                    error
                 )
 
-        # Respaldo cuando FormTransicion no está disponible o falla.
-        self.formulario_anterior.show()
-        self.formulario_anterior.raise_()
-        self.formulario_anterior.activateWindow()
+        except Exception as error:
+            self._volver_sin_transicion(
+                error
+            )
+
+    def _volver_sin_transicion(
+        self,
+        error: Exception,
+    ):
+        print(
+            "[PERFIL] No se pudo ejecutar la transición:",
+            error,
+        )
+
+        self._transicion_en_curso = False
+
+        if self.formulario_anterior is not None:
+            self.formulario_anterior.showMaximized()
+            self.formulario_anterior.raise_()
+            self.formulario_anterior.activateWindow()
+
         self.close()
 
-    # ======================================================
-    # REDIMENSIONAR
-    # ======================================================
-
     def resizeEvent(self, evento):
+
         if (
                 hasattr(self, "Perfil")
                 and self.Perfil is not self
@@ -2243,6 +2023,12 @@ class PerfilWindow(QtWidgets.QWidget):
             self.fondo.actualizar_tamano()
             self.fondo.lower()
 
+        if hasattr(self, "_timer_ajuste_resize"):
+            self._timer_ajuste_resize.start()
+
+        super().resizeEvent(evento)
+
+    def _aplicar_resize_completo(self):
         if hasattr(self, "labels_responsivos"):
             self.labels_responsivos.ajustar()
 
@@ -2255,55 +2041,33 @@ class PerfilWindow(QtWidgets.QWidget):
         self.actualizar_imagen_personaje()
         self.ajustar_tabla_responsiva()
         self.subir_controles_sobre_fondo()
-
-        if hasattr(self, "efectos_hover"):
-            QtCore.QTimer.singleShot(
-                0,
-                self.actualizar_hover_botones,
-            )
-
-        super().resizeEvent(evento)
-
-    # ======================================================
-    # MOSTRAR VENTANA
-    # ======================================================
+        self.actualizar_hover_botones()
 
     def showEvent(self, evento):
         super().showEvent(evento)
 
-        # Permite volver a utilizar la transición si el usuario regresa
-        # posteriormente a esta misma instancia del perfil.
         self._transicion_en_curso = False
+        self._volviendo = False
 
         if hasattr(self, "btn_volver"):
-            self.btn_volver.setEnabled(
-                True
-            )
+            self.btn_volver.setEnabled(True)
 
-        # Al entrar al perfil, consulta inmediatamente las vidas
-        # y el progreso por si cambiaron en otro formulario.
-        QtCore.QTimer.singleShot(
-            0,
-            self.actualizar_datos_en_tiempo_real,
-        )
+        if self._carga_inicial_completada:
+            QtCore.QTimer.singleShot(
+                RETRASO_CARGA_INICIAL_MS,
+                self._reanudar_actualizacion_perfil,
+            )
+        else:
+            self.programar_carga_inicial()
+
+    def _reanudar_actualizacion_perfil(self):
+        if not self.isVisible():
+            return
+
+        self.actualizar_datos_en_tiempo_real()
 
         if hasattr(self, "timer_actualizar_perfil"):
             self.timer_actualizar_perfil.start()
-
-        QtCore.QTimer.singleShot(
-            0,
-            self.mostrar_pantalla_completa,
-        )
-
-        QtCore.QTimer.singleShot(
-            0,
-            self.actualizar_vista,
-        )
-
-        QtCore.QTimer.singleShot(
-            100,
-            self.actualizar_vista,
-        )
 
     def hideEvent(self, evento):
         if hasattr(self, "timer_actualizar_perfil"):
